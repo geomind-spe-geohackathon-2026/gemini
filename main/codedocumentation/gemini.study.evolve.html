@@ -1,0 +1,205 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.study.evolve &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gemini.study.kinds" href="gemini.study.kinds.html" />
+    <link rel="prev" title="gemini.study.calibrate" href="gemini.study.calibrate.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="gemini.html">gemini</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gemini.analysis.html">gemini.analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.case.html">gemini.case</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.compiler.html">gemini.compiler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.engine.html">gemini.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.errors.html">gemini.errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.evaluate.html">gemini.evaluate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.modules.html">gemini.modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.ops.html">gemini.ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.physics.html">gemini.physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.plants.html">gemini.plants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.runtime.html">gemini.runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.streams.html">gemini.streams</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="gemini.study.html">gemini.study</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gemini.study.calibrate.html">gemini.study.calibrate</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gemini.study.evolve</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#gemini.study.evolve"><code class="docutils literal notranslate"><span class="pre">evolve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.study.kinds.html">gemini.study.kinds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.study.minimize.html">gemini.study.minimize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.study.result.html">gemini.study.result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.study.sample.html">gemini.study.sample</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.study.sensitivity.html">gemini.study.sensitivity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.study.size.html">gemini.study.size</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.study.study.html">gemini.study.study</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.units.html">gemini.units</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="gemini.html">gemini</a></li>
+          <li class="breadcrumb-item"><a href="gemini.study.html">gemini.study</a></li>
+      <li class="breadcrumb-item active">gemini.study.evolve</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/codedocumentation/gemini.study.evolve.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="gemini-study-evolve">
+<h1>gemini.study.evolve<a class="headerlink" href="#gemini-study-evolve" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="gemini.study.evolve">
+<span class="sig-prename descclassname"><span class="pre">gemini.study.</span></span><span class="sig-name descname"><span class="pre">evolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">case</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">objectives</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">population</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">polish</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gemini/study/evolve.html#evolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gemini.study.evolve" title="Link to this definition"></a></dt>
+<dd><p>Return the best structures and designs of a superstructure, by a genetic algorithm.</p>
+<p>The genome holds every choice the plant states: whether each optional module is on
+(<code class="docutils literal notranslate"><span class="pre">set_optional</span></code>), the group of each choice (<code class="docutils literal notranslate"><span class="pre">set_choice</span></code>), the number of doublets when
+<code class="docutils literal notranslate"><span class="pre">size.doublets</span></code> has a range, and the variables of <code class="docutils literal notranslate"><span class="pre">gm.study.minimize</span></code> (every <code class="docutils literal notranslate"><span class="pre">range</span></code>
+and <code class="docutils literal notranslate"><span class="pre">options</span></code> of a leaf, tied by role). A gene of a module that is off is ignored. With one
+objective it is a genetic algorithm; with two or more it is NSGA-II: the candidates are
+ranked in fronts of non-domination and, within a front, by crowding distance. A feasible
+candidate beats every infeasible one, and infeasible ones are ranked by their violation, as
+in <code class="docutils literal notranslate"><span class="pre">minimize</span></code>. Parents are chosen by binary tournament; continuous and integer genes cross
+by simulated binary crossover and mutate by polynomial mutation, the choices cross uniformly
+and mutate by a random reset; each generation keeps the best of the parents and children.</p>
+<p>The first generation is the plant’s own values (clipped to the ranges) in each valid structure,
+in the order of <code class="docutils literal notranslate"><span class="pre">plant.structures()</span></code> while they fit, then random candidates. A candidate whose
+structure gives no valid plant (<code class="docutils literal notranslate"><span class="pre">plant.with_structure(...).check()</span></code> has an error) is
+refused before any simulation and counted in <code class="docutils literal notranslate"><span class="pre">invalid</span></code>. A candidate equal to one judged
+before in the genes that matter is not simulated again. The trials of a generation run in the
+worker processes of <code class="docutils literal notranslate"><span class="pre">gm.runtime.settings(processes=n)</span></code>; the same seed gives the same result,
+whatever <code class="docutils literal notranslate"><span class="pre">n</span></code>. Each trial is judged as in <code class="docutils literal notranslate"><span class="pre">minimize</span></code>. The search ends when <code class="docutils literal notranslate"><span class="pre">evaluations</span></code>
+simulations have run, or after a number of generations in a row (<code class="docutils literal notranslate"><span class="pre">STALL</span></code>) without a new one.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">polish</span></code> above 0, each of the first <code class="docutils literal notranslate"><span class="pre">polish</span></code> designs of the result (ordered by the
+first objective) is searched again by <code class="docutils literal notranslate"><span class="pre">gm.study.minimize</span></code> in the ranges its plant keeps,
+on the first objective, with <code class="docutils literal notranslate"><span class="pre">population</span></code> evaluations for each doublet count (the budget of
+<code class="docutils literal notranslate"><span class="pre">minimize</span></code>) and the same seed; its best plant is run once more for every objective and joins
+the designs. These simulations come on top of <code class="docutils literal notranslate"><span class="pre">evaluations</span></code> and count in the result.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>plant</strong> (<em>Plant</em>) – A plant with values, with optional modules and choices and the ranges and options to
+search; a plant with neither is searched in its values alone.</p></li>
+<li><p><strong>case</strong> (<em>Case</em>) – What the plant is asked to do, as for <code class="docutils literal notranslate"><span class="pre">minimize</span></code>.</p></li>
+<li><p><strong>objectives</strong> (<em>str</em><em> or </em><em>list</em><em> of </em><em>str</em>) – The metric to minimise, or several (<code class="docutils literal notranslate"><span class="pre">[&quot;lcts&quot;,</span> <span class="pre">&quot;co2&quot;]</span></code>); a leading <code class="docutils literal notranslate"><span class="pre">&quot;-&quot;</span></code> maximises.</p></li>
+<li><p><strong>evaluations</strong> (<em>int</em>) – The largest number of simulations of the genetic search, at least <code class="docutils literal notranslate"><span class="pre">population</span></code>.</p></li>
+<li><p><strong>seed</strong> (<em>int</em>) – Seed of the search; the same call gives the same result.</p></li>
+<li><p><strong>population</strong> (<em>int</em>) – Candidates in each generation, at least 2.</p></li>
+<li><p><strong>polish</strong> (<em>int</em>) – The number of designs searched again by <code class="docutils literal notranslate"><span class="pre">minimize</span></code>; 0 for none. <code class="docutils literal notranslate"><span class="pre">population</span></code> must
+then be at least five per variable of the plant, the budget <code class="docutils literal notranslate"><span class="pre">minimize</span></code> needs.</p></li>
+<li><p><strong>plan</strong> (<em>DataFrame</em><em>, </em><em>optional</em>) – The run input held fixed over the trials, as for <code class="docutils literal notranslate"><span class="pre">minimize</span></code>.</p></li>
+<li><p><strong>on_progress</strong> (<em>callable</em><em>, </em><em>optional</em>) – <code class="docutils literal notranslate"><span class="pre">on_progress(done,</span> <span class="pre">total)</span></code> after each finished trial of the genetic search, <code class="docutils literal notranslate"><span class="pre">total</span></code>
+being <code class="docutils literal notranslate"><span class="pre">evaluations</span></code>; <code class="docutils literal notranslate"><span class="pre">done</span></code> reaches it when the search ends, before <code class="docutils literal notranslate"><span class="pre">polish</span></code>.
+Raising <code class="docutils literal notranslate"><span class="pre">gm.errors.Cancelled</span></code> stops the search.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">{front,</span> <span class="pre">best,</span> <span class="pre">history,</span> <span class="pre">evaluations,</span> <span class="pre">invalid}</span></code>: <code class="docutils literal notranslate"><span class="pre">front</span></code> the designs no other beats
+on every objective (the best one alone for one objective), each a <code class="docutils literal notranslate"><span class="pre">Design</span></code>
+<code class="docutils literal notranslate"><span class="pre">{structure,</span> <span class="pre">plant,</span> <span class="pre">metrics,</span> <span class="pre">feasible,</span> <span class="pre">reason,</span> <span class="pre">violation,</span> <span class="pre">parameters}</span></code>; <code class="docutils literal notranslate"><span class="pre">best</span></code> the
+design best on the first objective (the least violating one when none is feasible);
+<code class="docutils literal notranslate"><span class="pre">history</span></code> per generation <code class="docutils literal notranslate"><span class="pre">{generation,</span> <span class="pre">evaluations,</span> <span class="pre">best,</span> <span class="pre">front}</span></code>: the simulations so
+far, the best value of each objective among the feasible candidates so far (<code class="docutils literal notranslate"><span class="pre">None</span></code>
+without one) and the size of the first front; <code class="docutils literal notranslate"><span class="pre">evaluations</span></code> the number of simulations;
+<code class="docutils literal notranslate"><span class="pre">invalid</span></code> the candidates refused for their structure.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Evolution</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValidationError</strong> – The issues of <code class="docutils literal notranslate"><span class="pre">gm.check</span></code>; <code class="docutils literal notranslate"><span class="pre">invalid_design</span></code> when no structure is valid or the plant
+    states nothing to search; <code class="docutils literal notranslate"><span class="pre">invalid_value</span></code> for a setting out of its range.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gemini.study.calibrate.html" class="btn btn-neutral float-left" title="gemini.study.calibrate" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gemini.study.kinds.html" class="btn btn-neutral float-right" title="gemini.study.kinds" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

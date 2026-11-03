@@ -73,7 +73,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate._utils.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">OBJECTIVES</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate.summary</span><span class="w"> </span><span class="kn">import</span> <span class="n">KPI_NAMES</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.trial</span><span class="w"> </span><span class="kn">import</span> <span class="n">ECONOMICS</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study.study</span><span class="w"> </span><span class="kn">import</span> <span class="n">METHODS</span><span class="p">,</span> <span class="n">OWN</span><span class="p">,</span> <span class="n">PREPARE</span><span class="p">,</span> <span class="n">REQUIRED</span><span class="p">,</span> <span class="n">Study</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study.study</span><span class="w"> </span><span class="kn">import</span> <span class="n">METHODS</span><span class="p">,</span> <span class="n">OWN</span><span class="p">,</span> <span class="n">PREPARE</span><span class="p">,</span> <span class="n">REQUIRED</span><span class="p">,</span> <span class="n">SETTING_KEYS</span><span class="p">,</span> <span class="n">Study</span>
 
 <span class="n">KINDS</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">"run"</span><span class="p">:</span> <span class="p">(</span>
@@ -87,6 +87,14 @@
         <span class="s2">"Searches the ranges and choices that the plant file leaves open for the design with "</span>
         <span class="s2">"the lowest value of one figure, such as the cost of heat. A design that fails a "</span>
         <span class="s2">"requirement always ranks after every design that meets them."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"evolve"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Find the best structure"</span><span class="p">,</span>
+        <span class="s2">"Searches which optional equipment to include, which alternative to pick and the values "</span>
+        <span class="s2">"the plant file leaves open, with a genetic algorithm. With several figures, such as the "</span>
+        <span class="s2">"cost of heat and the emissions, it gives the designs where no figure can improve without "</span>
+        <span class="s2">"another getting worse. A design that fails a requirement always ranks after every "</span>
+        <span class="s2">"design that meets them."</span><span class="p">,</span>
     <span class="p">),</span>
     <span class="s2">"sample"</span><span class="p">:</span> <span class="p">(</span>
         <span class="s2">"Test the uncertainty"</span><span class="p">,</span>
@@ -124,6 +132,19 @@
         <span class="s2">"Number of draws"</span><span class="p">,</span>
         <span class="s2">"How many random draws are run; more draws give steadier figures and take longer."</span><span class="p">,</span>
     <span class="p">),</span>
+    <span class="s2">"objectives"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Figures to minimise"</span><span class="p">,</span>
+        <span class="s2">"One figure, or several that the search weighs against each other."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"population"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Designs per generation"</span><span class="p">,</span>
+        <span class="s2">"How many designs each generation of the search holds; more search wider."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"polish"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Designs to refine"</span><span class="p">,</span>
+        <span class="s2">"How many of the best designs are refined afterwards by a search of their values; 0 for "</span>
+        <span class="s2">"none."</span><span class="p">,</span>
+    <span class="p">),</span>
     <span class="s2">"seed"</span><span class="p">:</span> <span class="p">(</span>
         <span class="s2">"Random seed"</span><span class="p">,</span>
         <span class="s2">"A whole number that fixes the random choices: the same seed gives the same study."</span><span class="p">,</span>
@@ -141,15 +162,16 @@
         <span class="n">found</span><span class="p">[</span><span class="s2">"enum"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">OBJECTIVES</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"metrics"</span><span class="p">:</span>
         <span class="n">found</span><span class="p">[</span><span class="s2">"items"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">found</span><span class="p">[</span><span class="s2">"items"</span><span class="p">],</span> <span class="s2">"enum"</span><span class="p">:</span> <span class="p">[</span><span class="o">*</span><span class="n">KPI_NAMES</span><span class="p">,</span> <span class="o">*</span><span class="n">ECONOMICS</span><span class="p">]}</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"objectives"</span><span class="p">:</span>
+        <span class="n">found</span><span class="p">[</span><span class="s2">"anyOf"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"string"</span><span class="p">,</span> <span class="s2">"enum"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">OBJECTIVES</span><span class="p">)},</span> <span class="p">{</span><span class="o">**</span><span class="n">found</span><span class="p">[</span><span class="s2">"anyOf"</span><span class="p">][</span><span class="mi">1</span><span class="p">]}]</span>
+        <span class="n">found</span><span class="p">[</span><span class="s2">"anyOf"</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="s2">"items"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"string"</span><span class="p">,</span> <span class="s2">"enum"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">OBJECTIVES</span><span class="p">)}</span>
     <span class="k">return</span> <span class="n">found</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_settings</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Return the JSON Schema of the keys a method reads beyond ``cases`` and ``plants``."""</span>
     <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="n">key</span>
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"objective"</span><span class="p">,</span> <span class="s2">"metrics"</span><span class="p">,</span> <span class="s2">"evaluations"</span><span class="p">,</span> <span class="s2">"samples"</span><span class="p">,</span> <span class="s2">"seed"</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">REQUIRED</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="p">())</span> <span class="ow">or</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">OWN</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">())</span>
+        <span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">SETTING_KEYS</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">REQUIRED</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="p">())</span> <span class="ow">or</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">OWN</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">())</span>
     <span class="p">]</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"object"</span><span class="p">,</span>
@@ -168,12 +190,14 @@
 <span class="sd">    -------</span>
 <span class="sd">    list of dict</span>
 <span class="sd">        ``{kind, use, title, description, settings}`` in a fixed order: the methods of</span>
-<span class="sd">        ``gm.Study`` (``run``, ``minimize``, ``sample``, ``sensitivity``, ``use`` ``"method"``,</span>
-<span class="sd">        the value of the ``method`` key of ``study.json``) and ``size`` (``use`` ``"prepare"``,</span>
-<span class="sd">        an entry of its ``prepare`` list). ``title`` and ``description`` are plain words for a</span>
-<span class="sd">        user. ``settings`` is the JSON Schema (draft 2020-12) of the keys the kind reads besides</span>
-<span class="sd">        ``cases`` and ``plants``: ``objective``, ``evaluations`` and ``seed`` for ``minimize``,</span>
-<span class="sd">        ``metrics``, ``samples`` and ``seed`` for ``sample``, ``metrics`` for ``sensitivity``,</span>
+<span class="sd">        ``gm.Study`` (``run``, ``minimize``, ``sample``, ``sensitivity``, ``evolve``, ``use``</span>
+<span class="sd">        ``"method"``, the value of the ``method`` key of ``study.json``) and ``size`` (``use``</span>
+<span class="sd">        ``"prepare"``, an entry of its ``prepare`` list). ``title`` and ``description`` are plain</span>
+<span class="sd">        words for a user. ``settings`` is the JSON Schema (draft 2020-12) of the keys the kind</span>
+<span class="sd">        reads besides ``cases`` and ``plants``: ``objective``, ``evaluations`` and ``seed`` for</span>
+<span class="sd">        ``minimize``, ``metrics``, ``samples`` and ``seed`` for ``sample``, ``metrics`` for</span>
+<span class="sd">        ``sensitivity``, ``objectives``, ``evaluations``, ``population``, ``seed`` and ``polish``</span>
+<span class="sd">        for ``evolve``,</span>
 <span class="sd">        none for the others. ``required`` lists those the kind cannot do without; ``objective``</span>
 <span class="sd">        lists the metrics worth minimising (``gm.evaluate.metrics()``) and ``metrics`` those that a</span>
 <span class="sd">        study reads. Plain JSON, a new list on each call.</span>

@@ -1,0 +1,747 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.study.evolve &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../codedocumentation/gemini.html">gemini</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">gemini.study.evolve</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for gemini.study.evolve</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Search of the structures and the values a plant states, by a genetic algorithm (NSGA-II)."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini</span><span class="w"> </span><span class="kn">import</span> <span class="n">units</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini._utils.jsonable</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_plain</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.engine.check</span><span class="w"> </span><span class="kn">import</span> <span class="n">check</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ValidationError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.errors.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">raise_issues</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.plants</span><span class="w"> </span><span class="kn">import</span> <span class="n">Plant</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.plants._utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">superstructure</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.plants._utils.resize</span><span class="w"> </span><span class="kn">import</span> <span class="n">resized</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">genetic</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.parallel</span><span class="w"> </span><span class="kn">import</span> <span class="n">mapped_batches</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.progress</span><span class="w"> </span><span class="kn">import</span> <span class="n">counting</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.shared</span><span class="w"> </span><span class="kn">import</span> <span class="n">Shared</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.shown</span><span class="w"> </span><span class="kn">import</span> <span class="n">shown</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.target</span><span class="w"> </span><span class="kn">import</span> <span class="n">unit_of</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.trial</span><span class="w"> </span><span class="kn">import</span> <span class="n">LARGEST_VIOLATION</span><span class="p">,</span> <span class="n">checked_metric</span><span class="p">,</span> <span class="n">run_trials</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.variables</span><span class="w"> </span><span class="kn">import</span> <span class="n">DOUBLETS</span><span class="p">,</span> <span class="n">_owner</span><span class="p">,</span> <span class="n">_split</span><span class="p">,</span> <span class="n">counts</span><span class="p">,</span> <span class="n">variables</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study.minimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">NOT_A_NUMBER</span><span class="p">,</span> <span class="n">POPULATION_PER_VARIABLE</span><span class="p">,</span> <span class="n">minimize</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.units.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">measure</span>
+
+<span class="n">CROSSOVER</span> <span class="o">=</span> <span class="mf">0.9</span>
+<span class="sd">"""Probability that a pair of parents crosses: the value of Deb's NSGA-II."""</span>
+<span class="n">ETA_CROSSOVER</span> <span class="o">=</span> <span class="mf">15.0</span>
+<span class="sd">"""Distribution index of the simulated binary crossover: children near their parents."""</span>
+<span class="n">ETA_MUTATION</span> <span class="o">=</span> <span class="mf">20.0</span>
+<span class="sd">"""Distribution index of the polynomial mutation: small steps, now and then a large one."""</span>
+<span class="n">STALL</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="sd">"""Generations in a row without a new simulation after which the search ends: it has seen all."""</span>
+<span class="n">INVALID</span> <span class="o">=</span> <span class="n">LARGEST_VIOLATION</span> <span class="o">+</span> <span class="mf">1.0</span>
+<span class="sd">"""The violation of a structure whose plant is not valid: worse than any trial that ran."""</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Design</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""One design of ``evolve``: ``{structure, plant, metrics, feasible, reason, parameters}``.</span>
+
+<span class="sd">    ``structure`` is the dict ``with_structure`` takes, ``plant`` the ordinary plant that ran,</span>
+<span class="sd">    ``metrics`` ``{name: Value}`` in SI, ``feasible`` whether it meets the requirements,</span>
+<span class="sd">    ``reason`` why not (``None`` when feasible), ``parameters`` ``{name: Quantity or option}`` of</span>
+<span class="sd">    the values the search set, and ``violation`` its total relative violation (0 when feasible).</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the design as plain JSON in display units, with the plant as its plant dict."""</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"structure"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s2">"structure"</span><span class="p">]),</span>
+            <span class="s2">"feasible"</span><span class="p">:</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"feasible"</span><span class="p">],</span>
+            <span class="s2">"reason"</span><span class="p">:</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"reason"</span><span class="p">],</span>
+            <span class="s2">"violation"</span><span class="p">:</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"violation"</span><span class="p">],</span>
+            <span class="s2">"metrics"</span><span class="p">:</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">shown</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"metrics"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+            <span class="s2">"parameters"</span><span class="p">:</span> <span class="n">to_plain</span><span class="p">(</span><span class="n">shown</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s2">"parameters"</span><span class="p">])),</span>
+            <span class="s2">"plant"</span><span class="p">:</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"plant"</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"plant"</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+        <span class="p">}</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Evolution</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The result of ``evolve``: ``{front, best, history, evaluations, invalid}``, with ``to_dict``.</span>
+
+<span class="sd">    ``front`` is a list of ``Design``, ``best`` the ``Design`` best on the first objective,</span>
+<span class="sd">    ``history`` one entry per generation and ``evaluations`` the number of simulations;</span>
+<span class="sd">    ``invalid`` counts the candidates whose structure was refused before any simulation.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the result as plain JSON: every design of the front, the best and the history."""</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"best"</span><span class="p">:</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"best"</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+            <span class="s2">"front"</span><span class="p">:</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"front"</span><span class="p">]],</span>
+            <span class="s2">"history"</span><span class="p">:</span> <span class="n">to_plain</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="s2">"history"</span><span class="p">]),</span>
+            <span class="s2">"evaluations"</span><span class="p">:</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"evaluations"</span><span class="p">],</span>
+            <span class="s2">"invalid"</span><span class="p">:</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"invalid"</span><span class="p">],</span>
+        <span class="p">}</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_Space</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The genes of a superstructure: its structure, its doublet count, then its variables."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plant</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Read the genes of ``plant``: one per optional module, choice, count and variable."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plant</span> <span class="o">=</span> <span class="n">plant</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">genes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sides</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">plant</span><span class="o">.</span><span class="n">_optional</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">genetic</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">groups</span> <span class="ow">in</span> <span class="n">plant</span><span class="o">.</span><span class="n">_choices</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">genetic</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">groups</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">structural</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">genes</span><span class="p">)</span>
+        <span class="n">sizes</span> <span class="o">=</span> <span class="n">counts</span><span class="p">(</span><span class="n">plant</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">counted</span> <span class="o">=</span> <span class="n">sizes</span> <span class="o">!=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">counted</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add</span><span class="p">(</span><span class="n">DOUBLETS</span><span class="p">,</span> <span class="n">genetic</span><span class="o">.</span><span class="n">INTEGER</span><span class="p">,</span> <span class="n">sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sizes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ties</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">sizes</span><span class="p">:</span>
+            <span class="n">design</span> <span class="o">=</span> <span class="n">plant</span> <span class="k">if</span> <span class="n">count</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">resized</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">(</span><span class="n">design</span><span class="p">):</span>
+                <span class="n">tie</span> <span class="o">=</span> <span class="n">_tie</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">variable</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">tie</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ties</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ties</span><span class="p">[</span><span class="n">tie</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">genes</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">variable</span><span class="o">.</span><span class="n">options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">kind</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">genetic</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">options</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_add</span><span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">variable</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="n">variable</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">kind</span> <span class="o">=</span> <span class="n">genetic</span><span class="o">.</span><span class="n">INTEGER</span> <span class="k">if</span> <span class="n">variable</span><span class="o">.</span><span class="n">integer</span> <span class="k">else</span> <span class="n">genetic</span><span class="o">.</span><span class="n">CONTINUOUS</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_add</span><span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">variable</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="n">variable</span><span class="o">.</span><span class="n">high</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">variable</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">options</span><span class="p">,</span> <span class="n">variable</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Add a gene and what it stands for."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">genes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">genetic</span><span class="o">.</span><span class="n">Gene</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">low</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">high</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sides</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">options</span><span class="p">,</span> <span class="n">variable</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">structure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">genome</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the structure dict of a genome."""</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">gene</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sides</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="nb">int</span><span class="p">(</span><span class="n">genome</span><span class="p">[</span><span class="n">index</span><span class="p">])]</span>
+            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">gene</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">genes</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">structural</span><span class="p">])</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">genome</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the doublet count of a genome, ``None`` for a plant without one."""</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">genome</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">structural</span><span class="p">])</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">counted</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">base</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">count</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the plant on ``count`` doublets and the genes of its variables."""</span>
+        <span class="k">if</span> <span class="n">count</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+            <span class="n">design</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plant</span> <span class="k">if</span> <span class="n">count</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">resized</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plant</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+            <span class="n">found</span> <span class="o">=</span> <span class="p">[(</span><span class="bp">self</span><span class="o">.</span><span class="n">ties</span><span class="p">[</span><span class="n">_tie</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">item</span><span class="p">)],</span> <span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">(</span><span class="n">design</span><span class="p">)]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">count</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">found</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">count</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">active</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">genome</span><span class="p">,</span> <span class="n">off</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the indices of the genes that matter to a genome: those of modules that stay."""</span>
+        <span class="n">design</span><span class="p">,</span> <span class="n">found</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">genome</span><span class="p">))</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">structural</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">counted</span><span class="p">)))</span>
+        <span class="n">kept</span> <span class="o">+=</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="p">{</span><span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">found</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">_stays</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">off</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">paths</span><span class="p">)}</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">design</span><span class="p">,</span> <span class="n">found</span><span class="p">,</span> <span class="n">kept</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">genome</span><span class="p">,</span> <span class="n">found</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``{flat name: SI value}`` of the variables of a genome."""</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">found</span><span class="p">:</span>
+            <span class="n">values</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">paths</span><span class="p">,</span> <span class="n">_chosen</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">genome</span><span class="p">[</span><span class="n">index</span><span class="p">])))</span>
+        <span class="k">return</span> <span class="n">values</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the genome of the plant's own values, clipped, in ``structure``.</span>
+
+<span class="sd">        A variable that ties several modules takes the value of its first module that stays.</span>
+<span class="sd">        """</span>
+        <span class="n">genome</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">genes</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">structure</span><span class="p">):</span>
+            <span class="n">genome</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sides</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">structure</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plant</span><span class="o">.</span><span class="n">size</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"doublets"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">counted</span><span class="p">:</span>
+            <span class="n">genome</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">structural</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+                <span class="nb">max</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">genes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">structural</span><span class="p">]</span><span class="o">.</span><span class="n">low</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">genes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">structural</span><span class="p">]</span><span class="o">.</span><span class="n">high</span>
+            <span class="p">)</span>
+        <span class="n">design</span><span class="p">,</span> <span class="n">found</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">genome</span><span class="p">))</span>
+        <span class="n">off</span> <span class="o">=</span> <span class="n">superstructure</span><span class="o">.</span><span class="n">off</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plant</span><span class="p">,</span> <span class="n">structure</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">found</span><span class="p">:</span>
+            <span class="n">staying</span> <span class="o">=</span> <span class="p">[</span><span class="n">flat</span> <span class="k">for</span> <span class="n">flat</span> <span class="ow">in</span> <span class="n">variable</span><span class="o">.</span><span class="n">paths</span> <span class="k">if</span> <span class="n">_stays</span><span class="p">(</span><span class="n">flat</span><span class="p">,</span> <span class="n">off</span><span class="p">)]</span> <span class="ow">or</span> <span class="n">variable</span><span class="o">.</span><span class="n">paths</span>
+            <span class="n">path</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">parameter</span> <span class="o">=</span> <span class="n">staying</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span>
+            <span class="n">held</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">design</span><span class="o">.</span><span class="n">get_submodule</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="n">parameter</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">gene</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">genes</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">variable</span><span class="o">.</span><span class="n">options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">genome</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">variable</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">held</span><span class="p">)</span> <span class="k">if</span> <span class="n">held</span> <span class="ow">in</span> <span class="n">variable</span><span class="o">.</span><span class="n">options</span> <span class="k">else</span> <span class="mi">0</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">held</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+                <span class="n">genome</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">held</span><span class="p">),</span> <span class="n">gene</span><span class="o">.</span><span class="n">low</span><span class="p">),</span> <span class="n">gene</span><span class="o">.</span><span class="n">high</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">genome</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">gene</span><span class="o">.</span><span class="n">low</span> <span class="o">+</span> <span class="n">gene</span><span class="o">.</span><span class="n">high</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="n">genome</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_tie</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">variable</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return what makes a variable the same over doublet counts: name, owner, range, options."""</span>
+    <span class="n">flat</span> <span class="o">=</span> <span class="n">variable</span><span class="o">.</span><span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">_split</span><span class="p">(</span><span class="n">flat</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span> <span class="n">_owner</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">flat</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">variable</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="n">variable</span><span class="o">.</span><span class="n">high</span><span class="p">,</span> <span class="n">variable</span><span class="o">.</span><span class="n">options</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_stays</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">off</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return whether the module of the flat name ``path`` stays in a structure."""</span>
+    <span class="n">module</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s2">"."</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">module</span> <span class="o">==</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">module</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s2">"."</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">off</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_chosen</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">number</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the value of a variable at ``number``: a float, an integer or an option."""</span>
+    <span class="k">if</span> <span class="n">variable</span><span class="o">.</span><span class="n">options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">variable</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">number</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">number</span><span class="p">))</span> <span class="k">if</span> <span class="n">variable</span><span class="o">.</span><span class="n">integer</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">number</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_built</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">structure</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the plant of a structure with ``values`` set: the values first, then the bypass."""</span>
+    <span class="n">valued</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">design</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">flat</span><span class="p">,</span> <span class="n">number</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">path</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">parameter</span> <span class="o">=</span> <span class="n">flat</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span>
+        <span class="n">valued</span><span class="o">.</span><span class="n">_set_si_params</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="p">{</span><span class="n">parameter</span><span class="p">:</span> <span class="n">number</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">superstructure</span><span class="o">.</span><span class="n">concrete</span><span class="p">(</span><span class="n">valued</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">Plant</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_evaluated</span><span class="p">(</span><span class="n">shared</span><span class="p">,</span> <span class="n">items</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the outcome ``(metrics, reason, violation)`` of each ``(design, values, structure)``.</span>
+
+<span class="sd">    It runs in a worker process when the runtime has several.</span>
+<span class="sd">    """</span>
+    <span class="n">case</span><span class="p">,</span> <span class="n">plan</span><span class="p">,</span> <span class="n">names</span> <span class="o">=</span> <span class="n">shared</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">design</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">structure</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+        <span class="n">plant</span> <span class="o">=</span> <span class="n">_built</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">structure</span><span class="p">)</span>
+        <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">run_trials</span><span class="p">(</span><span class="n">Shared</span><span class="p">(</span><span class="n">plant</span><span class="p">),</span> <span class="n">case</span><span class="p">,</span> <span class="n">plan</span><span class="p">,</span> <span class="p">[{}],</span> <span class="n">names</span><span class="p">,</span> <span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">found</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_judged</span><span class="p">(</span><span class="n">outcome</span><span class="p">,</span> <span class="n">names</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``(metrics, reason, violation)`` with an objective that is no number infeasible."""</span>
+    <span class="n">metrics</span><span class="p">,</span> <span class="n">reason</span><span class="p">,</span> <span class="n">violation</span> <span class="o">=</span> <span class="n">outcome</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">measure</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">,</span> <span class="n">reason</span><span class="p">))</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">if</span> <span class="n">reason</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">value</span><span class="p">)):</span>
+            <span class="n">reason</span><span class="p">,</span> <span class="n">violation</span> <span class="o">=</span> <span class="n">metrics</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">reason</span> <span class="ow">or</span> <span class="n">NOT_A_NUMBER</span><span class="p">,</span> <span class="n">LARGEST_VIOLATION</span>
+    <span class="k">return</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">reason</span><span class="p">,</span> <span class="n">violation</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_Archive</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Every candidate the search judged, by the key of its active genes."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">plan</span><span class="p">,</span> <span class="n">names</span><span class="p">,</span> <span class="n">signs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Judge candidates of ``space`` on ``case``, reading ``names`` with their ``signs``."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">case</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">plan</span> <span class="o">=</span> <span class="n">space</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">plan</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">signs</span> <span class="o">=</span> <span class="n">names</span><span class="p">,</span> <span class="n">signs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outcomes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">entries</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{},</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evaluations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">invalid</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">design</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">count</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return whether a structure gives a valid plant, judged once per count."""</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">valid</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">superstructure</span><span class="o">.</span><span class="n">is_valid</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">Plant</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">judge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">genomes</span><span class="p">,</span> <span class="n">budget</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the objectives and violations of ``genomes``, simulating at most ``budget``."""</span>
+        <span class="n">keys</span><span class="p">,</span> <span class="n">waiting</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">genome</span> <span class="ow">in</span> <span class="n">genomes</span><span class="p">:</span>
+            <span class="n">structure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">genome</span><span class="p">)</span>
+            <span class="n">off</span> <span class="o">=</span> <span class="n">superstructure</span><span class="o">.</span><span class="n">off</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">plant</span><span class="p">,</span> <span class="n">structure</span><span class="p">)</span>
+            <span class="n">design</span><span class="p">,</span> <span class="n">found</span><span class="p">,</span> <span class="n">active</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">active</span><span class="p">(</span><span class="n">genome</span><span class="p">,</span> <span class="n">off</span><span class="p">)</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">genetic</span><span class="o">.</span><span class="n">key</span><span class="p">(</span><span class="n">genome</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">genes</span><span class="p">,</span> <span class="n">active</span><span class="p">)</span>
+            <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outcomes</span> <span class="ow">or</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">waiting</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validity</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">genome</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">invalid</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">outcomes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">waiting</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">budget</span><span class="p">:</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="n">genome</span><span class="p">,</span> <span class="n">found</span><span class="p">)</span>
+                <span class="n">waiting</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">genome</span><span class="p">)</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">entry</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">waiting</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+        <span class="n">shared</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">case</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">plan</span><span class="p">,</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">outcome</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">waiting</span><span class="p">,</span> <span class="n">mapped_batches</span><span class="p">(</span><span class="n">_evaluated</span><span class="p">,</span> <span class="n">shared</span><span class="p">,</span> <span class="n">items</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">outcomes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_judged</span><span class="p">(</span><span class="n">outcome</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">entries</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">waiting</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evaluations</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">keys</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">scores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keys</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``(objectives, violations)`` of judged keys; one not judged is the worst."""</span>
+        <span class="n">objectives</span><span class="p">,</span> <span class="n">violations</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="n">outcome</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outcomes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">outcome</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">objectives</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">))</span>
+                <span class="n">violations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">INVALID</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">metrics</span><span class="p">,</span> <span class="n">reason</span><span class="p">,</span> <span class="n">violation</span> <span class="o">=</span> <span class="n">outcome</span>
+            <span class="n">objectives</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="k">if</span> <span class="n">reason</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">sign</span> <span class="o">*</span> <span class="n">metrics</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+                    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">sign</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">signs</span><span class="p">)</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">violations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">violation</span> <span class="k">if</span> <span class="n">reason</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">objectives</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">violations</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">design</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the ``Design`` of a judged key."""</span>
+        <span class="n">design</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">genome</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">entries</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="n">metrics</span><span class="p">,</span> <span class="n">reason</span><span class="p">,</span> <span class="n">violation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outcomes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">_design</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">case</span><span class="p">,</span>
+            <span class="n">design</span><span class="p">,</span>
+            <span class="n">values</span><span class="p">,</span>
+            <span class="n">structure</span><span class="p">,</span>
+            <span class="n">genome</span><span class="p">,</span>
+            <span class="n">outcome</span><span class="o">=</span><span class="p">(</span>
+                <span class="n">metrics</span><span class="p">,</span>
+                <span class="n">reason</span><span class="p">,</span>
+                <span class="n">violation</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_design</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">design</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">genome</span><span class="p">,</span> <span class="n">outcome</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the ``Design`` of a candidate: its plant, its metrics and its parameters."""</span>
+    <span class="n">metrics</span><span class="p">,</span> <span class="n">reason</span><span class="p">,</span> <span class="n">violation</span> <span class="o">=</span> <span class="n">outcome</span>
+    <span class="n">plant</span> <span class="o">=</span> <span class="n">_built</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">structure</span><span class="p">)</span>
+    <span class="n">parameters</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">structure</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">space</span><span class="o">.</span><span class="n">counted</span><span class="p">:</span>
+        <span class="n">parameters</span><span class="p">[</span><span class="n">DOUBLETS</span><span class="p">]</span> <span class="o">=</span> <span class="n">units</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">genome</span><span class="p">),</span> <span class="s2">"-"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">space</span><span class="o">.</span><span class="n">base</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">genome</span><span class="p">))[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">_stays</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">superstructure</span><span class="o">.</span><span class="n">off</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">plant</span><span class="p">,</span> <span class="n">structure</span><span class="p">))</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">variable</span><span class="o">.</span><span class="n">paths</span>
+        <span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">chosen</span> <span class="o">=</span> <span class="n">_chosen</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">genome</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">variable</span><span class="o">.</span><span class="n">options</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">chosen</span> <span class="o">=</span> <span class="n">units</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">chosen</span><span class="p">,</span> <span class="n">unit_of</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">variable</span><span class="o">.</span><span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">parameters</span><span class="p">[</span><span class="n">variable</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">chosen</span>
+    <span class="k">return</span> <span class="n">Design</span><span class="p">(</span>
+        <span class="n">structure</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">structure</span><span class="p">),</span>
+        <span class="n">plant</span><span class="o">=</span><span class="n">plant</span><span class="p">,</span>
+        <span class="n">metrics</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
+        <span class="n">feasible</span><span class="o">=</span><span class="n">reason</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">reason</span><span class="o">=</span><span class="n">reason</span><span class="p">,</span>
+        <span class="n">violation</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">violation</span><span class="p">)</span> <span class="k">if</span> <span class="n">reason</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_objectives</span><span class="p">(</span><span class="n">objectives</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``(names, signs)`` of one objective or a list of them; a ``-`` maximises."""</span>
+    <span class="n">given</span> <span class="o">=</span> <span class="p">[</span><span class="n">objectives</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">objectives</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">objectives</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">given</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span>
+        <span class="ow">or</span> <span class="ow">not</span> <span class="n">given</span>
+        <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">given</span><span class="p">)</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"study.evolve: objectives = </span><span class="si">{</span><span class="n">objectives</span><span class="si">!r}</span><span class="s2">; expected a metric or a list of metrics"</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="s2">"objectives"</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_value"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">checked_metric</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">removeprefix</span><span class="p">(</span><span class="s2">"-"</span><span class="p">))</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">given</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">names</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"study.evolve: objectives = </span><span class="si">{</span><span class="n">given</span><span class="si">!r}</span><span class="s2">; expected each metric once"</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="s2">"objectives"</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_value"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">names</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.0</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"-"</span><span class="p">)</span> <span class="k">else</span> <span class="mf">1.0</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">given</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_whole</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">low</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``value`` when it is an integer of at least ``low``, else raise."""</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="n">low</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"study.evolve: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">; expected an integer of at least </span><span class="si">{</span><span class="n">low</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_value"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_polished</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="n">designs</span><span class="p">,</span> <span class="n">polish</span><span class="p">,</span> <span class="n">population</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">plan</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``(designs, simulations)`` of a ``minimize`` of each of the first ``polish``.</span>
+
+<span class="sd">    Each search starts from the design and searches the ranges its plant keeps on the first</span>
+<span class="sd">    objective, ``population`` simulations for each doublet count; its best plant is run once</span>
+<span class="sd">    more to read every objective, and joins the front.</span>
+<span class="sd">    """</span>
+    <span class="n">found</span><span class="p">,</span> <span class="n">simulations</span> <span class="o">=</span> <span class="p">[],</span> <span class="mi">0</span>
+    <span class="n">name</span><span class="p">,</span> <span class="n">sign</span> <span class="o">=</span> <span class="n">archive</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">archive</span><span class="o">.</span><span class="n">signs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">design</span> <span class="ow">in</span> <span class="n">designs</span><span class="p">[:</span><span class="n">polish</span><span class="p">]:</span>
+        <span class="n">plant</span> <span class="o">=</span> <span class="n">design</span><span class="p">[</span><span class="s2">"plant"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">variables</span><span class="p">(</span><span class="n">plant</span><span class="p">)</span> <span class="ow">and</span> <span class="n">counts</span><span class="p">(</span><span class="n">plant</span><span class="p">)</span> <span class="o">==</span> <span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
+            <span class="k">continue</span>
+        <span class="n">objective</span> <span class="o">=</span> <span class="n">name</span> <span class="k">if</span> <span class="n">sign</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"-</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">search</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">archive</span><span class="o">.</span><span class="n">case</span><span class="p">,</span> <span class="n">objective</span><span class="p">,</span> <span class="n">population</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">plan</span><span class="o">=</span><span class="n">plan</span><span class="p">)</span>
+        <span class="n">simulations</span> <span class="o">+=</span> <span class="n">search</span><span class="p">[</span><span class="s2">"evaluations"</span><span class="p">]</span>
+        <span class="n">best</span> <span class="o">=</span> <span class="n">search</span><span class="p">[</span><span class="s2">"best"</span><span class="p">][</span><span class="s2">"plant"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">best</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">outcome</span> <span class="o">=</span> <span class="n">run_trials</span><span class="p">(</span><span class="n">Shared</span><span class="p">(</span><span class="n">best</span><span class="p">),</span> <span class="n">archive</span><span class="o">.</span><span class="n">case</span><span class="p">,</span> <span class="n">plan</span><span class="p">,</span> <span class="p">[{}],</span> <span class="nb">set</span><span class="p">(</span><span class="n">archive</span><span class="o">.</span><span class="n">names</span><span class="p">),</span> <span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">simulations</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">metrics</span><span class="p">,</span> <span class="n">reason</span><span class="p">,</span> <span class="n">violation</span> <span class="o">=</span> <span class="n">_judged</span><span class="p">(</span><span class="n">outcome</span><span class="p">,</span> <span class="n">archive</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+        <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">Design</span><span class="p">(</span>
+                <span class="n">structure</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">design</span><span class="p">[</span><span class="s2">"structure"</span><span class="p">]),</span>
+                <span class="n">plant</span><span class="o">=</span><span class="n">best</span><span class="p">,</span>
+                <span class="n">metrics</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
+                <span class="n">feasible</span><span class="o">=</span><span class="n">reason</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">reason</span><span class="o">=</span><span class="n">reason</span><span class="p">,</span>
+                <span class="n">violation</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">violation</span><span class="p">)</span> <span class="k">if</span> <span class="n">reason</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+                <span class="n">parameters</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">design</span><span class="p">[</span><span class="s2">"parameters"</span><span class="p">])</span>
+                <span class="o">|</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">search</span><span class="p">[</span><span class="s2">"best"</span><span class="p">]</span><span class="o">.</span><span class="n">parts</span><span class="p">[</span><span class="s2">"parameters"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">found</span><span class="p">,</span> <span class="n">simulations</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_final</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="n">designs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``(front, best)`` of the designs: the first front, the best on the first objective."""</span>
+    <span class="n">signs</span> <span class="o">=</span> <span class="n">archive</span><span class="o">.</span><span class="n">signs</span>
+    <span class="n">objectives</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="p">[</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">item</span><span class="p">[</span><span class="s2">"feasible"</span><span class="p">]</span> <span class="k">else</span> <span class="n">sign</span> <span class="o">*</span> <span class="n">item</span><span class="p">[</span><span class="s2">"metrics"</span><span class="p">][</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">sign</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">archive</span><span class="o">.</span><span class="n">names</span><span class="p">,</span> <span class="n">signs</span><span class="p">)</span>
+            <span class="p">]</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">designs</span>
+        <span class="p">],</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">violations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">item</span><span class="p">[</span><span class="s2">"violation"</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">designs</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">front</span><span class="p">,</span> <span class="n">crowding</span> <span class="o">=</span> <span class="n">genetic</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">objectives</span><span class="p">,</span> <span class="n">violations</span><span class="p">)</span>
+    <span class="n">ordered</span> <span class="o">=</span> <span class="p">[</span><span class="n">index</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">genetic</span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="n">front</span><span class="p">,</span> <span class="n">crowding</span><span class="p">)</span> <span class="k">if</span> <span class="n">front</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">archive</span><span class="o">.</span><span class="n">names</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">violations</span><span class="p">[</span><span class="n">ordered</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">ordered</span> <span class="o">=</span> <span class="n">ordered</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">ordered</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">index</span><span class="p">:</span> <span class="n">objectives</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">chosen</span> <span class="o">=</span> <span class="p">[</span><span class="n">designs</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">]</span>
+    <span class="n">best</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+        <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">designs</span><span class="p">)),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">index</span><span class="p">:</span> <span class="p">(</span><span class="n">violations</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">objectives</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">index</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">chosen</span><span class="p">,</span> <span class="n">designs</span><span class="p">[</span><span class="n">best</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="evolve">
+<a class="viewcode-back" href="../../../codedocumentation/gemini.study.evolve.html#gemini.study.evolve">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">evolve</span><span class="p">(</span>
+    <span class="n">plant</span><span class="p">,</span>
+    <span class="n">case</span><span class="p">,</span>
+    <span class="n">objectives</span><span class="p">,</span>
+    <span class="n">evaluations</span><span class="p">,</span>
+    <span class="n">seed</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">population</span><span class="p">,</span>
+    <span class="n">polish</span><span class="p">,</span>
+    <span class="n">plan</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">on_progress</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the best structures and designs of a superstructure, by a genetic algorithm.</span>
+
+<span class="sd">    The genome holds every choice the plant states: whether each optional module is on</span>
+<span class="sd">    (``set_optional``), the group of each choice (``set_choice``), the number of doublets when</span>
+<span class="sd">    ``size.doublets`` has a range, and the variables of ``gm.study.minimize`` (every ``range``</span>
+<span class="sd">    and ``options`` of a leaf, tied by role). A gene of a module that is off is ignored. With one</span>
+<span class="sd">    objective it is a genetic algorithm; with two or more it is NSGA-II: the candidates are</span>
+<span class="sd">    ranked in fronts of non-domination and, within a front, by crowding distance. A feasible</span>
+<span class="sd">    candidate beats every infeasible one, and infeasible ones are ranked by their violation, as</span>
+<span class="sd">    in ``minimize``. Parents are chosen by binary tournament; continuous and integer genes cross</span>
+<span class="sd">    by simulated binary crossover and mutate by polynomial mutation, the choices cross uniformly</span>
+<span class="sd">    and mutate by a random reset; each generation keeps the best of the parents and children.</span>
+
+<span class="sd">    The first generation is the plant's own values (clipped to the ranges) in each valid structure,</span>
+<span class="sd">    in the order of ``plant.structures()`` while they fit, then random candidates. A candidate whose</span>
+<span class="sd">    structure gives no valid plant (``plant.with_structure(...).check()`` has an error) is</span>
+<span class="sd">    refused before any simulation and counted in ``invalid``. A candidate equal to one judged</span>
+<span class="sd">    before in the genes that matter is not simulated again. The trials of a generation run in the</span>
+<span class="sd">    worker processes of ``gm.runtime.settings(processes=n)``; the same seed gives the same result,</span>
+<span class="sd">    whatever ``n``. Each trial is judged as in ``minimize``. The search ends when ``evaluations``</span>
+<span class="sd">    simulations have run, or after a number of generations in a row (``STALL``) without a new one.</span>
+
+<span class="sd">    With ``polish`` above 0, each of the first ``polish`` designs of the result (ordered by the</span>
+<span class="sd">    first objective) is searched again by ``gm.study.minimize`` in the ranges its plant keeps,</span>
+<span class="sd">    on the first objective, with ``population`` evaluations for each doublet count (the budget of</span>
+<span class="sd">    ``minimize``) and the same seed; its best plant is run once more for every objective and joins</span>
+<span class="sd">    the designs. These simulations come on top of ``evaluations`` and count in the result.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    plant : Plant</span>
+<span class="sd">        A plant with values, with optional modules and choices and the ranges and options to</span>
+<span class="sd">        search; a plant with neither is searched in its values alone.</span>
+<span class="sd">    case : Case</span>
+<span class="sd">        What the plant is asked to do, as for ``minimize``.</span>
+<span class="sd">    objectives : str or list of str</span>
+<span class="sd">        The metric to minimise, or several (``["lcts", "co2"]``); a leading ``"-"`` maximises.</span>
+<span class="sd">    evaluations : int</span>
+<span class="sd">        The largest number of simulations of the genetic search, at least ``population``.</span>
+<span class="sd">    seed : int</span>
+<span class="sd">        Seed of the search; the same call gives the same result.</span>
+<span class="sd">    population : int</span>
+<span class="sd">        Candidates in each generation, at least 2.</span>
+<span class="sd">    polish : int</span>
+<span class="sd">        The number of designs searched again by ``minimize``; 0 for none. ``population`` must</span>
+<span class="sd">        then be at least five per variable of the plant, the budget ``minimize`` needs.</span>
+<span class="sd">    plan : DataFrame, optional</span>
+<span class="sd">        The run input held fixed over the trials, as for ``minimize``.</span>
+<span class="sd">    on_progress : callable, optional</span>
+<span class="sd">        ``on_progress(done, total)`` after each finished trial of the genetic search, ``total``</span>
+<span class="sd">        being ``evaluations``; ``done`` reaches it when the search ends, before ``polish``.</span>
+<span class="sd">        Raising ``gm.errors.Cancelled`` stops the search.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Evolution</span>
+<span class="sd">        ``{front, best, history, evaluations, invalid}``: ``front`` the designs no other beats</span>
+<span class="sd">        on every objective (the best one alone for one objective), each a ``Design``</span>
+<span class="sd">        ``{structure, plant, metrics, feasible, reason, violation, parameters}``; ``best`` the</span>
+<span class="sd">        design best on the first objective (the least violating one when none is feasible);</span>
+<span class="sd">        ``history`` per generation ``{generation, evaluations, best, front}``: the simulations so</span>
+<span class="sd">        far, the best value of each objective among the feasible candidates so far (``None``</span>
+<span class="sd">        without one) and the size of the first front; ``evaluations`` the number of simulations;</span>
+<span class="sd">        ``invalid`` the candidates refused for their structure.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValidationError</span>
+<span class="sd">        The issues of ``gm.check``; ``invalid_design`` when no structure is valid or the plant</span>
+<span class="sd">        states nothing to search; ``invalid_value`` for a setting out of its range.</span>
+<span class="sd">    """</span>
+    <span class="n">raise_issues</span><span class="p">(</span><span class="n">check</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">))</span>
+    <span class="n">names</span><span class="p">,</span> <span class="n">signs</span> <span class="o">=</span> <span class="n">_objectives</span><span class="p">(</span><span class="n">objectives</span><span class="p">)</span>
+    <span class="n">space</span> <span class="o">=</span> <span class="n">_checked</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">evaluations</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">population</span><span class="p">,</span> <span class="n">polish</span><span class="p">)</span>
+    <span class="n">archive</span> <span class="o">=</span> <span class="n">_Archive</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">plan</span><span class="p">,</span> <span class="n">names</span><span class="p">,</span> <span class="n">signs</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">counting</span><span class="p">(</span><span class="n">on_progress</span><span class="p">,</span> <span class="n">evaluations</span><span class="p">)</span> <span class="k">as</span> <span class="n">count</span><span class="p">:</span>
+        <span class="n">history</span> <span class="o">=</span> <span class="n">_search</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">),</span> <span class="n">population</span><span class="p">,</span> <span class="n">evaluations</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">count</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">count</span><span class="o">.</span><span class="n">reach</span><span class="p">(</span><span class="n">evaluations</span><span class="p">)</span>
+    <span class="n">designs</span> <span class="o">=</span> <span class="p">[</span><span class="n">archive</span><span class="o">.</span><span class="n">design</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">archive</span><span class="o">.</span><span class="n">entries</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">designs</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="s2">"study.evolve: no candidate was simulated; every structure drawn was refused"</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="s2">"optional"</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_design"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">polished</span><span class="p">,</span> <span class="n">extra</span> <span class="o">=</span> <span class="n">_polished</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="n">_ordered</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="n">designs</span><span class="p">),</span> <span class="n">polish</span><span class="p">,</span> <span class="n">population</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">plan</span><span class="p">)</span>
+    <span class="n">front</span><span class="p">,</span> <span class="n">best</span> <span class="o">=</span> <span class="n">_final</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="n">designs</span> <span class="o">+</span> <span class="n">polished</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Evolution</span><span class="p">(</span>
+        <span class="n">front</span><span class="o">=</span><span class="n">front</span><span class="p">,</span>
+        <span class="n">best</span><span class="o">=</span><span class="n">best</span><span class="p">,</span>
+        <span class="n">history</span><span class="o">=</span><span class="n">history</span><span class="p">,</span>
+        <span class="n">evaluations</span><span class="o">=</span><span class="n">archive</span><span class="o">.</span><span class="n">evaluations</span> <span class="o">+</span> <span class="n">extra</span><span class="p">,</span>
+        <span class="n">invalid</span><span class="o">=</span><span class="n">archive</span><span class="o">.</span><span class="n">invalid</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_checked</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">evaluations</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">population</span><span class="p">,</span> <span class="n">polish</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the ``_Space`` of ``plant`` after checking the settings of ``evolve``."""</span>
+    <span class="n">_whole</span><span class="p">(</span><span class="s2">"population"</span><span class="p">,</span> <span class="n">population</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">_whole</span><span class="p">(</span><span class="s2">"evaluations"</span><span class="p">,</span> <span class="n">evaluations</span><span class="p">,</span> <span class="n">population</span><span class="p">)</span>
+    <span class="n">_whole</span><span class="p">(</span><span class="s2">"polish"</span><span class="p">,</span> <span class="n">polish</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"study.evolve: seed = </span><span class="si">{</span><span class="n">seed</span><span class="si">!r}</span><span class="s2">; expected an integer"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"seed"</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_value"</span>
+        <span class="p">)</span>
+    <span class="n">space</span> <span class="o">=</span> <span class="n">_Space</span><span class="p">(</span><span class="n">plant</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">space</span><span class="o">.</span><span class="n">genes</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="s2">"study.evolve: the plant states no optional module, choice, range or options; expected "</span>
+            <span class="s2">"at least one to search"</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="s2">"params"</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_design"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">polish</span> <span class="ow">and</span> <span class="n">population</span> <span class="o">&lt;</span> <span class="n">POPULATION_PER_VARIABLE</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">genes</span><span class="p">)</span> <span class="o">-</span> <span class="n">space</span><span class="o">.</span><span class="n">structural</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"study.evolve: population = </span><span class="si">{</span><span class="n">population</span><span class="si">}</span><span class="s2">; polish searches with minimize, which needs "</span>
+            <span class="sa">f</span><span class="s2">"at least </span><span class="si">{</span><span class="n">POPULATION_PER_VARIABLE</span><span class="si">}</span><span class="s2"> per variable"</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="s2">"population"</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_value"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">space</span><span class="o">.</span><span class="n">valid</span> <span class="o">=</span> <span class="n">superstructure</span><span class="o">.</span><span class="n">valid</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">Plant</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">space</span><span class="o">.</span><span class="n">valid</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="s2">"study.evolve: no structure of the optional modules and choices gives a valid plant"</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="s2">"optional"</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_design"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">space</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_search</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">population</span><span class="p">,</span> <span class="n">evaluations</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Run the generations until the budget is spent or the search stalls; return the history.</span>
+
+<span class="sd">    The draws are, in order: the random part of the first generation, then for each generation</span>
+<span class="sd">    the two tournaments and the children (``genetic.offspring``).</span>
+<span class="sd">    """</span>
+    <span class="n">genes</span> <span class="o">=</span> <span class="n">archive</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">genes</span>
+    <span class="n">own</span> <span class="o">=</span> <span class="p">[</span><span class="n">archive</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">archive</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">valid</span><span class="p">[:</span><span class="n">population</span><span class="p">]]</span>
+    <span class="n">members</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">own</span><span class="p">,</span> <span class="n">genetic</span><span class="o">.</span><span class="n">random_genomes</span><span class="p">(</span><span class="n">genes</span><span class="p">,</span> <span class="n">population</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">own</span><span class="p">),</span> <span class="n">rng</span><span class="p">)])</span>
+    <span class="n">keys</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">archive</span><span class="o">.</span><span class="n">judge</span><span class="p">(</span><span class="n">members</span><span class="p">,</span> <span class="n">evaluations</span><span class="p">)</span>
+    <span class="n">history</span><span class="p">,</span> <span class="n">stalled</span> <span class="o">=</span> <span class="p">[</span><span class="n">_generation</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">keys</span><span class="p">)],</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">archive</span><span class="o">.</span><span class="n">evaluations</span> <span class="o">&lt;</span> <span class="n">evaluations</span> <span class="ow">and</span> <span class="n">stalled</span> <span class="o">&lt;</span> <span class="n">STALL</span><span class="p">:</span>
+        <span class="n">front</span><span class="p">,</span> <span class="n">crowding</span> <span class="o">=</span> <span class="n">genetic</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="o">*</span><span class="n">archive</span><span class="o">.</span><span class="n">scores</span><span class="p">(</span><span class="n">keys</span><span class="p">))</span>
+        <span class="n">first</span> <span class="o">=</span> <span class="n">genetic</span><span class="o">.</span><span class="n">tournament</span><span class="p">(</span><span class="n">front</span><span class="p">,</span> <span class="n">crowding</span><span class="p">,</span> <span class="n">population</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+        <span class="n">second</span> <span class="o">=</span> <span class="n">genetic</span><span class="o">.</span><span class="n">tournament</span><span class="p">(</span><span class="n">front</span><span class="p">,</span> <span class="n">crowding</span><span class="p">,</span> <span class="n">population</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+        <span class="n">children</span> <span class="o">=</span> <span class="n">genetic</span><span class="o">.</span><span class="n">offspring</span><span class="p">(</span>
+            <span class="n">members</span><span class="p">[</span><span class="n">first</span><span class="p">],</span>
+            <span class="n">members</span><span class="p">[</span><span class="n">second</span><span class="p">],</span>
+            <span class="n">genes</span><span class="p">,</span>
+            <span class="n">rng</span><span class="p">,</span>
+            <span class="n">crossover</span><span class="o">=</span><span class="n">CROSSOVER</span><span class="p">,</span>
+            <span class="n">eta_crossover</span><span class="o">=</span><span class="n">ETA_CROSSOVER</span><span class="p">,</span>
+            <span class="n">eta_mutation</span><span class="o">=</span><span class="n">ETA_MUTATION</span><span class="p">,</span>
+            <span class="n">mutation</span><span class="o">=</span><span class="mf">1.0</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">genes</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">child_keys</span><span class="p">,</span> <span class="n">ran</span> <span class="o">=</span> <span class="n">archive</span><span class="o">.</span><span class="n">judge</span><span class="p">(</span><span class="n">children</span><span class="p">,</span> <span class="n">evaluations</span> <span class="o">-</span> <span class="n">archive</span><span class="o">.</span><span class="n">evaluations</span><span class="p">)</span>
+        <span class="n">stalled</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">ran</span> <span class="k">else</span> <span class="n">stalled</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">pooled</span><span class="p">,</span> <span class="n">pooled_keys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">members</span><span class="p">,</span> <span class="n">children</span><span class="p">]),</span> <span class="n">keys</span> <span class="o">+</span> <span class="n">child_keys</span>
+        <span class="n">front</span><span class="p">,</span> <span class="n">crowding</span> <span class="o">=</span> <span class="n">genetic</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="o">*</span><span class="n">archive</span><span class="o">.</span><span class="n">scores</span><span class="p">(</span><span class="n">pooled_keys</span><span class="p">))</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="n">genetic</span><span class="o">.</span><span class="n">order</span><span class="p">(</span><span class="n">front</span><span class="p">,</span> <span class="n">crowding</span><span class="p">)[:</span><span class="n">population</span><span class="p">]</span>
+        <span class="n">members</span><span class="p">,</span> <span class="n">keys</span> <span class="o">=</span> <span class="n">pooled</span><span class="p">[</span><span class="n">kept</span><span class="p">],</span> <span class="p">[</span><span class="n">pooled_keys</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">kept</span><span class="p">]</span>
+        <span class="n">history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_generation</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="p">),</span> <span class="n">keys</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">history</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ordered</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="n">designs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the designs best first on the first objective, the feasible ones first."""</span>
+    <span class="n">name</span><span class="p">,</span> <span class="n">sign</span> <span class="o">=</span> <span class="n">archive</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">archive</span><span class="o">.</span><span class="n">signs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="n">designs</span><span class="p">,</span>
+        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">item</span><span class="p">[</span><span class="s2">"violation"</span><span class="p">],</span>
+            <span class="n">sign</span> <span class="o">*</span> <span class="n">item</span><span class="p">[</span><span class="s2">"metrics"</span><span class="p">][</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">"feasible"</span><span class="p">]</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_generation</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="n">number</span><span class="p">,</span> <span class="n">keys</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the history entry of a generation: simulations so far, best values, front size."""</span>
+    <span class="n">feasible</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">archive</span><span class="o">.</span><span class="n">outcomes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">archive</span><span class="o">.</span><span class="n">outcomes</span>
+        <span class="k">if</span> <span class="n">archive</span><span class="o">.</span><span class="n">outcomes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">archive</span><span class="o">.</span><span class="n">outcomes</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
+    <span class="p">]</span>
+    <span class="n">best</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">sign</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">archive</span><span class="o">.</span><span class="n">names</span><span class="p">,</span> <span class="n">archive</span><span class="o">.</span><span class="n">signs</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">sign</span> <span class="o">*</span> <span class="n">outcome</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">outcome</span> <span class="ow">in</span> <span class="n">feasible</span><span class="p">]</span>
+        <span class="n">best</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">values</span> <span class="k">else</span> <span class="n">sign</span> <span class="o">*</span> <span class="nb">min</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="n">objectives</span><span class="p">,</span> <span class="n">violations</span> <span class="o">=</span> <span class="n">archive</span><span class="o">.</span><span class="n">scores</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">keys</span><span class="p">)))</span>
+    <span class="n">front</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">genetic</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">objectives</span><span class="p">,</span> <span class="n">violations</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"generation"</span><span class="p">:</span> <span class="n">number</span><span class="p">,</span>
+        <span class="s2">"evaluations"</span><span class="p">:</span> <span class="n">archive</span><span class="o">.</span><span class="n">evaluations</span><span class="p">,</span>
+        <span class="s2">"best"</span><span class="p">:</span> <span class="n">best</span><span class="p">,</span>
+        <span class="s2">"front"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">front</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">violations</span> <span class="o">==</span> <span class="mi">0</span><span class="p">))),</span>
+    <span class="p">}</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

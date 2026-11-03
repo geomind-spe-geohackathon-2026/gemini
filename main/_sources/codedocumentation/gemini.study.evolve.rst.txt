@@ -1,0 +1,6 @@
+gemini.study.evolve
+===================
+
+.. currentmodule:: gemini.study
+
+.. autofunction:: evolve

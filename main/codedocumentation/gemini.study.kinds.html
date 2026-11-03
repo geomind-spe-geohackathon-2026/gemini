@@ -20,7 +20,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="gemini.study.minimize" href="gemini.study.minimize.html" />
-    <link rel="prev" title="gemini.study.calibrate" href="gemini.study.calibrate.html" /> 
+    <link rel="prev" title="gemini.study.evolve" href="gemini.study.evolve.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -58,6 +58,7 @@
 <li class="toctree-l2"><a class="reference internal" href="gemini.streams.html">gemini.streams</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="gemini.study.html">gemini.study</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="gemini.study.calibrate.html">gemini.study.calibrate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.study.evolve.html">gemini.study.evolve</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">gemini.study.kinds</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#gemini.study.kinds"><code class="docutils literal notranslate"><span class="pre">kinds()</span></code></a></li>
 </ul>
@@ -110,12 +111,14 @@
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">{kind,</span> <span class="pre">use,</span> <span class="pre">title,</span> <span class="pre">description,</span> <span class="pre">settings}</span></code> in a fixed order: the methods of
-<code class="docutils literal notranslate"><span class="pre">gm.Study</span></code> (<code class="docutils literal notranslate"><span class="pre">run</span></code>, <code class="docutils literal notranslate"><span class="pre">minimize</span></code>, <code class="docutils literal notranslate"><span class="pre">sample</span></code>, <code class="docutils literal notranslate"><span class="pre">sensitivity</span></code>, <code class="docutils literal notranslate"><span class="pre">use</span></code> <code class="docutils literal notranslate"><span class="pre">&quot;method&quot;</span></code>,
-the value of the <code class="docutils literal notranslate"><span class="pre">method</span></code> key of <code class="docutils literal notranslate"><span class="pre">study.json</span></code>) and <code class="docutils literal notranslate"><span class="pre">size</span></code> (<code class="docutils literal notranslate"><span class="pre">use</span></code> <code class="docutils literal notranslate"><span class="pre">&quot;prepare&quot;</span></code>,
-an entry of its <code class="docutils literal notranslate"><span class="pre">prepare</span></code> list). <code class="docutils literal notranslate"><span class="pre">title</span></code> and <code class="docutils literal notranslate"><span class="pre">description</span></code> are plain words for a
-user. <code class="docutils literal notranslate"><span class="pre">settings</span></code> is the JSON Schema (draft 2020-12) of the keys the kind reads besides
-<code class="docutils literal notranslate"><span class="pre">cases</span></code> and <code class="docutils literal notranslate"><span class="pre">plants</span></code>: <code class="docutils literal notranslate"><span class="pre">objective</span></code>, <code class="docutils literal notranslate"><span class="pre">evaluations</span></code> and <code class="docutils literal notranslate"><span class="pre">seed</span></code> for <code class="docutils literal notranslate"><span class="pre">minimize</span></code>,
-<code class="docutils literal notranslate"><span class="pre">metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">samples</span></code> and <code class="docutils literal notranslate"><span class="pre">seed</span></code> for <code class="docutils literal notranslate"><span class="pre">sample</span></code>, <code class="docutils literal notranslate"><span class="pre">metrics</span></code> for <code class="docutils literal notranslate"><span class="pre">sensitivity</span></code>,
+<code class="docutils literal notranslate"><span class="pre">gm.Study</span></code> (<code class="docutils literal notranslate"><span class="pre">run</span></code>, <code class="docutils literal notranslate"><span class="pre">minimize</span></code>, <code class="docutils literal notranslate"><span class="pre">sample</span></code>, <code class="docutils literal notranslate"><span class="pre">sensitivity</span></code>, <code class="docutils literal notranslate"><span class="pre">evolve</span></code>, <code class="docutils literal notranslate"><span class="pre">use</span></code>
+<code class="docutils literal notranslate"><span class="pre">&quot;method&quot;</span></code>, the value of the <code class="docutils literal notranslate"><span class="pre">method</span></code> key of <code class="docutils literal notranslate"><span class="pre">study.json</span></code>) and <code class="docutils literal notranslate"><span class="pre">size</span></code> (<code class="docutils literal notranslate"><span class="pre">use</span></code>
+<code class="docutils literal notranslate"><span class="pre">&quot;prepare&quot;</span></code>, an entry of its <code class="docutils literal notranslate"><span class="pre">prepare</span></code> list). <code class="docutils literal notranslate"><span class="pre">title</span></code> and <code class="docutils literal notranslate"><span class="pre">description</span></code> are plain
+words for a user. <code class="docutils literal notranslate"><span class="pre">settings</span></code> is the JSON Schema (draft 2020-12) of the keys the kind
+reads besides <code class="docutils literal notranslate"><span class="pre">cases</span></code> and <code class="docutils literal notranslate"><span class="pre">plants</span></code>: <code class="docutils literal notranslate"><span class="pre">objective</span></code>, <code class="docutils literal notranslate"><span class="pre">evaluations</span></code> and <code class="docutils literal notranslate"><span class="pre">seed</span></code> for
+<code class="docutils literal notranslate"><span class="pre">minimize</span></code>, <code class="docutils literal notranslate"><span class="pre">metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">samples</span></code> and <code class="docutils literal notranslate"><span class="pre">seed</span></code> for <code class="docutils literal notranslate"><span class="pre">sample</span></code>, <code class="docutils literal notranslate"><span class="pre">metrics</span></code> for
+<code class="docutils literal notranslate"><span class="pre">sensitivity</span></code>, <code class="docutils literal notranslate"><span class="pre">objectives</span></code>, <code class="docutils literal notranslate"><span class="pre">evaluations</span></code>, <code class="docutils literal notranslate"><span class="pre">population</span></code>, <code class="docutils literal notranslate"><span class="pre">seed</span></code> and <code class="docutils literal notranslate"><span class="pre">polish</span></code>
+for <code class="docutils literal notranslate"><span class="pre">evolve</span></code>,
 none for the others. <code class="docutils literal notranslate"><span class="pre">required</span></code> lists those the kind cannot do without; <code class="docutils literal notranslate"><span class="pre">objective</span></code>
 lists the metrics worth minimising (<code class="docutils literal notranslate"><span class="pre">gm.evaluate.metrics()</span></code>) and <code class="docutils literal notranslate"><span class="pre">metrics</span></code> those that a
 study reads. Plain JSON, a new list on each call.</p>
@@ -132,7 +135,7 @@ study reads. Plain JSON, a new list on each call.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="gemini.study.calibrate.html" class="btn btn-neutral float-left" title="gemini.study.calibrate" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gemini.study.evolve.html" class="btn btn-neutral float-left" title="gemini.study.evolve" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="gemini.study.minimize.html" class="btn btn-neutral float-right" title="gemini.study.minimize" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
