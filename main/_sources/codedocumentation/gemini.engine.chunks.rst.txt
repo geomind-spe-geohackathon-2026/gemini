@@ -18,6 +18,7 @@ gemini.engine.chunks
       assemble
       first_present
       merge
+      merged_column
    
    .. rubric:: Classes
 

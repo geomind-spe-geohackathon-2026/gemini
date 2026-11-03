@@ -15,6 +15,7 @@ gemini.evaluate
    coverage
    emissions
    metrics
+   missing
    report
    summary
    verdict

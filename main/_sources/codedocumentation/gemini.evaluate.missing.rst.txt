@@ -1,0 +1,6 @@
+gemini.evaluate.missing
+=======================
+
+.. currentmodule:: gemini.evaluate
+
+.. autofunction:: missing

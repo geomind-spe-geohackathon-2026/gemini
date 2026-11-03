@@ -76,6 +76,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">differential_evolution</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">gemini</span><span class="w"> </span><span class="kn">import</span> <span class="n">units</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini._utils.jsonable</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_plain</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gemini.engine.check</span><span class="w"> </span><span class="kn">import</span> <span class="n">check</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gemini.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ValidationError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gemini.errors.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">raise_issues</span>
@@ -84,7 +85,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.parallel</span><span class="w"> </span><span class="kn">import</span> <span class="n">mapped</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.progress</span><span class="w"> </span><span class="kn">import</span> <span class="n">counting</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.shared</span><span class="w"> </span><span class="kn">import</span> <span class="n">Shared</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.shown</span><span class="w"> </span><span class="kn">import</span> <span class="n">difference_names</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.shown</span><span class="w"> </span><span class="kn">import</span> <span class="n">difference_names</span><span class="p">,</span> <span class="n">shown</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.target</span><span class="w"> </span><span class="kn">import</span> <span class="n">quantity_of</span><span class="p">,</span> <span class="n">unit_of</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.trial</span><span class="w"> </span><span class="kn">import</span> <span class="n">LARGEST_VIOLATION</span><span class="p">,</span> <span class="n">checked_metric</span><span class="p">,</span> <span class="n">run_trials</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.variables</span><span class="w"> </span><span class="kn">import</span> <span class="n">DOUBLETS</span><span class="p">,</span> <span class="n">counts</span><span class="p">,</span> <span class="n">variables</span>
@@ -115,6 +116,32 @@
         <span class="n">scaled</span> <span class="o">=</span> <span class="n">sign</span> <span class="o">*</span> <span class="n">number</span>
         <span class="k">return</span> <span class="n">scaled</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">scaled</span><span class="p">))</span>
     <span class="k">return</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">violation</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">violation</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Search</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The result of ``minimize``: ``{best, feasible, history, evaluations}``, with ``to_dict``.</span>
+
+<span class="sd">    It is the dict ``minimize`` has always returned; ``to_dict`` gives its plain JSON form, the one</span>
+<span class="sd">    ``StudyResult.to_dict`` writes as ``found``, so that a caller can store or show the progress of</span>
+<span class="sd">    a search without reading its parts.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the result as plain JSON in display units, without the best plant.</span>
+
+<span class="sd">        ``best`` and each entry of ``history`` are ``{"value", "unit", ...}`` with its</span>
+<span class="sd">        ``parameters`` and ``violation``; ``best["plant"]`` is ``None`` (write the plant itself</span>
+<span class="sd">        with ``found["best"]["plant"].to_json``).</span>
+<span class="sd">        """</span>
+        <span class="n">best</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"best"</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="o">|</span> <span class="p">{</span><span class="s2">"plant"</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"best"</span><span class="p">:</span> <span class="n">best</span><span class="p">,</span>
+            <span class="s2">"feasible"</span><span class="p">:</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"feasible"</span><span class="p">],</span>
+            <span class="s2">"evaluations"</span><span class="p">:</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"evaluations"</span><span class="p">],</span>
+            <span class="s2">"history"</span><span class="p">:</span> <span class="p">[</span>
+                <span class="n">to_plain</span><span class="p">(</span><span class="n">shown</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">parts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"differences"</span><span class="p">,</span> <span class="p">())))</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"history"</span><span class="p">]</span>
+            <span class="p">],</span>
+        <span class="p">}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_entry</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">reason</span><span class="p">,</span> <span class="n">violation</span><span class="p">,</span> <span class="n">lifts</span><span class="p">):</span>
@@ -431,7 +458,8 @@
 <span class="sd">        ``parts["violation"]`` (0 when feasible) and a ``reason`` for an infeasible trial: the</span>
 <span class="sd">        first reason of its verdict (its dict), a text for a failed run.</span>
 <span class="sd">        ``evaluations`` is the number of simulations. With no trial that ran, ``best`` has no</span>
-<span class="sd">        value and no plant, and gives a ``reason``. ``to_plain`` gives the JSON form.</span>
+<span class="sd">        value and no plant, and gives a ``reason``. It is a ``Search``, a dict whose ``to_dict()``</span>
+<span class="sd">        gives the JSON form with the history.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -459,7 +487,7 @@
         <span class="k">if</span> <span class="n">count</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">count</span><span class="o">.</span><span class="n">reach</span><span class="p">(</span><span class="n">total</span><span class="p">)</span>
     <span class="n">best</span><span class="p">,</span> <span class="n">feasible</span> <span class="o">=</span> <span class="n">_best</span><span class="p">(</span><span class="n">history</span><span class="p">,</span> <span class="n">sign</span><span class="p">,</span> <span class="n">plant</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s2">"best"</span><span class="p">:</span> <span class="n">best</span><span class="p">,</span> <span class="s2">"feasible"</span><span class="p">:</span> <span class="n">feasible</span><span class="p">,</span> <span class="s2">"history"</span><span class="p">:</span> <span class="n">history</span><span class="p">,</span> <span class="s2">"evaluations"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="p">)}</span></div>
+    <span class="k">return</span> <span class="n">Search</span><span class="p">(</span><span class="n">best</span><span class="o">=</span><span class="n">best</span><span class="p">,</span> <span class="n">feasible</span><span class="o">=</span><span class="n">feasible</span><span class="p">,</span> <span class="n">history</span><span class="o">=</span><span class="n">history</span><span class="p">,</span> <span class="n">evaluations</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="p">))</span></div>
 
 </pre></div>
 

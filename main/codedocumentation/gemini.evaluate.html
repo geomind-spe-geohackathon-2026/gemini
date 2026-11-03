@@ -55,6 +55,7 @@
 <li class="toctree-l3"><a class="reference internal" href="gemini.evaluate.coverage.html">gemini.evaluate.coverage</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gemini.evaluate.emissions.html">gemini.evaluate.emissions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gemini.evaluate.metrics.html">gemini.evaluate.metrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.evaluate.missing.html">gemini.evaluate.missing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gemini.evaluate.report.html">gemini.evaluate.report</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gemini.evaluate.summary.html">gemini.evaluate.summary</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gemini.evaluate.verdict.html">gemini.evaluate.verdict</a></li>
@@ -102,7 +103,8 @@
 <p>What a finished run gave and whether it is acceptable.</p>
 <p>Grouped by job: <code class="docutils literal notranslate"><span class="pre">costs</span></code> (capex, opex, annualised cost, levelised costs, NPV, payback),
 <code class="docutils literal notranslate"><span class="pre">emissions</span></code> (CO2), <code class="docutils literal notranslate"><span class="pre">balances</span></code> (energy, mass and plant balance, and the audits of one call),
-<code class="docutils literal notranslate"><span class="pre">verdict</span></code> (bounds, requirements, failures, the verdict) and <code class="docutils literal notranslate"><span class="pre">summary</span></code> and <code class="docutils literal notranslate"><span class="pre">report</span></code> (totals,
+<code class="docutils literal notranslate"><span class="pre">missing</span></code> (the values of the economics the costs need), <code class="docutils literal notranslate"><span class="pre">verdict</span></code> (bounds,
+requirements, failures, the verdict) and <code class="docutils literal notranslate"><span class="pre">summary</span></code> and <code class="docutils literal notranslate"><span class="pre">report</span></code> (totals,
 capacities, the report and its comparison), <code class="docutils literal notranslate"><span class="pre">coverage</span></code> (what covered the demand of each day) and
 <code class="docutils literal notranslate"><span class="pre">metrics</span></code> (the metrics of a table with their display unit). Every function is
 <code class="docutils literal notranslate"><span class="pre">gm.evaluate.&lt;name&gt;</span></code>.</p>
@@ -124,13 +126,16 @@ capacities, the report and its comparison), <code class="docutils literal notran
 <tr class="row-odd"><td><p><a class="reference internal" href="gemini.evaluate.metrics.html#gemini.evaluate.metrics" title="gemini.evaluate.metrics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">metrics</span></code></a>()</p></td>
 <td><p>Return the metrics a table of results shows, each with its quantity and display unit.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gemini.evaluate.report.html#gemini.evaluate.report" title="gemini.evaluate.report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">report</span></code></a>(plant, case, results)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gemini.evaluate.missing.html#gemini.evaluate.missing" title="gemini.evaluate.missing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">missing</span></code></a>(plant, case, results)</p></td>
+<td><p>Return every value of the economics that the costs of a run need and the case lacks.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gemini.evaluate.report.html#gemini.evaluate.report" title="gemini.evaluate.report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">report</span></code></a>(plant, case, results)</p></td>
 <td><p>Return the energy, capacities, costs, CO2, requirements, verdict and failures of a run.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gemini.evaluate.summary.html#module-gemini.evaluate.summary" title="gemini.evaluate.summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gemini.evaluate.summary.html#module-gemini.evaluate.summary" title="gemini.evaluate.summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary</span></code></a></p></td>
 <td><p>What a finished run gave: the totals of its flows and the capacities of the plant.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gemini.evaluate.verdict.html#gemini.evaluate.verdict" title="gemini.evaluate.verdict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">verdict</span></code></a>(plant, case, results)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gemini.evaluate.verdict.html#gemini.evaluate.verdict" title="gemini.evaluate.verdict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">verdict</span></code></a>(plant, case, results)</p></td>
 <td><p>Return whether a finished run is feasible, and why not.</p></td>
 </tr>
 </tbody>

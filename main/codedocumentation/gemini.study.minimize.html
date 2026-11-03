@@ -165,7 +165,8 @@ says why. <code class="docutils literal notranslate"><span class="pre">history</
 <code class="docutils literal notranslate"><span class="pre">parts[&quot;violation&quot;]</span></code> (0 when feasible) and a <code class="docutils literal notranslate"><span class="pre">reason</span></code> for an infeasible trial: the
 first reason of its verdict (its dict), a text for a failed run.
 <code class="docutils literal notranslate"><span class="pre">evaluations</span></code> is the number of simulations. With no trial that ran, <code class="docutils literal notranslate"><span class="pre">best</span></code> has no
-value and no plant, and gives a <code class="docutils literal notranslate"><span class="pre">reason</span></code>. <code class="docutils literal notranslate"><span class="pre">to_plain</span></code> gives the JSON form.</p>
+value and no plant, and gives a <code class="docutils literal notranslate"><span class="pre">reason</span></code>. It is a <code class="docutils literal notranslate"><span class="pre">Search</span></code>, a dict whose <code class="docutils literal notranslate"><span class="pre">to_dict()</span></code>
+gives the JSON form with the history.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict</p>
