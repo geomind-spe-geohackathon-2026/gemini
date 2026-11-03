@@ -90,7 +90,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate.balances</span><span class="w"> </span><span class="kn">import</span> <span class="n">energy_balance</span><span class="p">,</span> <span class="n">mass_balance</span><span class="p">,</span> <span class="n">plant_balance</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate.summary</span><span class="w"> </span><span class="kn">import</span> <span class="n">totals</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gemini.modules.declarations</span><span class="w"> </span><span class="kn">import</span> <span class="n">Output</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.plants.roles</span><span class="w"> </span><span class="kn">import</span> <span class="n">delivery_ports</span><span class="p">,</span> <span class="n">reads</span><span class="p">,</span> <span class="n">units_of</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.plants.roles</span><span class="w"> </span><span class="kn">import</span> <span class="n">delivery_ports</span><span class="p">,</span> <span class="n">reads</span><span class="p">,</span> <span class="n">remembered</span><span class="p">,</span> <span class="n">units_of</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gemini.units.quantities</span><span class="w"> </span><span class="kn">import</span> <span class="n">Temperature</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gemini.units.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">check</span><span class="p">,</span> <span class="n">measure</span>
 
@@ -299,8 +299,9 @@
     <span class="n">frame</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span>
     <span class="n">sited</span> <span class="o">=</span> <span class="n">apply_case</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">)</span>
     <span class="n">checks</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">requirement</span> <span class="ow">in</span> <span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">requirements</span> <span class="ow">or</span> <span class="p">()),</span> <span class="o">*</span><span class="n">_services</span><span class="p">(</span><span class="n">case</span><span class="p">)):</span>
-        <span class="n">checks</span> <span class="o">+=</span> <span class="n">_checks</span><span class="p">(</span><span class="n">sited</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">requirement</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">remembered</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">requirement</span> <span class="ow">in</span> <span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">requirements</span> <span class="ow">or</span> <span class="p">()),</span> <span class="o">*</span><span class="n">_services</span><span class="p">(</span><span class="n">case</span><span class="p">)):</span>
+            <span class="n">checks</span> <span class="o">+=</span> <span class="n">_checks</span><span class="p">(</span><span class="n">sited</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">requirement</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">checks</span>
 
 
