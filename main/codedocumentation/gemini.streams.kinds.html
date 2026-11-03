@@ -56,6 +56,7 @@
 <li class="toctree-l2"><a class="reference internal" href="gemini.plants.html">gemini.plants</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gemini.runtime.html">gemini.runtime</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="gemini.streams.html">gemini.streams</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gemini.streams.energy.html">gemini.streams.energy</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gemini.streams.flows.html">gemini.streams.flows</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gemini.streams.fluid.html">gemini.streams.fluid</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">gemini.streams.kinds</a></li>
@@ -96,7 +97,12 @@
              
   <section id="module-gemini.streams.kinds">
 <span id="gemini-streams-kinds"></span><h1>gemini.streams.kinds<a class="headerlink" href="#module-gemini.streams.kinds" title="Link to this heading"></a></h1>
-<p>The fixed list of stream types that ports carry.</p>
+<p>What a port carries, field by field: the enums of a <code class="docutils literal notranslate"><span class="pre">Port</span></code> and the labels they replace.</p>
+<p>A port states its <code class="docutils literal notranslate"><span class="pre">Direction</span></code> and either a fluid (<code class="docutils literal notranslate"><span class="pre">gm.Fluid</span></code>) or an energy
+(<code class="docutils literal notranslate"><span class="pre">gm.streams.Energy</span></code>). A stream port also has a <code class="docutils literal notranslate"><span class="pre">Phase</span></code> and a <code class="docutils literal notranslate"><span class="pre">Level</span></code> (the temperature role
+of the circuit), <code class="docutils literal notranslate"><span class="pre">ANY</span></code> when not given; gemini’s own modules state every field. <code class="docutils literal notranslate"><span class="pre">NAMES</span></code> are the
+labels of the ports before 0.6.0 (<code class="docutils literal notranslate"><span class="pre">kind</span></code>), which a port still reports and which the descriptions
+of modules keep.</p>
 <p class="rubric">Module Attributes</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
@@ -108,8 +114,28 @@
 <p class="rubric">Functions</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">names</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">label</span></code>(stream, phase, fluid, level, energy)</p></td>
+<td><p>Return the label of a port before 0.6.0 (<code class="docutils literal notranslate"><span class="pre">kind</span></code>), or <code class="docutils literal notranslate"><span class="pre">None</span></code> for one of any fluid.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">names</span></code>()</p></td>
 <td><p>Return the stream types.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Classes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Direction</span></code>(*values)</p></td>
+<td><p>Whether a port takes (<code class="docutils literal notranslate"><span class="pre">IN</span></code>) or gives (<code class="docutils literal notranslate"><span class="pre">OUT</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Flow</span></code>(*values)</p></td>
+<td><p>Who sets what a port carries: the giver (<code class="docutils literal notranslate"><span class="pre">IMPOSED</span></code>) or the taker (<code class="docutils literal notranslate"><span class="pre">DRAWN</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Level</span></code>(*values)</p></td>
+<td><p>The temperature role of the circuit of a stream port.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Phase</span></code>(*values)</p></td>
+<td><p>The phase of the fluid of a stream port.</p></td>
 </tr>
 </tbody>
 </table>

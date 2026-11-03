@@ -14,5 +14,15 @@ gemini.streams.kinds
 
    .. autosummary::
    
+      label
       names
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Direction
+      Flow
+      Level
+      Phase
    

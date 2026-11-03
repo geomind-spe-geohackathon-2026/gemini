@@ -10,6 +10,7 @@ gemini.streams
    :toctree:
    :recursive:
 
+   energy
    flows
    fluid
    kinds

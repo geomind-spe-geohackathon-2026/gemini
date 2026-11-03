@@ -9,6 +9,9 @@ gemini.streams.fluid
    .. autosummary::
    
       FLUE_CO2
+      NATURAL_GAS
+      CHEMICAL
+      WASTE
    
    .. rubric:: Functions
 

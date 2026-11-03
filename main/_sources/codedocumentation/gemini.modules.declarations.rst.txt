@@ -4,6 +4,12 @@ gemini.modules.declarations
 .. automodule:: gemini.modules.declarations
 
    
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      mismatch
+   
    .. rubric:: Classes
 
    .. autosummary::
@@ -11,9 +17,8 @@ gemini.modules.declarations
       Boundary
       Control
       Declaration
-      Inlet
-      Outlet
       Output
       Parameter
+      Port
       State
    

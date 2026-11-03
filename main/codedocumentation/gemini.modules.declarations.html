@@ -125,6 +125,14 @@ calibratable design data; a <code class="docutils literal notranslate"><span cla
 studies (defined in <code class="docutils literal notranslate"><span class="pre">gemini.ops</span></code> because physics uses it, for example
 <code class="docutils literal notranslate"><span class="pre">physics.constants.ESP_REFERENCE_FREQUENCY</span></code>); a <code class="docutils literal notranslate"><span class="pre">State</span></code> is carried from step to step. Each
 numeric parameter and each constant a traced call uses is one named graph input, never a literal.</p>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mismatch</span></code>(source, target)</p></td>
+<td><p>Return why the outlet <code class="docutils literal notranslate"><span class="pre">source</span></code> cannot feed the inlet <code class="docutils literal notranslate"><span class="pre">target</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if it can.</p></td>
+</tr>
+</tbody>
+</table>
 <p class="rubric">Classes</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
@@ -137,19 +145,16 @@ numeric parameter and each constant a traced call uses is one named graph input,
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Declaration</span></code>(type, *[, default, description])</p></td>
 <td><p>Validated metadata attached to one module instance.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Inlet</span></code>([type, kind, many, drawn, description])</p></td>
-<td><p>Incoming port: a <code class="docutils literal notranslate"><span class="pre">Stream</span></code> by default.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Outlet</span></code>([type, kind, many, drawn, offered, ...])</p></td>
-<td><p>Outgoing port.</p></td>
-</tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Output</span></code>(type, *[, soft_sensor, description])</p></td>
 <td><p>Computed value recorded for one call.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Parameter</span></code>(type, *[, default, shape, ...])</p></td>
 <td><p>Design data fixed during a run, with optional dated values.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">State</span></code>(type, *[, default, description])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Port</span></code>(direction, *[, fluid, energy, phase, ...])</p></td>
+<td><p>A port of a module: what it takes (<code class="docutils literal notranslate"><span class="pre">Direction.IN</span></code>) or gives (<code class="docutils literal notranslate"><span class="pre">Direction.OUT</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">State</span></code>(type, *[, default, description])</p></td>
 <td><p>Value a stateful module carries from one time step to the next; it has no default.</p></td>
 </tr>
 </tbody>
