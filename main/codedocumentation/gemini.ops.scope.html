@@ -1,0 +1,204 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.ops.scope &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gemini.ops.solvers" href="gemini.ops.solvers.html" />
+    <link rel="prev" title="gemini.ops.registry" href="gemini.ops.registry.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="gemini.html">gemini</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gemini.analysis.html">gemini.analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.case.html">gemini.case</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.compiler.html">gemini.compiler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.engine.html">gemini.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.errors.html">gemini.errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.evaluate.html">gemini.evaluate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.modules.html">gemini.modules</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="gemini.ops.html">gemini.ops</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.backend.html">gemini.ops.backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.check.html">gemini.ops.check</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.control.html">gemini.ops.control</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.dispatch.html">gemini.ops.dispatch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.elementwise.html">gemini.ops.elementwise</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.failed.html">gemini.ops.failed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.failedrows.html">gemini.ops.failedrows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.kernels.html">gemini.ops.kernels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.logic.html">gemini.ops.logic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.math.html">gemini.ops.math</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.reductions.html">gemini.ops.reductions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.registry.html">gemini.ops.registry</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gemini.ops.scope</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.solvers.html">gemini.ops.solvers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.physics.html">gemini.physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.plants.html">gemini.plants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.runtime.html">gemini.runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.streams.html">gemini.streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.study.html">gemini.study</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.units.html">gemini.units</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="gemini.html">gemini</a></li>
+          <li class="breadcrumb-item"><a href="gemini.ops.html">gemini.ops</a></li>
+      <li class="breadcrumb-item active">gemini.ops.scope</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/codedocumentation/gemini.ops.scope.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-gemini.ops.scope">
+<span id="gemini-ops-scope"></span><h1>gemini.ops.scope<a class="headerlink" href="#module-gemini.ops.scope" title="Link to this heading"></a></h1>
+<p>The eager physics scope: <code class="docutils literal notranslate"><span class="pre">&#64;ops.physics</span></code> and the scope a module call enters.</p>
+<p>A direct call of a module or a physics function is eager: the same <code class="docutils literal notranslate"><span class="pre">forward</span></code> and the same ops
+as the graph, evaluated on the Python backend. One mechanism makes plain operators safe there:</p>
+<ul class="simple">
+<li><p><strong>Entering the outermost scope</strong> enters <code class="docutils literal notranslate"><span class="pre">np.errstate(all=&quot;ignore&quot;)</span></code> and gives a function called
+on plain Python numbers its arguments as NumPy scalars: an exact <code class="docutils literal notranslate"><span class="pre">float</span></code> as <code class="docutils literal notranslate"><span class="pre">np.float64</span></code>, an
+exact <code class="docutils literal notranslate"><span class="pre">int</span></code> as <code class="docutils literal notranslate"><span class="pre">np.int64</span></code>, which prints, indexes and loops as an int (<code class="docutils literal notranslate"><span class="pre">bool</span></code>, <code class="docutils literal notranslate"><span class="pre">None</span></code>,
+strings, arrays and traced values pass through). They have the arithmetic of Python numbers
+but <code class="docutils literal notranslate"><span class="pre">/</span></code> by zero, an invalid <code class="docutils literal notranslate"><span class="pre">**</span></code> and an overflow give <code class="docutils literal notranslate"><span class="pre">inf</span></code> or <code class="docutils literal notranslate"><span class="pre">nan</span></code> silently, like the
+NumPy and graph backends. Arrays or traced values among the arguments leave the scope unwrapped
+(an <code class="docutils literal notranslate"><span class="pre">np.float64</span></code> scalar would promote a float32 array), and so does a module whose
+<code class="docutils literal notranslate"><span class="pre">Module._scalar_mode</span></code> is <code class="docutils literal notranslate"><span class="pre">PLAIN</span></code> (the ESP under float32 precision, the one quirk).</p></li>
+<li><p><strong>Nested scopes</strong> only wrap the exact numbers among their own arguments (a literal <code class="docutils literal notranslate"><span class="pre">0.0</span></code>) and
+catch a failing check; the cost is a <code class="docutils literal notranslate"><span class="pre">ContextVar</span></code> read and a scan of the arguments.</p></li>
+<li><p><strong>Leaving the outermost scope</strong> returns plain Python scalars on every backend: <code class="docutils literal notranslate"><span class="pre">float</span></code> for
+<code class="docutils literal notranslate"><span class="pre">np.float64</span></code>, <code class="docutils literal notranslate"><span class="pre">bool</span></code> for <code class="docutils literal notranslate"><span class="pre">np.bool_</span></code>, recursively through tuples, lists, dicts and frozen
+dataclasses, and raises the error of a <code class="docutils literal notranslate"><span class="pre">Failed</span></code> found anywhere in the result.</p></li>
+<li><p><strong>A failing check</strong> (<code class="docutils literal notranslate"><span class="pre">ops.check</span></code> on concrete scalars) raises a marked error; <code class="docutils literal notranslate"><span class="pre">physics</span></code>
+returns <code class="docutils literal notranslate"><span class="pre">Failed(error)</span></code> for it at each function boundary (see <code class="docutils literal notranslate"><span class="pre">gemini.ops.failed</span></code>).
+Outside any scope the caller sees the real error. A failing check on an eager array raises at
+once, for its first failing row, and is never turned into a <code class="docutils literal notranslate"><span class="pre">Failed</span></code>; the eager executor asks
+for <code class="docutils literal notranslate"><span class="pre">gemini.ops.failedrows.marking</span></code> instead, and then the failing rows of a physics function
+travel with its results as <code class="docutils literal notranslate"><span class="pre">FailedRows</span></code>, the array counterpart of <code class="docutils literal notranslate"><span class="pre">Failed</span></code>.</p></li>
+<li><p><strong>In a trace</strong> (<code class="docutils literal notranslate"><span class="pre">tracing(graph)</span></code>) a physics function keeps the checks recorded directly in it
+and guards every traced value it returns with them, so the graph attaches an error to the
+results of the function exactly as the eager <code class="docutils literal notranslate"><span class="pre">Failed</span></code> does. A check recorded outside any
+physics function is certain: it guards every graph output, as it raises at once when eager.</p></li>
+<li><p><strong>A result used for its validity only</strong> is passed to <code class="docutils literal notranslate"><span class="pre">require</span></code>, or its error is dropped.</p></li>
+</ul>
+<p>Do not put <code class="docutils literal notranslate"><span class="pre">repr</span></code> of a physical value in a message (<code class="docutils literal notranslate"><span class="pre">np.float64(1.0)</span></code>), and note that
+<code class="docutils literal notranslate"><span class="pre">round(np.float64,</span> <span class="pre">n)</span></code> is NumPy’s rounding: use <code class="docutils literal notranslate"><span class="pre">ops.round</span></code>.</p>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">physics</span></code>(function)</p></td>
+<td><p>Decorate a public function of <code class="docutils literal notranslate"><span class="pre">gemini/physics</span></code> so it is safe with plain operators.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plain</span></code>(value)</p></td>
+<td><p>Return <code class="docutils literal notranslate"><span class="pre">value</span></code> as plain Python scalars; raise the error of any <code class="docutils literal notranslate"><span class="pre">Failed</span></code> inside it.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">require</span></code>(value)</p></td>
+<td><p>Surface the error of <code class="docutils literal notranslate"><span class="pre">value</span></code> where its number is not used, as if it reached an output.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">traced_graph</span></code>()</p></td>
+<td><p>Return the graph the running trace records into, <code class="docutils literal notranslate"><span class="pre">None</span></code> outside a trace.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tracing</span></code>(graph)</p></td>
+<td><p>Select <code class="docutils literal notranslate"><span class="pre">graph</span></code> as the one that physics functions record their checks in.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">wrap</span></code>(value)</p></td>
+<td><p>Return <code class="docutils literal notranslate"><span class="pre">value</span></code> for the scope: numbers as NumPy scalars; lists, tuples and dicts too.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Classes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Scope</span></code>([mode, arrays])</p></td>
+<td><p>Context manager entering the eager scope for a call that asks for <code class="docutils literal notranslate"><span class="pre">mode</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gemini.ops.registry.html" class="btn btn-neutral float-left" title="gemini.ops.registry" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gemini.ops.solvers.html" class="btn btn-neutral float-right" title="gemini.ops.solvers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,21 @@
+gemini.physics.cycles
+=====================
+
+.. automodule:: gemini.physics.cycles
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      cycle_design
+      lorenz_efficiency
+      plant_balance
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      CycleDesign
+      PlantBalance
+   

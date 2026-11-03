@@ -1,0 +1,470 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.study.calibrate &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../codedocumentation/gemini.html">gemini</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">gemini.study.calibrate</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for gemini.study.calibrate</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Bounded calibration using only Engine.replay for model predictions."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">least_squares</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini._utils.strings</span><span class="w"> </span><span class="kn">import</span> <span class="n">join_names</span><span class="p">,</span> <span class="n">join_path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.analysis.fits</span><span class="w"> </span><span class="kn">import</span> <span class="n">fit_head_coefficients</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.case.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">as_dataset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.engine.bindings</span><span class="w"> </span><span class="kn">import</span> <span class="n">bound_unit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.engine.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">PhysicsError</span><span class="p">,</span> <span class="n">ValidationError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.modules.exchangers</span><span class="w"> </span><span class="kn">import</span> <span class="n">HeatExchanger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.modules.pumps</span><span class="w"> </span><span class="kn">import</span> <span class="n">ESP</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.physics</span><span class="w"> </span><span class="kn">import</span> <span class="n">heat_transfer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.units</span><span class="w"> </span><span class="kn">import</span> <span class="n">array_to_si</span>
+
+<span class="n">_MASS_FLOW_UNITS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"kg/s"</span><span class="p">,</span> <span class="s2">"t/h"</span><span class="p">}</span>
+<span class="sd">"""Mass-flow units ``units.to_si`` accepts; other flow units are volume flows."""</span>
+
+<span class="n">_FIT_TARGETS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="n">HeatExchanger</span><span class="p">,</span> <span class="p">(</span><span class="s2">"thermal_conductance"</span><span class="p">,),</span> <span class="p">{</span><span class="s2">"duty"</span><span class="p">,</span> <span class="s2">"hot_out_T"</span><span class="p">,</span> <span class="s2">"cold_out_T"</span><span class="p">}),</span>
+    <span class="p">(</span><span class="n">ESP</span><span class="p">,</span> <span class="p">(</span><span class="s2">"head_coefficients"</span><span class="p">,),</span> <span class="p">{</span><span class="s2">"head"</span><span class="p">,</span> <span class="s2">"discharge_pressure"</span><span class="p">}),</span>
+    <span class="p">(</span><span class="n">ESP</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">{</span><span class="s2">"power"</span><span class="p">,</span> <span class="s2">"head"</span><span class="p">,</span> <span class="s2">"discharge_pressure"</span><span class="p">}),</span>
+<span class="p">]</span>
+<span class="sd">"""Measured outputs fitted per module class and parameter set (``None``: any parameters)."""</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CalibrationResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Initial/fitted design values, normalised RMS per output and optimizer diagnostics."""</span>
+
+    <span class="n">fitted</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+    <span class="n">rms_before</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">rms_after</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">observations</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">success</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">applied</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">initial</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+    <span class="n">rms_by_output_before</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
+    <span class="n">rms_by_output_after</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
+    <span class="n">evaluations</span><span class="p">:</span> <span class="nb">int</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Show the fitted change and its measured residual improvement."""</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">initial</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitted</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"CalibrationResult(</span><span class="si">{</span><span class="n">values</span><span class="si">}</span><span class="s2">; RMS </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">rms_before</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">rms_after</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2">; "</span>
+            <span class="sa">f</span><span class="s2">"evaluations=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">evaluations</span><span class="si">}</span><span class="s2">, success=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2">, applied=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">applied</span><span class="si">}</span><span class="s2">)"</span>
+        <span class="p">)</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_Coordinates</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Optimiser coordinates: every fitted value divided by its initial magnitude.</span>
+
+<span class="sd">    ``sizes`` maps each field to its value count and whether it is a list parameter.</span>
+<span class="sd">    """</span>
+
+    <span class="n">sizes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]]</span>
+    <span class="n">scale</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">initial</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">lower</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">upper</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">unpack</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return parameter values for coordinates ``x``."""</span>
+        <span class="n">values</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="p">{},</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">is_vector</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">part</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">offset</span> <span class="p">:</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">size</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">[</span><span class="n">offset</span> <span class="p">:</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">size</span><span class="p">])</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">values</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">part</span> <span class="k">if</span> <span class="n">is_vector</span> <span class="k">else</span> <span class="n">part</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">offset</span> <span class="o">+=</span> <span class="n">size</span>
+        <span class="k">return</span> <span class="n">values</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_owner</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the one module owning ``params``, its plant path and the parameter names."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">params</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="s2">"calibrate: params = []; expected at least one Parameter"</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_design"</span>
+        <span class="p">)</span>
+    <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">parameter</span><span class="o">.</span><span class="n">calibratable</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">parameter</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">: calibratable = False; expected parameters declared with "</span>
+                <span class="s2">"calibratable=True"</span><span class="p">,</span>
+                <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_design"</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="n">owners</span> <span class="o">=</span> <span class="p">{</span><span class="n">parameter</span><span class="o">.</span><span class="n">owner</span> <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">params</span><span class="p">}</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">owners</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">paths</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">owner</span><span class="o">.</span><span class="n">path</span> <span class="k">for</span> <span class="n">owner</span> <span class="ow">in</span> <span class="n">owners</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"calibrate: parameter owners = </span><span class="si">{</span><span class="n">join_names</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span><span class="si">}</span><span class="s2">; expected one module at a time"</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_design"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">module</span> <span class="o">=</span> <span class="n">owners</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">path</span> <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">plant</span><span class="o">.</span><span class="n">named_modules</span><span class="p">()</span> <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="n">module</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">module</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">: module is not part of the supplied plant"</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_design"</span>
+        <span class="p">)</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="n">parameter</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">params</span><span class="p">]</span>
+    <span class="n">duplicates</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">field</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">fields</span> <span class="k">if</span> <span class="n">fields</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">field</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">})</span>
+    <span class="k">if</span> <span class="n">duplicates</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">join_path</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="n">duplicates</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s2">: parameter given twice; expected each once"</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_design"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">module</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">fields</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_single_snapshot</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Reject windows that start before every dated snapshot or span a snapshot change."""</span>
+    <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">index</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">dates</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">valid_from</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">module</span><span class="o">.</span><span class="n">_param_history</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">date</span> <span class="o">&gt;</span> <span class="n">start</span> <span class="k">for</span> <span class="n">date</span> <span class="ow">in</span> <span class="n">dates</span><span class="p">):</span>
+        <span class="n">first</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">dates</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: calibration window starts </span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s2">; first parameter snapshot valid_from = "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">first</span><span class="si">}</span><span class="s2">; expected a window inside one dated design snapshot"</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_design"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">changes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">date</span> <span class="k">for</span> <span class="n">date</span> <span class="ow">in</span> <span class="n">dates</span> <span class="k">if</span> <span class="n">date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">start</span> <span class="o">&lt;</span> <span class="n">date</span> <span class="o">&lt;=</span> <span class="n">end</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">changes</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: parameter snapshots start at </span><span class="si">{</span><span class="n">changes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> inside the calibration window "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">end</span><span class="si">}</span><span class="s2">; expected one dated design snapshot"</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_design"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_fit_targets</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">measured</span><span class="p">,</span> <span class="n">fields</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the sorted measured outputs to fit for this module and parameter set."""</span>
+    <span class="n">targets</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">outputs</span><span class="p">(</span><span class="n">recurse</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span> <span class="o">&amp;</span> <span class="n">measured</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">module_class</span><span class="p">,</span> <span class="n">target_fields</span><span class="p">,</span> <span class="n">allowed</span> <span class="ow">in</span> <span class="n">_FIT_TARGETS</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">module_class</span><span class="p">)</span> <span class="ow">and</span> <span class="n">target_fields</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">fields</span><span class="p">)):</span>
+            <span class="n">targets</span> <span class="o">&amp;=</span> <span class="n">allowed</span>
+            <span class="k">break</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">targets</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: measured bindings = </span><span class="si">{</span><span class="n">join_names</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">measured</span><span class="p">))</span><span class="si">}</span><span class="s2">; expected at least one "</span>
+            <span class="sa">f</span><span class="s2">"output of </span><span class="si">{</span><span class="n">join_names</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">outputs</span><span class="p">(</span><span class="n">recurse</span><span class="o">=</span><span class="kc">False</span><span class="p">)))</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_binding"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_bounds</span><span class="p">(</span><span class="n">bounds</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return closed ``(lower, upper)`` limits of a parameter's ge/gt/le/lt bounds."""</span>
+    <span class="n">low</span> <span class="o">=</span> <span class="n">bounds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ge"</span><span class="p">,</span> <span class="n">bounds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"gt"</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">))</span>
+    <span class="n">high</span> <span class="o">=</span> <span class="n">bounds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"le"</span><span class="p">,</span> <span class="n">bounds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"lt"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">))</span>
+    <span class="k">if</span> <span class="s2">"gt"</span> <span class="ow">in</span> <span class="n">bounds</span><span class="p">:</span>
+        <span class="n">low</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nextafter</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"lt"</span> <span class="ow">in</span> <span class="n">bounds</span><span class="p">:</span>
+        <span class="n">high</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nextafter</span><span class="p">(</span><span class="n">high</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_coordinates</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">fields</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return scaled coordinates starting at the module's current parameter values.</span>
+
+<span class="sd">    Each value is scaled by its magnitude (at least 1e-30), and zero values by 1.</span>
+<span class="sd">    """</span>
+    <span class="n">sizes</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">initial</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">; expected a numeric value"</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_design"</span>
+            <span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+        <span class="n">sizes</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)))</span>
+        <span class="n">field_scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">values</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="mf">1e-30</span><span class="p">))</span>
+        <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">_bounds</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field</span><span class="p">)</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
+        <span class="n">scale</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">field_scale</span><span class="p">)</span>
+        <span class="n">initial</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">values</span> <span class="o">/</span> <span class="n">field_scale</span><span class="p">)</span>
+        <span class="n">lower</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="n">low</span><span class="p">)</span> <span class="o">/</span> <span class="n">field_scale</span><span class="p">)</span>
+        <span class="n">upper</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="n">high</span><span class="p">)</span> <span class="o">/</span> <span class="n">field_scale</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_Coordinates</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="o">*</span><span class="nb">map</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">,</span> <span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="n">initial</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">)))</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_Observed</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Observations bound to the calibrated module; a dataset column unit wins over the binding."""</span>
+
+    <span class="n">dataset</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="n">bindings</span><span class="p">:</span> <span class="n">Any</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">binding</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return a bound column converted to SI."""</span>
+        <span class="n">unit</span> <span class="o">=</span> <span class="n">bound_unit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="n">binding</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">array_to_si</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">binding</span><span class="o">.</span><span class="n">column</span><span class="p">],</span> <span class="n">unit</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ua_guess</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">observed</span><span class="p">,</span> <span class="n">measured</span><span class="p">,</span> <span class="n">valid</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the median apparent UA [W/K] of the valid rows, or ``None`` if none is defined.</span>
+
+<span class="sd">    Each row gives ``duty / LMTD`` with temperature differences clipped at zero.</span>
+<span class="sd">    """</span>
+    <span class="n">inlets</span> <span class="o">=</span> <span class="n">observed</span><span class="o">.</span><span class="n">bindings</span><span class="o">.</span><span class="n">inlets</span>
+    <span class="n">hot_in</span> <span class="o">=</span> <span class="n">observed</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="n">inlets</span><span class="p">[</span><span class="s2">"hot_in"</span><span class="p">][</span><span class="s2">"T"</span><span class="p">])[</span><span class="n">valid</span><span class="p">]</span>
+    <span class="n">cold_in</span> <span class="o">=</span> <span class="n">observed</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="n">inlets</span><span class="p">[</span><span class="s2">"cold_in"</span><span class="p">][</span><span class="s2">"T"</span><span class="p">])[</span><span class="n">valid</span><span class="p">]</span>
+    <span class="n">hot_out</span><span class="p">,</span> <span class="n">cold_out</span> <span class="o">=</span> <span class="n">measured</span><span class="p">[</span><span class="s2">"hot_out_T"</span><span class="p">][</span><span class="n">valid</span><span class="p">],</span> <span class="n">measured</span><span class="p">[</span><span class="s2">"cold_out_T"</span><span class="p">][</span><span class="n">valid</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">arrangement</span> <span class="o">==</span> <span class="s2">"counterflow"</span><span class="p">:</span>
+        <span class="n">differences</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">hot_in</span> <span class="o">-</span> <span class="n">cold_out</span><span class="p">,</span> <span class="n">hot_out</span> <span class="o">-</span> <span class="n">cold_in</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">differences</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">hot_in</span> <span class="o">-</span> <span class="n">cold_in</span><span class="p">,</span> <span class="n">hot_out</span> <span class="o">-</span> <span class="n">cold_out</span><span class="p">)</span>
+    <span class="n">apparent</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">duty</span> <span class="o">/</span> <span class="n">delta</span>
+        <span class="k">for</span> <span class="n">duty</span><span class="p">,</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">measured</span><span class="p">[</span><span class="s2">"duty"</span><span class="p">][</span><span class="n">valid</span><span class="p">],</span> <span class="n">differences</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">delta</span> <span class="o">:=</span> <span class="n">heat_transfer</span><span class="o">.</span><span class="n">lmtd</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pair</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">apparent</span><span class="p">)]</span> <span class="k">if</span> <span class="n">apparent</span> <span class="k">else</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_head_coefficient_guess</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">observed</span><span class="p">,</span> <span class="n">measured</span><span class="p">,</span> <span class="n">valid</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return head coefficients fitted to the valid rows, or ``None`` without head data.</span>
+
+<span class="sd">    Mass flows are converted to volume flows at the measured suction conditions.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="s2">"head"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">measured</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">suction</span> <span class="o">=</span> <span class="n">observed</span><span class="o">.</span><span class="n">bindings</span><span class="o">.</span><span class="n">inlets</span><span class="p">[</span><span class="s2">"fluid_in"</span><span class="p">]</span>
+    <span class="n">flows</span> <span class="o">=</span> <span class="n">observed</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="n">suction</span><span class="p">[</span><span class="s2">"m_dot"</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">bound_unit</span><span class="p">(</span><span class="n">observed</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="n">suction</span><span class="p">[</span><span class="s2">"m_dot"</span><span class="p">])</span> <span class="ow">in</span> <span class="n">_MASS_FLOW_UNITS</span><span class="p">:</span>
+        <span class="n">pressures</span><span class="p">,</span> <span class="n">temperatures</span> <span class="o">=</span> <span class="n">observed</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="n">suction</span><span class="p">[</span><span class="s2">"p"</span><span class="p">]),</span> <span class="n">observed</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="n">suction</span><span class="p">[</span><span class="s2">"T"</span><span class="p">])</span>
+        <span class="n">flows</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">module</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">properties</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span><span class="o">.</span><span class="n">density</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pressures</span><span class="p">,</span> <span class="n">temperatures</span><span class="p">)]</span>
+        <span class="p">)</span>
+    <span class="n">distinct</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">flows</span><span class="p">[</span><span class="n">valid</span><span class="p">]))</span>
+    <span class="k">if</span> <span class="n">distinct</span> <span class="o">&lt;</span> <span class="mi">6</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">PhysicsError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">.head_coefficients: distinct valid flows = </span><span class="si">{</span><span class="n">distinct</span><span class="si">}</span><span class="s2">; expected at least 6 to "</span>
+            <span class="s2">"seed the head-curve guess"</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"too_little_data"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">frequencies</span> <span class="o">=</span> <span class="n">observed</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="n">observed</span><span class="o">.</span><span class="n">bindings</span><span class="o">.</span><span class="n">controls</span><span class="p">[</span><span class="s2">"frequency"</span><span class="p">])[</span><span class="n">valid</span><span class="p">]</span>
+    <span class="n">fitted</span> <span class="o">=</span> <span class="n">fit_head_coefficients</span><span class="p">(</span>
+        <span class="n">flows</span><span class="p">[</span><span class="n">valid</span><span class="p">],</span> <span class="n">frequencies</span><span class="p">,</span> <span class="n">measured</span><span class="p">[</span><span class="s2">"head"</span><span class="p">][</span><span class="n">valid</span><span class="p">],</span> <span class="n">module</span><span class="o">.</span><span class="n">stage_count</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">fitted</span><span class="p">[</span><span class="s2">"value"</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_initial_guess</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">observed</span><span class="p">,</span> <span class="n">measured</span><span class="p">,</span> <span class="n">valid</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return an equipment-specific starting value for the fitted parameters, or ``None``."""</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">HeatExchanger</span><span class="p">)</span> <span class="ow">and</span> <span class="n">fields</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"thermal_conductance"</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">_ua_guess</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">observed</span><span class="p">,</span> <span class="n">measured</span><span class="p">,</span> <span class="n">valid</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">ESP</span><span class="p">)</span> <span class="ow">and</span> <span class="n">fields</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"head_coefficients"</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">_head_coefficient_guess</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">observed</span><span class="p">,</span> <span class="n">measured</span><span class="p">,</span> <span class="n">valid</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_predictor</span><span class="p">(</span><span class="n">engine</span><span class="p">,</span> <span class="n">trial</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">coordinates</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``predict(x)``: replayed targets [SI] for coordinates ``x``, one row per tick."""</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">trial</span><span class="o">.</span><span class="n">get_submodule</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">join_path</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">target</span><span class="o">.</span><span class="n">_override_params</span><span class="p">(</span><span class="n">coordinates</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">replay</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">only</span><span class="o">=</span><span class="p">[</span><span class="n">path</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">names</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">PhysicsError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: module was skipped on every calibration row"</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="s2">"too_little_data"</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">results</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()[</span><span class="n">columns</span><span class="p">]</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">predict</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_valid_rows</span><span class="p">(</span><span class="n">predicted</span><span class="p">,</span> <span class="n">measured</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the rows where every target is both predicted and measured."""</span>
+    <span class="n">valid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">predicted</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">measured</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">valid</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">PhysicsError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: no row has every target measured and predicted"</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="s2">"too_little_data"</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">valid</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rms</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">values</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_fit</span><span class="p">(</span><span class="n">residual</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">coordinates</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Run the bounded least-squares fit: at most 200 evaluations, all tolerances 1e-10."""</span>
+    <span class="k">return</span> <span class="n">least_squares</span><span class="p">(</span>
+        <span class="n">residual</span><span class="p">,</span>
+        <span class="n">start</span><span class="p">,</span>
+        <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="n">coordinates</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="n">coordinates</span><span class="o">.</span><span class="n">upper</span><span class="p">),</span>
+        <span class="n">x_scale</span><span class="o">=</span><span class="s2">"jac"</span><span class="p">,</span>
+        <span class="n">max_nfev</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+        <span class="n">ftol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">,</span>
+        <span class="n">xtol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">,</span>
+        <span class="n">gtol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_result</span><span class="p">(</span><span class="n">fitted</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">initial</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">errors_before</span><span class="p">,</span> <span class="n">errors_after</span><span class="p">,</span> <span class="n">applied</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Summarise a fit; errors are scaled residuals with one column per target."""</span>
+    <span class="k">return</span> <span class="n">CalibrationResult</span><span class="p">(</span>
+        <span class="n">fitted</span><span class="o">=</span><span class="n">values</span><span class="p">,</span>
+        <span class="n">rms_before</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">_rms</span><span class="p">(</span><span class="n">errors_before</span><span class="p">)),</span>
+        <span class="n">rms_after</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">_rms</span><span class="p">(</span><span class="n">errors_after</span><span class="p">)),</span>
+        <span class="n">observations</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">errors_before</span><span class="p">),</span>
+        <span class="n">success</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">fitted</span><span class="o">.</span><span class="n">success</span><span class="p">),</span>
+        <span class="n">message</span><span class="o">=</span><span class="n">fitted</span><span class="o">.</span><span class="n">message</span><span class="p">,</span>
+        <span class="n">applied</span><span class="o">=</span><span class="n">applied</span><span class="p">,</span>
+        <span class="n">initial</span><span class="o">=</span><span class="n">initial</span><span class="p">,</span>
+        <span class="n">rms_by_output_before</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">_rms</span><span class="p">(</span><span class="n">errors_before</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">())),</span>
+        <span class="n">rms_by_output_after</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">_rms</span><span class="p">(</span><span class="n">errors_after</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">())),</span>
+        <span class="n">evaluations</span><span class="o">=</span><span class="n">fitted</span><span class="o">.</span><span class="n">nfev</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="calibrate">
+<a class="viewcode-back" href="../../../codedocumentation/gemini.study.calibrate.html#gemini.study.calibrate">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calibrate</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">"numpy"</span><span class="p">,</span> <span class="n">apply</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Fit measured outputs with bounded least squares through the public replay API.</span>
+
+<span class="sd">    With apply=True, successful fits replace current parameters and persist as explicit</span>
+<span class="sd">    overrides. No dated history entry is added. apply=False leaves the plant unchanged.</span>
+<span class="sd">    Windows must lie in one design snapshot; holdout observations never enter the objective.</span>
+<span class="sd">    The rows fitted are those where every target is measured and predicted at the initial</span>
+<span class="sd">    values; equipment-specific starting guesses use the same rows. ``backend`` is the engine</span>
+<span class="sd">    backend that evaluates the replays; the fit does not depend on it.</span>
+<span class="sd">    """</span>
+    <span class="n">original</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">fields</span> <span class="o">=</span> <span class="n">_owner</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">as_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="o">.</span><span class="n">window</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">PhysicsError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: calibration window </span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">end</span><span class="si">}</span><span class="s2"> has no rows"</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="s2">"too_little_data"</span>
+        <span class="p">)</span>
+    <span class="n">_check_single_snapshot</span><span class="p">(</span><span class="n">original</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">trial</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">plant</span><span class="p">)</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">trial</span><span class="o">.</span><span class="n">get_submodule</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">target</span><span class="o">.</span><span class="n">_override_params</span><span class="p">(</span><span class="n">original</span><span class="o">.</span><span class="n">_params_at</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="n">observed</span> <span class="o">=</span> <span class="n">_Observed</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">plant</span><span class="o">.</span><span class="n">bindings</span><span class="p">[</span><span class="n">path</span><span class="p">])</span>
+    <span class="n">targets</span> <span class="o">=</span> <span class="n">_fit_targets</span><span class="p">(</span><span class="n">original</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">observed</span><span class="o">.</span><span class="n">bindings</span><span class="o">.</span><span class="n">measured</span><span class="p">,</span> <span class="n">fields</span><span class="p">)</span>
+    <span class="n">measured</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">observed</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="n">observed</span><span class="o">.</span><span class="n">bindings</span><span class="o">.</span><span class="n">measured</span><span class="p">[</span><span class="n">name</span><span class="p">])</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">}</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">measured</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">])</span>
+    <span class="n">scales</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">matrix</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="mf">1e-12</span><span class="p">)</span>
+    <span class="n">initial</span> <span class="o">=</span> <span class="p">{</span><span class="n">field</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">}</span>
+    <span class="n">coordinates</span> <span class="o">=</span> <span class="n">_coordinates</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">fields</span><span class="p">)</span>
+    <span class="n">engine</span> <span class="o">=</span> <span class="n">Engine</span><span class="p">(</span><span class="n">trial</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="n">on_error</span><span class="o">=</span><span class="s2">"raise"</span><span class="p">)</span>
+    <span class="n">predict</span> <span class="o">=</span> <span class="n">_predictor</span><span class="p">(</span><span class="n">engine</span><span class="p">,</span> <span class="n">trial</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">coordinates</span><span class="p">)</span>
+    <span class="n">before</span> <span class="o">=</span> <span class="n">predict</span><span class="p">(</span><span class="n">coordinates</span><span class="o">.</span><span class="n">initial</span><span class="p">)</span>
+    <span class="n">valid</span> <span class="o">=</span> <span class="n">_valid_rows</span><span class="p">(</span><span class="n">before</span><span class="p">,</span> <span class="n">matrix</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">residual</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">((</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="n">valid</span><span class="p">]</span> <span class="o">-</span> <span class="n">matrix</span><span class="p">[</span><span class="n">valid</span><span class="p">])</span> <span class="o">/</span> <span class="n">scales</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+
+    <span class="n">guess</span> <span class="o">=</span> <span class="n">_initial_guess</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">observed</span><span class="p">,</span> <span class="n">measured</span><span class="p">,</span> <span class="n">valid</span><span class="p">)</span>
+    <span class="n">start_x</span> <span class="o">=</span> <span class="n">coordinates</span><span class="o">.</span><span class="n">initial</span> <span class="k">if</span> <span class="n">guess</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">guess</span><span class="p">)</span> <span class="o">/</span> <span class="n">coordinates</span><span class="o">.</span><span class="n">scale</span>
+    <span class="n">fitted</span> <span class="o">=</span> <span class="n">_fit</span><span class="p">(</span><span class="n">residual</span><span class="p">,</span> <span class="n">start_x</span><span class="p">,</span> <span class="n">coordinates</span><span class="p">)</span>
+    <span class="n">errors_before</span> <span class="o">=</span> <span class="p">(</span><span class="n">before</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span> <span class="o">-</span> <span class="n">matrix</span><span class="p">[</span><span class="n">valid</span><span class="p">])</span> <span class="o">/</span> <span class="n">scales</span>
+    <span class="n">errors_after</span> <span class="o">=</span> <span class="n">residual</span><span class="p">(</span><span class="n">fitted</span><span class="o">.</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">))</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">coordinates</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">fitted</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">applied</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">apply</span> <span class="ow">and</span> <span class="n">fitted</span><span class="o">.</span><span class="n">success</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">applied</span><span class="p">:</span>
+        <span class="n">original</span><span class="o">.</span><span class="n">_override_params</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_result</span><span class="p">(</span><span class="n">fitted</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">initial</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">errors_before</span><span class="p">,</span> <span class="n">errors_after</span><span class="p">,</span> <span class="n">applied</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

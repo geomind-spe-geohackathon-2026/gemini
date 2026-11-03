@@ -1,0 +1,22 @@
+gemini.engine.check
+===================
+
+.. automodule:: gemini.engine.check
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      SUPPLY_ROLES
+      ECONOMICS
+      GAS_ROLES
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      check
+      checked
+      issues_of
+   

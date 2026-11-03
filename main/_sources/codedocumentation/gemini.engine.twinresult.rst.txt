@@ -1,0 +1,26 @@
+gemini.engine.twinresult
+========================
+
+.. automodule:: gemini.engine.twinresult
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      UNCHANGED
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      evaluate_twin
+      twin_steps
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Outcome
+      StepResults
+   

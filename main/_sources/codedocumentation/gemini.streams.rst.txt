@@ -1,0 +1,16 @@
+gemini.streams
+==============
+
+.. automodule:: gemini.streams
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   flows
+   fluid
+   kinds
+   ports

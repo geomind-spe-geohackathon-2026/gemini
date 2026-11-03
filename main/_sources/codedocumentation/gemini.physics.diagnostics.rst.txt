@@ -1,0 +1,22 @@
+gemini.physics.diagnostics
+==========================
+
+.. automodule:: gemini.physics.diagnostics
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DRIFT_FLOOR
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      below_limit
+      bounded_score
+      performance_ratio
+      relative_drift
+      remaining_margin
+   

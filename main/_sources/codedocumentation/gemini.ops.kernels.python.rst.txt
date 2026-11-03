@@ -1,0 +1,18 @@
+gemini.ops.kernels.python
+=========================
+
+.. automodule:: gemini.ops.kernels.python
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      numpy_float
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      PythonBackend
+   

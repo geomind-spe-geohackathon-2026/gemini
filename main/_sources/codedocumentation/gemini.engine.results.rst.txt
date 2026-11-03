@@ -1,0 +1,30 @@
+gemini.engine.results
+=====================
+
+.. automodule:: gemini.engine.results
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      ENERGY_FIELDS
+      SERIES_UNITS
+      PORT_QUANTITIES
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      declared_quantities
+      declared_units
+      port_fields
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ModuleSeries
+      Results
+      Summary
+   

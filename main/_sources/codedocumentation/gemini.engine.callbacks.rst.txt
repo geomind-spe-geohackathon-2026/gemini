@@ -1,0 +1,14 @@
+gemini.engine.callbacks
+=======================
+
+.. automodule:: gemini.engine.callbacks
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      AutoCheckpoint
+      Callback
+      EventLog
+   

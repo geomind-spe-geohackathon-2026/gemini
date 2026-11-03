@@ -1,0 +1,32 @@
+gemini.physics.geometry
+=======================
+
+.. automodule:: gemini.physics.geometry
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      VERTICAL
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      build_path
+      circle_area
+      lateral_area
+      mean_velocity
+      path_between
+      path_of
+      section_values
+      vertical_path
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      PipePath
+      PipeSection
+   

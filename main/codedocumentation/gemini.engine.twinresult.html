@@ -1,0 +1,185 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.engine.twinresult &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gemini.errors" href="gemini.errors.html" />
+    <link rel="prev" title="gemini.engine.simulate" href="gemini.engine.simulate.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="gemini.html">gemini</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gemini.analysis.html">gemini.analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.case.html">gemini.case</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.compiler.html">gemini.compiler</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="gemini.engine.html">gemini.engine</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gemini.engine.apply.html">gemini.engine.apply</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.engine.archive.html">gemini.engine.archive</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.engine.bindings.html">gemini.engine.bindings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.engine.callbacks.html">gemini.engine.callbacks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.engine.check.html">gemini.engine.check</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.engine.checkpoint.html">gemini.engine.checkpoint</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.engine.chunkresult.html">gemini.engine.chunkresult</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.engine.chunks.html">gemini.engine.chunks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.engine.clock.html">gemini.engine.clock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.engine.columns.html">gemini.engine.columns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.engine.eager.html">gemini.engine.eager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.engine.engine.html">gemini.engine.engine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.engine.executor.html">gemini.engine.executor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.engine.health.html">gemini.engine.health</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.engine.loader.html">gemini.engine.loader</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.engine.lockstep.html">gemini.engine.lockstep</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.engine.results.html">gemini.engine.results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.engine.rowwise.html">gemini.engine.rowwise</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.engine.runner.html">gemini.engine.runner</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.engine.simulate.html">gemini.engine.simulate</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gemini.engine.twinresult</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.errors.html">gemini.errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.evaluate.html">gemini.evaluate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.modules.html">gemini.modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.ops.html">gemini.ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.physics.html">gemini.physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.plants.html">gemini.plants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.runtime.html">gemini.runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.streams.html">gemini.streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.study.html">gemini.study</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.units.html">gemini.units</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="gemini.html">gemini</a></li>
+          <li class="breadcrumb-item"><a href="gemini.engine.html">gemini.engine</a></li>
+      <li class="breadcrumb-item active">gemini.engine.twinresult</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/codedocumentation/gemini.engine.twinresult.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-gemini.engine.twinresult">
+<span id="gemini-engine-twinresult"></span><h1>gemini.engine.twinresult<a class="headerlink" href="#module-gemini.engine.twinresult" title="Link to this heading"></a></h1>
+<p>One twin evaluated over a block of ticks: its result columns, errors and new state.</p>
+<p><code class="docutils literal notranslate"><span class="pre">evaluate_twin</span></code> builds the inlet streams and inputs of the ticks a <code class="docutils literal notranslate"><span class="pre">Block</span></code> lets through,
+evaluates the twin over them with an executor (<code class="docutils literal notranslate"><span class="pre">gemini.engine.executor</span></code>, on whichever backend is
+selected), assesses the health of the rows that worked and spreads the columns over the ticks
+of the chunk. A tick that cannot be evaluated has an error: an invalid inlet stream, the
+exception of the failing row, or the exception of its health.</p>
+<p class="rubric">Module Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">UNCHANGED</span></code></p></td>
+<td><p>The <code class="docutils literal notranslate"><span class="pre">state</span></code> of an outcome that leaves the states of the run as they were.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">evaluate_twin</span></code>(twin, block, executor, ...[, halt])</p></td>
+<td><p>Return the <code class="docutils literal notranslate"><span class="pre">Outcome</span></code> of <code class="docutils literal notranslate"><span class="pre">twin</span></code> over <code class="docutils literal notranslate"><span class="pre">block</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">twin_steps</span></code>(twin, block, executor, durations, ...)</p></td>
+<td><p>Evaluate <code class="docutils literal notranslate"><span class="pre">twin</span></code> as <code class="docutils literal notranslate"><span class="pre">evaluate_twin</span></code> does, as a generator: it yields the <code class="docutils literal notranslate"><span class="pre">Request</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Classes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Outcome</span></code>(twin, block, selected, evaluation, ...)</p></td>
+<td><p>What one twin gave over one chunk of ticks.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">StepResults</span></code>(outcomes, tick)</p></td>
+<td><p>The result trees of one tick by twin path, each built from the arrays when first asked.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gemini.engine.simulate.html" class="btn btn-neutral float-left" title="gemini.engine.simulate" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gemini.errors.html" class="btn btn-neutral float-right" title="gemini.errors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

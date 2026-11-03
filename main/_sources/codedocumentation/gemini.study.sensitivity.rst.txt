@@ -1,0 +1,6 @@
+gemini.study.sensitivity
+========================
+
+.. currentmodule:: gemini.study
+
+.. autofunction:: sensitivity

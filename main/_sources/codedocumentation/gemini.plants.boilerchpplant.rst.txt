@@ -1,0 +1,12 @@
+gemini.plants.boilerchpplant
+============================
+
+.. automodule:: gemini.plants.boilerchpplant
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      BoilerChpPlant
+   

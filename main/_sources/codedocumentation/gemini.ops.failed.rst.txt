@@ -1,0 +1,19 @@
+gemini.ops.failed
+=================
+
+.. automodule:: gemini.ops.failed
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      is_marked
+      mark
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Failed
+   

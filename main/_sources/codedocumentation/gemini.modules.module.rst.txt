@@ -1,0 +1,12 @@
+gemini.modules.module
+=====================
+
+.. automodule:: gemini.modules.module
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Module
+   

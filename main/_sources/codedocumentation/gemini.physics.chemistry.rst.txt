@@ -1,0 +1,15 @@
+gemini.physics.chemistry
+========================
+
+.. automodule:: gemini.physics.chemistry
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      co2_partial_pressure
+      co2_solubility_gas
+      co2_solubility_liquid
+      henry_constant
+   

@@ -1,0 +1,28 @@
+gemini.engine.chunks
+====================
+
+.. automodule:: gemini.engine.chunks
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      ADDED_QUANTITIES
+      MISSING
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      assemble
+      first_present
+      merge
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      PathColumns
+      ResultChunk
+   

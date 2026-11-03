@@ -1,0 +1,30 @@
+gemini.units.shapes
+===================
+
+.. automodule:: gemini.units.shapes
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      NO_VALUE
+      SCHEMAS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      check
+      measure
+      series
+      statistics
+      value
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      OutputUnits
+      Value
+   

@@ -1,0 +1,13 @@
+gemini.engine.runner
+====================
+
+.. automodule:: gemini.engine.runner
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Failure
+      Runner
+   

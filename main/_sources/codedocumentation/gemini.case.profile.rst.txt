@@ -1,0 +1,12 @@
+gemini.case.profile
+===================
+
+.. automodule:: gemini.case.profile
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Profile
+   

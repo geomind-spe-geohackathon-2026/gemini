@@ -1,0 +1,24 @@
+gemini.engine.health
+====================
+
+.. automodule:: gemini.engine.health
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      UNAVAILABLE
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      assess
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      HealthColumns
+   

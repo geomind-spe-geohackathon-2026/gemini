@@ -1,0 +1,12 @@
+gemini.ops.math
+===============
+
+.. automodule:: gemini.ops.math
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      getitem
+   

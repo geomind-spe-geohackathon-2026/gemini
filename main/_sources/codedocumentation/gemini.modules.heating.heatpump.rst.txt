@@ -1,0 +1,12 @@
+gemini.modules.heating.heatpump
+===============================
+
+.. automodule:: gemini.modules.heating.heatpump
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      HeatPump
+   

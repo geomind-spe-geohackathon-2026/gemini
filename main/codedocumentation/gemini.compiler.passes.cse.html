@@ -1,0 +1,166 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.compiler.passes.cse &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gemini.compiler.run" href="gemini.compiler.run.html" />
+    <link rel="prev" title="gemini.compiler.passes" href="gemini.compiler.passes.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="gemini.html">gemini</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gemini.analysis.html">gemini.analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.case.html">gemini.case</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="gemini.compiler.html">gemini.compiler</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gemini.compiler.cache.html">gemini.compiler.cache</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.compiler.compile.html">gemini.compiler.compile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.compiler.executor.html">gemini.compiler.executor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.compiler.ir.html">gemini.compiler.ir</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="gemini.compiler.passes.html">gemini.compiler.passes</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">gemini.compiler.passes.cse</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.compiler.run.html">gemini.compiler.run</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.engine.html">gemini.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.errors.html">gemini.errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.evaluate.html">gemini.evaluate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.modules.html">gemini.modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.ops.html">gemini.ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.physics.html">gemini.physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.plants.html">gemini.plants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.runtime.html">gemini.runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.streams.html">gemini.streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.study.html">gemini.study</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.units.html">gemini.units</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="gemini.html">gemini</a></li>
+          <li class="breadcrumb-item"><a href="gemini.compiler.html">gemini.compiler</a></li>
+          <li class="breadcrumb-item"><a href="gemini.compiler.passes.html">gemini.compiler.passes</a></li>
+      <li class="breadcrumb-item active">gemini.compiler.passes.cse</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/codedocumentation/gemini.compiler.passes.cse.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-gemini.compiler.passes.cse">
+<span id="gemini-compiler-passes-cse"></span><h1>gemini.compiler.passes.cse<a class="headerlink" href="#module-gemini.compiler.passes.cse" title="Link to this heading"></a></h1>
+<p>Common-subexpression elimination: merge nodes with the same op, operands and attributes.</p>
+<p><code class="docutils literal notranslate"><span class="pre">eliminate_common_subexpressions(graph)</span></code> rewrites the graph in place in one forward sweep
+over the nodes in creation order. A node is a twin of an earlier node when its op, its
+operands (after the operands themselves were merged), its literals and its attributes are
+identical. Operand identity is a node by the merged node and a literal by type and exact value:
+<code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">1.0</span></code> and <code class="docutils literal notranslate"><span class="pre">True</span></code> differ, <code class="docutils literal notranslate"><span class="pre">0.0</span></code> and <code class="docutils literal notranslate"><span class="pre">-0.0</span></code> differ, NaN equals itself. Graph
+inputs and ops of the <code class="docutils literal notranslate"><span class="pre">reduction</span></code>, <code class="docutils literal notranslate"><span class="pre">interp</span></code>, <code class="docutils literal notranslate"><span class="pre">solver</span></code> and <code class="docutils literal notranslate"><span class="pre">scan</span></code> kinds are never merged.</p>
+<p>Errors. A node carries the error codes of its operands and of its <code class="docutils literal notranslate"><span class="pre">guards</span></code>, and <code class="docutils literal notranslate"><span class="pre">where</span></code>
+keeps only the codes of its selected branch. Merging twins gives the survivor the union of
+their guards, which can only add an error to the consumers of one twin. That is harmless when
+the added error already reaches a graph output on every row where it fires, because the error
+that is raised is the lowest code over all outputs; it is wrong when the twin sat in one
+<code class="docutils literal notranslate"><span class="pre">where</span></code> branch and the error belonged to the other. A node is therefore <code class="docutils literal notranslate"><span class="pre">certain</span></code> when it
+reaches a graph output through operands that are not a <code class="docutils literal notranslate"><span class="pre">where</span></code> branch. Two twins merge only
+when each of them is certain or has no guards. A node whose guards stay below a <code class="docutils literal notranslate"><span class="pre">where</span></code>
+branch merges with nothing, so no error moves onto a branch it did not belong to.</p>
+<p>Checks merge like any other node: same condition, error class, message and message values. The
+merged check keeps the lowest code, codes are renumbered in creation order, and the traced
+message values of every check and the proxies of <code class="docutils literal notranslate"><span class="pre">Graph.result</span></code> follow the merged nodes. The
+pass costs one dictionary lookup per node.</p>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">eliminate_common_subexpressions</span></code>(graph)</p></td>
+<td><p>Merge identical nodes of <code class="docutils literal notranslate"><span class="pre">graph</span></code> in place, keeping results, errors and node order.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gemini.compiler.passes.html" class="btn btn-neutral float-left" title="gemini.compiler.passes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gemini.compiler.run.html" class="btn btn-neutral float-right" title="gemini.compiler.run" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,12 @@
+gemini.plants.doubletheatplant
+==============================
+
+.. automodule:: gemini.plants.doubletheatplant
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      DoubletHeatPlant
+   

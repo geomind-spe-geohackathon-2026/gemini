@@ -1,0 +1,12 @@
+gemini.modules.grids.heatinggrid
+================================
+
+.. automodule:: gemini.modules.grids.heatinggrid
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      HeatingGrid
+   

@@ -1,0 +1,493 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.study.minimize &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../codedocumentation/gemini.html">gemini</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">gemini.study.minimize</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for gemini.study.minimize</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Search of the design space a plant file states: its ranges and options, and its doublet count."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">differential_evolution</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini</span><span class="w"> </span><span class="kn">import</span> <span class="n">units</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.engine.check</span><span class="w"> </span><span class="kn">import</span> <span class="n">check</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ValidationError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.errors.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">raise_issues</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.plants._utils.resize</span><span class="w"> </span><span class="kn">import</span> <span class="n">resized</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.best</span><span class="w"> </span><span class="kn">import</span> <span class="n">Best</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.parallel</span><span class="w"> </span><span class="kn">import</span> <span class="n">mapped</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.progress</span><span class="w"> </span><span class="kn">import</span> <span class="n">counting</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.shared</span><span class="w"> </span><span class="kn">import</span> <span class="n">Shared</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.shown</span><span class="w"> </span><span class="kn">import</span> <span class="n">difference_names</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.target</span><span class="w"> </span><span class="kn">import</span> <span class="n">quantity_of</span><span class="p">,</span> <span class="n">unit_of</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.trial</span><span class="w"> </span><span class="kn">import</span> <span class="n">LARGEST_VIOLATION</span><span class="p">,</span> <span class="n">checked_metric</span><span class="p">,</span> <span class="n">run_trials</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.variables</span><span class="w"> </span><span class="kn">import</span> <span class="n">DOUBLETS</span><span class="p">,</span> <span class="n">counts</span><span class="p">,</span> <span class="n">variables</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.units.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Value</span><span class="p">,</span> <span class="n">measure</span>
+
+<span class="n">POPULATION_PER_VARIABLE</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="sd">"""Candidates of a generation per variable: a small budget still sees several generations."""</span>
+<span class="n">SMALLEST_POPULATION</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="sd">"""The fewest candidates of a generation, which ``differential_evolution`` needs."""</span>
+
+
+<span class="n">NOT_A_NUMBER</span> <span class="o">=</span> <span class="s2">"the objective is not a number"</span>
+<span class="sd">"""The reason of a trial whose objective is NaN, which a run without failed steps can give."""</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_number</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Whether an objective is a finite number; ``None`` and NaN rank a trial as infeasible."""</span>
+    <span class="k">return</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ranked</span><span class="p">(</span><span class="n">sign</span><span class="p">,</span> <span class="n">number</span><span class="p">,</span> <span class="n">reason</span><span class="p">,</span> <span class="n">violation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the objective the search sees: feasible trials in (-1, 1), the others above 2.</span>
+
+<span class="sd">    The map is monotone, so every feasible trial is better than every infeasible one, and the</span>
+<span class="sd">    infeasible ones are ordered by their violation.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">reason</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">scaled</span> <span class="o">=</span> <span class="n">sign</span> <span class="o">*</span> <span class="n">number</span>
+        <span class="k">return</span> <span class="n">scaled</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">scaled</span><span class="p">))</span>
+    <span class="k">return</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">violation</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">violation</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_entry</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">reason</span><span class="p">,</span> <span class="n">violation</span><span class="p">,</span> <span class="n">lifts</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return one line of the history: the objective, with the parameters and the violation.</span>
+
+<span class="sd">    ``lifts`` names the parameters that are differences of temperature, listed when there are any.</span>
+<span class="sd">    """</span>
+    <span class="n">metric</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">measure</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">,</span> <span class="n">reason</span><span class="p">))</span>
+    <span class="n">extra</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"differences"</span><span class="p">:</span> <span class="n">lifts</span><span class="p">}</span> <span class="k">if</span> <span class="n">lifts</span> <span class="k">else</span> <span class="p">{}</span>
+    <span class="k">return</span> <span class="n">Value</span><span class="p">(</span>
+        <span class="n">metric</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+        <span class="n">metric</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span>
+        <span class="n">reason</span> <span class="ow">or</span> <span class="n">metric</span><span class="o">.</span><span class="n">reason</span><span class="p">,</span>
+        <span class="n">metric</span><span class="o">.</span><span class="n">parts</span> <span class="o">|</span> <span class="p">{</span><span class="s2">"parameters"</span><span class="p">:</span> <span class="n">parameters</span><span class="p">,</span> <span class="s2">"violation"</span><span class="p">:</span> <span class="n">violation</span><span class="p">}</span> <span class="o">|</span> <span class="n">extra</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_generations</span><span class="p">(</span><span class="n">evaluations</span><span class="p">,</span> <span class="n">count</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``(population, generations after the first)`` that fit the budget."""</span>
+    <span class="n">population</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">SMALLEST_POPULATION</span><span class="p">,</span> <span class="n">POPULATION_PER_VARIABLE</span> <span class="o">*</span> <span class="n">count</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">evaluations</span> <span class="o">&lt;</span> <span class="n">population</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"study.minimize: evaluations = </span><span class="si">{</span><span class="n">evaluations</span><span class="si">}</span><span class="s2">; </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2"> variables need at least "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">population</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="s2">"evaluations"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">population</span><span class="p">,</span> <span class="n">evaluations</span> <span class="o">//</span> <span class="n">population</span> <span class="o">-</span> <span class="mi">1</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_values</span><span class="p">(</span><span class="n">found</span><span class="p">,</span> <span class="n">point</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``{flat name: value}`` of the parameters a point of the search sets."""</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">variable</span><span class="p">,</span> <span class="n">number</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">found</span><span class="p">,</span> <span class="n">point</span><span class="p">):</span>
+        <span class="n">chosen</span> <span class="o">=</span> <span class="n">_chosen</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">number</span><span class="p">))</span>
+        <span class="n">values</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">paths</span><span class="p">,</span> <span class="n">chosen</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">values</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_chosen</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">number</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the value of a variable at ``number``: a float, an integer or an option."""</span>
+    <span class="k">if</span> <span class="n">variable</span><span class="o">.</span><span class="n">options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">variable</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">number</span><span class="p">))]</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">number</span><span class="p">))</span> <span class="k">if</span> <span class="n">variable</span><span class="o">.</span><span class="n">integer</span> <span class="k">else</span> <span class="n">number</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_shown</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">found</span><span class="p">,</span> <span class="n">point</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``{variable name: Quantity or option}`` of a point, in the SI unit of each."""</span>
+    <span class="n">shown</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">variable</span><span class="p">,</span> <span class="n">number</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">found</span><span class="p">,</span> <span class="n">point</span><span class="p">):</span>
+        <span class="n">chosen</span> <span class="o">=</span> <span class="n">_chosen</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">number</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">variable</span><span class="o">.</span><span class="n">options</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">chosen</span> <span class="o">=</span> <span class="n">units</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">chosen</span><span class="p">,</span> <span class="n">unit_of</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">variable</span><span class="o">.</span><span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">shown</span><span class="p">[</span><span class="n">variable</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">chosen</span>
+    <span class="k">return</span> <span class="n">shown</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_lifts</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">found</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the names of the variables that are differences of temperature."""</span>
+    <span class="n">paths</span> <span class="o">=</span> <span class="p">{</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">found</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">options</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">}</span>
+    <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">name</span><span class="p">:</span> <span class="n">units</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">unit_of</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">path</span><span class="p">))</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">difference_names</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">name</span><span class="p">:</span> <span class="n">quantity_of</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">paths</span><span class="p">[</span><span class="n">name</span><span class="p">]))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_design</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return a copy of ``plant`` on the doublet count and with the values of a trial."""</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">DOUBLETS</span><span class="p">)</span>
+    <span class="n">design</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">plant</span><span class="p">)</span> <span class="k">if</span> <span class="n">count</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">resized</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">count</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">(</span><span class="n">design</span><span class="p">):</span>
+        <span class="n">chosen</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="n">variable</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">number</span> <span class="o">=</span> <span class="n">chosen</span> <span class="k">if</span> <span class="n">variable</span><span class="o">.</span><span class="n">options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">chosen</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">for</span> <span class="n">flat</span> <span class="ow">in</span> <span class="n">variable</span><span class="o">.</span><span class="n">paths</span><span class="p">:</span>
+            <span class="n">path</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">parameter</span> <span class="o">=</span> <span class="n">flat</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span>
+            <span class="n">design</span><span class="o">.</span><span class="n">_set_si_params</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="p">{</span><span class="n">parameter</span><span class="p">:</span> <span class="n">number</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">design</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_best</span><span class="p">(</span><span class="n">history</span><span class="p">,</span> <span class="n">sign</span><span class="p">,</span> <span class="n">plant</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``(Best, feasible)``: the best feasible trial, else the least violating one.</span>
+
+<span class="sd">    A trial that ran but broke a limit is returned, with its ``reason``, only when none is</span>
+<span class="sd">    feasible; with no trial that ran, ``Best`` has no value and no plant.</span>
+<span class="sd">    """</span>
+    <span class="n">ran</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">history</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="n">feasible</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">ran</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">reason</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ran</span><span class="p">:</span>
+        <span class="n">reason</span> <span class="o">=</span> <span class="s2">"every trial failed"</span>
+        <span class="k">return</span> <span class="n">Best</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">,</span> <span class="n">reason</span><span class="p">,</span> <span class="p">{</span><span class="s2">"parameters"</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span> <span class="kc">None</span><span class="p">),</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">feasible</span><span class="p">:</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">feasible</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="n">sign</span> <span class="o">*</span> <span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">ran</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">parts</span><span class="p">[</span><span class="s2">"violation"</span><span class="p">])</span>
+    <span class="n">design</span> <span class="o">=</span> <span class="n">_design</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">found</span><span class="o">.</span><span class="n">parts</span><span class="p">[</span><span class="s2">"parameters"</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">Best</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">found</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span> <span class="n">found</span><span class="o">.</span><span class="n">reason</span><span class="p">,</span> <span class="n">found</span><span class="o">.</span><span class="n">parts</span><span class="p">,</span> <span class="n">design</span><span class="p">),</span> <span class="nb">bool</span><span class="p">(</span><span class="n">feasible</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_start</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">found</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the point of the design itself, each value clipped to the bounds of its variable.</span>
+
+<span class="sd">    A variable takes the value the design has for its first parameter; a choice, the index of its</span>
+<span class="sd">    value among the options; a parameter with no number takes the middle of its bounds.</span>
+<span class="sd">    """</span>
+    <span class="n">point</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="n">found</span><span class="p">:</span>
+        <span class="n">path</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">parameter</span> <span class="o">=</span> <span class="n">variable</span><span class="o">.</span><span class="n">paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span>
+        <span class="n">held</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">design</span><span class="o">.</span><span class="n">get_submodule</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="n">parameter</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">variable</span><span class="o">.</span><span class="n">options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">point</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">held</span><span class="p">))</span> <span class="k">if</span> <span class="n">held</span> <span class="ow">in</span> <span class="n">variable</span><span class="o">.</span><span class="n">options</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">number</span> <span class="o">=</span> <span class="p">(</span><span class="n">variable</span><span class="o">.</span><span class="n">low</span> <span class="o">+</span> <span class="n">variable</span><span class="o">.</span><span class="n">high</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">held</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="k">else</span> <span class="n">held</span>
+        <span class="n">point</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">number</span><span class="p">),</span> <span class="n">variable</span><span class="o">.</span><span class="n">low</span><span class="p">),</span> <span class="n">variable</span><span class="o">.</span><span class="n">high</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">point</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_bounds</span><span class="p">(</span><span class="n">found</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the ``(low, high)`` of every variable for the search; a choice is an index."""</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">options</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">high</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">found</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_discrete</span><span class="p">(</span><span class="n">found</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the ``integrality`` of the variables, or ``None`` when all are continuous."""</span>
+    <span class="n">flags</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">item</span><span class="o">.</span><span class="n">integer</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">found</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">flags</span><span class="p">)</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">flags</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_search</span><span class="p">(</span><span class="n">evaluated</span><span class="p">,</span> <span class="n">found</span><span class="p">,</span> <span class="n">evaluations</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">generations</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Run the search of the variables from ``start``; with none, evaluate once.</span>
+
+<span class="sd">    ``generations`` is the number of generations after the first; without it, what the budget</span>
+<span class="sd">    allows. With ``0`` only the first population is evaluated, which is how the points of the</span>
+<span class="sd">    first generation are known before the search runs.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
+        <span class="n">evaluated</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="k">return</span>
+    <span class="n">population</span><span class="p">,</span> <span class="n">allowed</span> <span class="o">=</span> <span class="n">_generations</span><span class="p">(</span><span class="n">evaluations</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">))</span>
+    <span class="n">differential_evolution</span><span class="p">(</span>
+        <span class="n">evaluated</span><span class="p">,</span>
+        <span class="n">_bounds</span><span class="p">(</span><span class="n">found</span><span class="p">),</span>
+        <span class="n">maxiter</span><span class="o">=</span><span class="n">allowed</span> <span class="k">if</span> <span class="n">generations</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">generations</span><span class="p">,</span>
+        <span class="n">popsize</span><span class="o">=</span><span class="n">population</span><span class="p">,</span>
+        <span class="n">x0</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+        <span class="n">tol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">polish</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+        <span class="n">integrality</span><span class="o">=</span><span class="n">_discrete</span><span class="p">(</span><span class="n">found</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_Population</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The first population of a search, run as one batch, and the trials after it one by one.</span>
+
+<span class="sd">    ``differential_evolution`` with ``updating="immediate"`` (the default, and the trial sequence</span>
+<span class="sd">    this search has always had) builds each candidate of a generation from the members replaced</span>
+<span class="sd">    before it, so only the first population, which is drawn before any trial is known, is one</span>
+<span class="sd">    batch; its points are found by a search of zero generations that records them. A point that</span>
+<span class="sd">    was run in the batch is read from there when the search asks for it, in the order the search</span>
+<span class="sd">    asks, so the history, the order and the random draws are those of a search that runs every</span>
+<span class="sd">    trial alone.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shared</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">plan</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">found</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Run the trials on ``shared``, the plant of the search, judged on ``name``."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shared</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">case</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">plan</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">found</span> <span class="o">=</span> <span class="n">shared</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">plan</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">found</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">known</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluations</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Run the first population of the search that ``evaluations`` and ``seed`` describe."""</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">record</span><span class="p">(</span><span class="n">point</span><span class="p">):</span>
+            <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+
+        <span class="n">_search</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">found</span><span class="p">,</span> <span class="n">evaluations</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">generations</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">outcomes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">found</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span> <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">points</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">point</span><span class="p">,</span> <span class="n">outcome</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">outcomes</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">known</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">tobytes</span><span class="p">(),</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">outcome</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">valued</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the outcome ``(metrics, reason, violation)`` of the trials of ``valued``."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">valued</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="n">run_trials</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shared</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">case</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">plan</span><span class="p">,</span> <span class="n">valued</span><span class="p">,</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">},</span> <span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">outcome</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the outcome of the trial at ``point``: the batch's, else one trial alone.</span>
+
+<span class="sd">        A trial of the batch is read once, so a point asked twice is run twice, as it is alone.</span>
+<span class="sd">        """</span>
+        <span class="n">waiting</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">known</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">tobytes</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">waiting</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">waiting</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">found</span><span class="p">,</span> <span class="n">point</span><span class="p">)])[</span><span class="mi">0</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_counted</span><span class="p">(</span><span class="n">shared</span><span class="p">,</span> <span class="n">count</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the history of the search on ``count`` doublets, ``None`` for the plant as it is."""</span>
+    <span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">plan</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">sign</span><span class="p">,</span> <span class="n">evaluations</span><span class="p">,</span> <span class="n">seed</span> <span class="o">=</span> <span class="n">shared</span>
+    <span class="n">design</span> <span class="o">=</span> <span class="n">plant</span> <span class="k">if</span> <span class="n">count</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">resized</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+    <span class="n">chosen</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">count</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{</span><span class="n">DOUBLETS</span><span class="p">:</span> <span class="n">units</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">)}</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">variables</span><span class="p">(</span><span class="n">design</span><span class="p">)</span>
+    <span class="n">history</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">lifts</span> <span class="o">=</span> <span class="n">_lifts</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">found</span><span class="p">)</span>
+    <span class="n">population</span> <span class="o">=</span> <span class="n">_Population</span><span class="p">(</span><span class="n">Shared</span><span class="p">(</span><span class="n">design</span><span class="p">),</span> <span class="n">case</span><span class="p">,</span> <span class="n">plan</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">found</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluated</span><span class="p">(</span><span class="n">point</span><span class="p">):</span>
+        <span class="n">metrics</span><span class="p">,</span> <span class="n">reason</span><span class="p">,</span> <span class="n">violation</span> <span class="o">=</span> <span class="n">population</span><span class="o">.</span><span class="n">outcome</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">reason</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">_is_number</span><span class="p">(</span><span class="n">metrics</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">):</span>
+            <span class="n">reason</span><span class="p">,</span> <span class="n">violation</span> <span class="o">=</span> <span class="n">metrics</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">reason</span> <span class="ow">or</span> <span class="n">NOT_A_NUMBER</span><span class="p">,</span> <span class="n">LARGEST_VIOLATION</span>
+            <span class="n">metrics</span> <span class="o">=</span> <span class="n">metrics</span> <span class="o">|</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">measure</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">metrics</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">unit</span><span class="p">,</span> <span class="n">reason</span><span class="p">)}</span>
+        <span class="n">shown</span> <span class="o">=</span> <span class="n">chosen</span> <span class="o">|</span> <span class="n">_shown</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">found</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span>
+        <span class="n">history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_entry</span><span class="p">(</span><span class="n">shown</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">reason</span><span class="p">,</span> <span class="n">violation</span><span class="p">,</span> <span class="n">lifts</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">_ranked</span><span class="p">(</span><span class="n">sign</span><span class="p">,</span> <span class="n">history</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">reason</span><span class="p">,</span> <span class="n">violation</span><span class="p">)</span>
+
+    <span class="n">start</span> <span class="o">=</span> <span class="n">_start</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">found</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">found</span><span class="p">:</span>
+        <span class="n">population</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">evaluations</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+    <span class="n">_search</span><span class="p">(</span><span class="n">evaluated</span><span class="p">,</span> <span class="n">found</span><span class="p">,</span> <span class="n">evaluations</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">history</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">trials_of</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">evaluations</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the number of trials ``minimize`` runs on ``plant``: the sum over its doublet counts.</span>
+
+<span class="sd">    A count with variables runs whole populations, as many as the budget allows; one without</span>
+<span class="sd">    runs the design once. A search that ends before its budget runs fewer.</span>
+<span class="sd">    """</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">counts</span><span class="p">(</span><span class="n">plant</span><span class="p">):</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="n">variables</span><span class="p">(</span><span class="n">plant</span> <span class="k">if</span> <span class="n">count</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">resized</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">count</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
+            <span class="n">total</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">continue</span>
+        <span class="n">population</span><span class="p">,</span> <span class="n">allowed</span> <span class="o">=</span> <span class="n">_generations</span><span class="p">(</span><span class="n">evaluations</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">))</span>
+        <span class="n">total</span> <span class="o">+=</span> <span class="n">population</span> <span class="o">*</span> <span class="p">(</span><span class="n">allowed</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">total</span>
+
+
+<div class="viewcode-block" id="minimize">
+<a class="viewcode-back" href="../../../codedocumentation/gemini.study.minimize.html#gemini.study.minimize">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">minimize</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">objective</span><span class="p">,</span> <span class="n">evaluations</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">plan</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">on_progress</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the design of a plant that minimises a metric, searched in the space the plant states.</span>
+
+<span class="sd">    The variables are the plant's own: every leaf with a ``range`` (continuous, or integer when</span>
+<span class="sd">    the parameter is) and every leaf with ``options`` (a choice among strings), and the number of</span>
+<span class="sd">    doublets when ``size.doublets`` has a ``range``. Leaves with the same parameter name, the same</span>
+<span class="sd">    role and an equal range are one variable (three chillers of one range are one capacity); the</span>
+<span class="sd">    order is that of the file. ``gm.check`` runs first and raises its issues, so a plant is sized</span>
+<span class="sd">    first (``gm.study.size`` completes a template plant).</span>
+
+<span class="sd">    Each trial copies the plant, sets the variables, simulates the copy on the case</span>
+<span class="sd">    (``gm.simulate`` plans the demand on that design) and reads the objective from</span>
+<span class="sd">    ``gm.evaluate``. The variables are searched with ``scipy.optimize.differential_evolution``</span>
+<span class="sd">    from a Latin hypercube with the given ``seed``; the integers and the choices are searched as</span>
+<span class="sd">    integers. One member is the plant as it is given (its own values, clipped to the bounds), so a</span>
+<span class="sd">    start inside the bounds is among the trials and the best is never worse than it. It needs no</span>
+<span class="sd">    gradient and its population gives the exact number of simulations. The number of doublets is</span>
+<span class="sd">    a discrete variable: the search runs once for each count, from the lowest to the highest, on</span>
+<span class="sd">    a new plant of that size, and the best trial of all counts wins; with</span>
+<span class="sd">    ``gm.runtime.settings(processes=n)`` the searches of the counts run in ``n`` worker processes</span>
+<span class="sd">    and give the same result. The plant and the case themselves are not changed.</span>
+
+<span class="sd">    A trial is feasible when its ``gm.evaluate.verdict`` has no reason a design can change (the</span>
+<span class="sd">    reasons with a ``violation``): no failed step, every requirement of the case passes, the</span>
+<span class="sd">    supply temperatures of the services included, no operating limit breached. A reason no variable</span>
+<span class="sd">    can change (a service the plant has no unit for) is not held against a trial; the verdict of</span>
+<span class="sd">    the best plant, from ``gm.evaluate.report``, keeps it. A</span>
+<span class="sd">    trial that does not run (a physics error, say at some depth) is infeasible with the largest</span>
+<span class="sd">    violation. The search sees feasible trials as better than infeasible ones, and infeasible</span>
+<span class="sd">    ones ordered by their total relative violation, so it moves towards feasibility. The best</span>
+<span class="sd">    feasible trial is ``best``; with none, ``best`` is the least violating trial and ``feasible``</span>
+<span class="sd">    is ``False``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    plant : Plant</span>
+<span class="sd">        A plant with parameter values, and the ranges and options to search.</span>
+<span class="sd">    case : Case</span>
+<span class="sd">        What the plant is asked to do: its demand is planned for each trial, so a variable that</span>
+<span class="sd">        changes the design changes the plan, and its economics give the prices.</span>
+<span class="sd">    objective : str</span>
+<span class="sd">        The metric to minimise, a KPI of ``gm.evaluate.totals`` or ``lcoh``, ``lcoc``, ``lcts``,</span>
+<span class="sd">        ``annualised_cost`` or ``co2``; a metric to maximise is given with a leading ``"-"``.</span>
+<span class="sd">    evaluations : int</span>
+<span class="sd">        The largest number of simulations for each doublet count; at least five per variable, and</span>
+<span class="sd">        at least five. It has no default.</span>
+<span class="sd">    seed : int</span>
+<span class="sd">        Seed of the search; the same call gives the same trials. It has no default.</span>
+<span class="sd">    plan : DataFrame, optional</span>
+<span class="sd">        The run input held fixed over the trials, for a building block with no demand; without it</span>
+<span class="sd">        each trial is planned from the case.</span>
+<span class="sd">    on_progress : callable, optional</span>
+<span class="sd">        ``on_progress(done, total)``, called in the calling process after each finished trial,</span>
+<span class="sd">        also when the searches run in worker processes; ``total`` is the number of trials the</span>
+<span class="sd">        budget gives, and ``done`` reaches it at the end even when a search ends early. Raising</span>
+<span class="sd">        ``gm.errors.Cancelled`` from it stops the search: no later trial starts, the workers are</span>
+<span class="sd">        stopped and the exception propagates. The trials, their order and the result do not</span>
+<span class="sd">        depend on it; any other exception it raises propagates too.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        ``{best, feasible, history, evaluations}``. ``best`` is the objective as a ``Value`` in</span>
+<span class="sd">        SI, whose ``parts["parameters"]`` are ``{name: Quantity}`` (an option is its string) and</span>
+<span class="sd">        whose ``["plant"]`` is the best plant: a ``Plant`` with the best doublet count and the</span>
+<span class="sd">        values set, whose ``to_json`` is a plant file that runs. ``feasible`` is whether ``best``</span>
+<span class="sd">        is feasible; if not, ``best`` is the least violating trial that ran and its ``reason``</span>
+<span class="sd">        says why. ``history`` lists the same as ``best`` for every trial, with</span>
+<span class="sd">        ``parts["violation"]`` (0 when feasible) and a ``reason`` for an infeasible trial: the</span>
+<span class="sd">        first reason of its verdict (its dict), a text for a failed run.</span>
+<span class="sd">        ``evaluations`` is the number of simulations. With no trial that ran, ``best`` has no</span>
+<span class="sd">        value and no plant, and gives a ``reason``. ``to_plain`` gives the JSON form.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValidationError</span>
+<span class="sd">        The issues of ``gm.check``; ``invalid_design`` when the plant states nothing to search;</span>
+<span class="sd">        ``missing_value`` for a range with one side only.</span>
+<span class="sd">    """</span>
+    <span class="n">raise_issues</span><span class="p">(</span><span class="n">check</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">))</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">checked_metric</span><span class="p">(</span><span class="n">objective</span><span class="o">.</span><span class="n">removeprefix</span><span class="p">(</span><span class="s2">"-"</span><span class="p">))</span>
+    <span class="n">sign</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span> <span class="k">if</span> <span class="n">objective</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"-"</span><span class="p">)</span> <span class="k">else</span> <span class="mf">1.0</span>
+    <span class="n">sizes</span> <span class="o">=</span> <span class="n">counts</span><span class="p">(</span><span class="n">plant</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">sizes</span> <span class="o">==</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">variables</span><span class="p">(</span><span class="n">plant</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="s2">"study.minimize: the plant states no range and no options; expected at least one "</span>
+            <span class="s2">"leaf with a range or options to search"</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="s2">"params"</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_design"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">sizes</span> <span class="o">!=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
+        <span class="n">resized</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">shared</span> <span class="o">=</span> <span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">plan</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">sign</span><span class="p">,</span> <span class="n">evaluations</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">on_progress</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">trials_of</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">evaluations</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">counting</span><span class="p">(</span><span class="n">on_progress</span><span class="p">,</span> <span class="n">total</span><span class="p">)</span> <span class="k">as</span> <span class="n">count</span><span class="p">:</span>
+        <span class="n">history</span> <span class="o">=</span> <span class="p">[</span><span class="n">entry</span> <span class="k">for</span> <span class="n">found</span> <span class="ow">in</span> <span class="n">mapped</span><span class="p">(</span><span class="n">_counted</span><span class="p">,</span> <span class="n">shared</span><span class="p">,</span> <span class="n">sizes</span><span class="p">)</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">found</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">count</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">count</span><span class="o">.</span><span class="n">reach</span><span class="p">(</span><span class="n">total</span><span class="p">)</span>
+    <span class="n">best</span><span class="p">,</span> <span class="n">feasible</span> <span class="o">=</span> <span class="n">_best</span><span class="p">(</span><span class="n">history</span><span class="p">,</span> <span class="n">sign</span><span class="p">,</span> <span class="n">plant</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"best"</span><span class="p">:</span> <span class="n">best</span><span class="p">,</span> <span class="s2">"feasible"</span><span class="p">:</span> <span class="n">feasible</span><span class="p">,</span> <span class="s2">"history"</span><span class="p">:</span> <span class="n">history</span><span class="p">,</span> <span class="s2">"evaluations"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="p">)}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,13 @@
+gemini.compiler.passes
+======================
+
+.. automodule:: gemini.compiler.passes
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   cse

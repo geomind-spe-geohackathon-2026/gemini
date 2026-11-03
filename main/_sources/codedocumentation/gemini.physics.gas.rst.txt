@@ -1,0 +1,40 @@
+gemini.physics.gas
+==================
+
+.. automodule:: gemini.physics.gas
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      NORMAL_TEMPERATURE
+      NORMAL_PRESSURE
+      SPECIES
+      COMPOSITION_TOLERANCE
+      AIR_COMPOSITION
+      AIR_SPECIFIC_HEAT
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      combustion_co2
+      composition_of_masses
+      emission_per_energy
+      gas_liquid_ratio
+      gas_mass_fraction
+      heat_rejected
+      ideal_gas_density
+      isentropic_outlet_temperature
+      lower_heating_value
+      mass_fraction
+      molar_mass
+      normal_density
+      overall_pressure_ratio
+      shaft_power
+      species_flow
+      specific_compression_work
+      stage_outlet_temperature
+      stage_pressure_ratio
+   

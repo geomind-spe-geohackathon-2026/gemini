@@ -1,0 +1,6 @@
+gemini.study.calibrate
+======================
+
+.. currentmodule:: gemini.study
+
+.. autofunction:: calibrate

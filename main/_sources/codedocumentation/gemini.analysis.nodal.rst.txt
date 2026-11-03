@@ -1,0 +1,6 @@
+gemini.analysis.nodal
+=====================
+
+.. currentmodule:: gemini.analysis
+
+.. autofunction:: nodal

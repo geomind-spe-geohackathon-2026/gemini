@@ -1,0 +1,12 @@
+gemini.modules.control.pidcontroller
+====================================
+
+.. automodule:: gemini.modules.control.pidcontroller
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      PIDController
+   

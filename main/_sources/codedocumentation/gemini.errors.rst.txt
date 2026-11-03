@@ -1,0 +1,15 @@
+gemini.errors
+=============
+
+.. automodule:: gemini.errors
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   base
+   lookup
+   rows

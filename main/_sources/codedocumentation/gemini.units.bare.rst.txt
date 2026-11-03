@@ -1,0 +1,13 @@
+gemini.units.bare
+=================
+
+.. automodule:: gemini.units.bare
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      is_bare
+      refuse
+   

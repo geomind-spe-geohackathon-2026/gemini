@@ -1,0 +1,12 @@
+gemini.plants.heatingsubstation
+===============================
+
+.. automodule:: gemini.plants.heatingsubstation
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      HeatingSubstation
+   

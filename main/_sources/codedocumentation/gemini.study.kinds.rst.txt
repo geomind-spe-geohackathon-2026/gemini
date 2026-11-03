@@ -1,0 +1,6 @@
+gemini.study.kinds
+==================
+
+.. currentmodule:: gemini.study
+
+.. autofunction:: kinds

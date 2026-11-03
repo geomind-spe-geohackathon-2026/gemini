@@ -1,0 +1,23 @@
+gemini.ops.scope
+================
+
+.. automodule:: gemini.ops.scope
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      physics
+      plain
+      require
+      traced_graph
+      tracing
+      wrap
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Scope
+   

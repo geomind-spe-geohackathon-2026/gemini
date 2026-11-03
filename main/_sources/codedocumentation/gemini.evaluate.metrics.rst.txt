@@ -1,0 +1,6 @@
+gemini.evaluate.metrics
+=======================
+
+.. currentmodule:: gemini.evaluate
+
+.. autofunction:: metrics

@@ -1,0 +1,217 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.physics.pumps &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gemini.physics.refrigeration" href="gemini.physics.refrigeration.html" />
+    <link rel="prev" title="gemini.physics.psychrometrics" href="gemini.physics.psychrometrics.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="gemini.html">gemini</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gemini.analysis.html">gemini.analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.case.html">gemini.case</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.compiler.html">gemini.compiler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.engine.html">gemini.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.errors.html">gemini.errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.evaluate.html">gemini.evaluate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.modules.html">gemini.modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.ops.html">gemini.ops</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="gemini.physics.html">gemini.physics</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.chemistry.html">gemini.physics.chemistry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.combustion.html">gemini.physics.combustion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.constants.html">gemini.physics.constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.corrosion.html">gemini.physics.corrosion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.cycles.html">gemini.physics.cycles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.diagnostics.html">gemini.physics.diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.energy.html">gemini.physics.energy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.erosion.html">gemini.physics.erosion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.fluid.html">gemini.physics.fluid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.gas.html">gemini.physics.gas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.geometry.html">gemini.physics.geometry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.ground.html">gemini.physics.ground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.heat_transfer.html">gemini.physics.heat_transfer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.hydraulics.html">gemini.physics.hydraulics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.psychrometrics.html">gemini.physics.psychrometrics</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gemini.physics.pumps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.refrigeration.html">gemini.physics.refrigeration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.separation.html">gemini.physics.separation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.steam.html">gemini.physics.steam</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.plants.html">gemini.plants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.runtime.html">gemini.runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.streams.html">gemini.streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.study.html">gemini.study</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.units.html">gemini.units</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="gemini.html">gemini</a></li>
+          <li class="breadcrumb-item"><a href="gemini.physics.html">gemini.physics</a></li>
+      <li class="breadcrumb-item active">gemini.physics.pumps</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/codedocumentation/gemini.physics.pumps.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-gemini.physics.pumps">
+<span id="gemini-physics-pumps"></span><h1>gemini.physics.pumps<a class="headerlink" href="#module-gemini.physics.pumps" title="Link to this heading"></a></h1>
+<p>Pump relations: the TNO R11363 power polynomial, affinity-law curves, efficiencies.</p>
+<p>The ESP and line-shaft pumps use the TNO R11363 power polynomial on the historical US basis
+(<code class="docutils literal notranslate"><span class="pre">power</span></code>, which the doublet design reads too, <code class="docutils literal notranslate"><span class="pre">head</span></code> and the ESP and line-shaft efficiencies
+and friction). The centrifugal pump uses a quadratic head curve in SI with
+a parabolic efficiency (<code class="docutils literal notranslate"><span class="pre">centrifugal_head</span></code>, <code class="docutils literal notranslate"><span class="pre">parabolic_efficiency</span></code>). The shared relations
+are the speed ratio, the hydraulic and shaft power and the operating window.</p>
+<p class="rubric">Module Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">POLYNOMIAL_COEFFICIENT_COUNT</span></code></p></td>
+<td><p>Number of ascending coefficients of the degree-5 TNO head and power polynomials.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">RUNOUT_LOAD</span></code></p></td>
+<td><p>Flow over the speed-scaled best-efficiency flow [-] at which the centrifugal curve ends.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">CENTRIFUGAL_HEAD_COEFFICIENT_COUNT</span></code></p></td>
+<td><p>Number of coefficients <code class="docutils literal notranslate"><span class="pre">c0,</span> <span class="pre">c1,</span> <span class="pre">c2</span></code> of the quadratic centrifugal head curve.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">HYDRAULIC_POWER_PER_HEAD</span></code></p></td>
+<td><p>[W per bhp] over [Pa per ft of head], computed once.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">best_efficiency_ratio</span></code>(flow, speed, ...)</p></td>
+<td><p>Return the flow relative to the speed-scaled best-efficiency flow.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">centrifugal_head</span></code>(flow, speed, coefficients)</p></td>
+<td><p>Return the pressure rise of a centrifugal pump from its quadratic curve and the speed.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">constant_head_curves</span></code>(design_head, efficiency)</p></td>
+<td><p>Return the head and power coefficients of a pump with one head at its design efficiency.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">esp_efficiency</span></code>(flow, head, power)</p></td>
+<td><p>Return the retained US-basis ESP efficiency; zero for a stopped pump.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">head</span></code>(volume_flow, frequency, stages, ...)</p></td>
+<td><p>Return pressure rise [Pa] from flow [m3/s], frequency [Hz], stages and ft coefficients.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">hydraulic_power</span></code>(flow, head)</p></td>
+<td><p>Return the power given to the liquid by a pump.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">intake_gas_volume_fraction</span></code>(liquid_density, ...)</p></td>
+<td><p>Return the free-gas volume fraction [-] of a mixture at the pump intake.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_in_operating_window</span></code>(flow, minimum_flow, ...)</p></td>
+<td><p>Return whether a flow lies inside the speed-scaled operating window of a pump.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">line_shaft_friction_power</span></code>(friction_loss, ...)</p></td>
+<td><p>Return the mechanical friction power of a line shaft.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">parabolic_efficiency</span></code>(best_efficiency, load)</p></td>
+<td><p>Return the hydraulic efficiency of the parabola through the origin.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">power</span></code>(volume_flow, frequency, stages, ...)</p></td>
+<td><p>Return power [W] from flow [m3/s], frequency [Hz], stages and bhp coefficients.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pump_efficiency</span></code>(flow, head, power)</p></td>
+<td><p>Return the SI efficiency of a pump from a measured or modelled power; zero when stopped.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">speed_ratio</span></code>(frequency, rated_frequency)</p></td>
+<td><p>Return the speed ratio of a variable-speed pump.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">speed_scaled_flow</span></code>(flow, speed)</p></td>
+<td><p>Return a flow limit of a pump at a speed ratio [m3/s].</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gemini.physics.psychrometrics.html" class="btn btn-neutral float-left" title="gemini.physics.psychrometrics" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gemini.physics.refrigeration.html" class="btn btn-neutral float-right" title="gemini.physics.refrigeration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

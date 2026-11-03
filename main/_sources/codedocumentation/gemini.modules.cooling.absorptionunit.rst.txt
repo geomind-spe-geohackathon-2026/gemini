@@ -1,0 +1,12 @@
+gemini.modules.cooling.absorptionunit
+=====================================
+
+.. automodule:: gemini.modules.cooling.absorptionunit
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      AbsorptionUnit
+   

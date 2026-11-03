@@ -1,0 +1,18 @@
+gemini.streams.kinds
+====================
+
+.. automodule:: gemini.streams.kinds
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      NAMES
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      names
+   

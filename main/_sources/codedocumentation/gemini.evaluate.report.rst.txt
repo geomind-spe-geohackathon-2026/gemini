@@ -1,0 +1,6 @@
+gemini.evaluate.report
+======================
+
+.. currentmodule:: gemini.evaluate
+
+.. autofunction:: report

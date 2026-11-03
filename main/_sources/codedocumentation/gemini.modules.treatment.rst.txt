@@ -1,0 +1,18 @@
+gemini.modules.treatment
+========================
+
+.. automodule:: gemini.modules.treatment
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   blowdown
+   degasser
+   desander
+   filter
+   flare
+   inhibitordosing

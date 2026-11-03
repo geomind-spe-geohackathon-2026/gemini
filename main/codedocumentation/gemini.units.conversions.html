@@ -1,0 +1,316 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.units.conversions &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gemini.units.display" href="gemini.units.display.html" />
+    <link rel="prev" title="gemini.units.bare" href="gemini.units.bare.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="gemini.html">gemini</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gemini.analysis.html">gemini.analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.case.html">gemini.case</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.compiler.html">gemini.compiler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.engine.html">gemini.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.errors.html">gemini.errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.evaluate.html">gemini.evaluate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.modules.html">gemini.modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.ops.html">gemini.ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.physics.html">gemini.physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.plants.html">gemini.plants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.runtime.html">gemini.runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.streams.html">gemini.streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.study.html">gemini.study</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="gemini.units.html">gemini.units</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gemini.units.bare.html">gemini.units.bare</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gemini.units.conversions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.units.display.html">gemini.units.display</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.units.inputs.html">gemini.units.inputs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.units.quantities.html">gemini.units.quantities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.units.shapes.html">gemini.units.shapes</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="gemini.html">gemini</a></li>
+          <li class="breadcrumb-item"><a href="gemini.units.html">gemini.units</a></li>
+      <li class="breadcrumb-item active">gemini.units.conversions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/codedocumentation/gemini.units.conversions.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-gemini.units.conversions">
+<span id="gemini-units-conversions"></span><h1>gemini.units.conversions<a class="headerlink" href="#module-gemini.units.conversions" title="Link to this heading"></a></h1>
+<p>Unit conversions at package and correlation boundaries; historical factors retained.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">*_to_*</span></code> functions convert at correlation boundaries that use US or laboratory units.
+<code class="docutils literal notranslate"><span class="pre">_UNITS</span></code> is the single table of public data units: every unit maps to its SI unit, a scale
+and an offset, <code class="docutils literal notranslate"><span class="pre">si</span> <span class="pre">=</span> <span class="pre">value</span> <span class="pre">*</span> <span class="pre">scale</span> <span class="pre">+</span> <span class="pre">offset</span></code>. <code class="docutils literal notranslate"><span class="pre">Unit</span></code>, the enum of the units, is generated from
+it, and <code class="docutils literal notranslate"><span class="pre">to_si</span></code>, <code class="docutils literal notranslate"><span class="pre">convert</span></code>, <code class="docutils literal notranslate"><span class="pre">value_in_si</span></code>, <code class="docutils literal notranslate"><span class="pre">si_unit</span></code>, <code class="docutils literal notranslate"><span class="pre">names</span></code>, <code class="docutils literal notranslate"><span class="pre">fits</span></code> and the unit sets
+of <code class="docutils literal notranslate"><span class="pre">Profile</span></code> and <code class="docutils literal notranslate"><span class="pre">Stream</span></code> all read it. <code class="docutils literal notranslate"><span class="pre">define_quantity</span></code> records the SI unit of each named
+quantity (the types package calls it once per quantity), so <code class="docutils literal notranslate"><span class="pre">names(quantity)</span></code> and
+<code class="docutils literal notranslate"><span class="pre">fits(unit,</span> <span class="pre">quantity)</span></code> need no upward import.</p>
+<p>Each conversion factor is declared once, as a named module constant below, and both the table
+and the converters read that constant.</p>
+<p>Validity: every converter is valid for any finite number; the argument is returned scaled (and
+offset for temperatures), with no range check. Source: NIST Special Publication 811 (2008) for
+the exact definitions (bar, inch, foot, psi, hour, degree Celsius). Where a value is a retained
+number of the original GEMINI (the millidarcy, barrel per day, foot of head, brake horsepower,
+lbm/ft3 and psi factors), that historical factor is kept bit for bit, whatever its digits.</p>
+<p>The converters are not decorated with <code class="docutils literal notranslate"><span class="pre">&#64;ops.physics</span></code>: they sit on the hot path of every
+binding and plain operators work on every backend, so the registry wrapper would only add cost.</p>
+<p class="rubric">Module Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ZERO_CELSIUS</span></code></p></td>
+<td><p>Temperature [K] of 0 degC.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">STANDARD_ATMOSPHERE</span></code></p></td>
+<td><p>Standard atmosphere [Pa], the offset of gauge pressure.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">QUANTITY_FORM</span></code></p></td>
+<td><p>How a value with a dimension is written; the message of every refused text shows it.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">array_convert</span></code>(values, from_unit, to_unit[, ...])</p></td>
+<td><p>Convert an array-like between units of one dimension, element for element as <code class="docutils literal notranslate"><span class="pre">convert</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">array_to_si</span></code>(values, unit[, quantity])</p></td>
+<td><p>Convert an array-like of <code class="docutils literal notranslate"><span class="pre">unit</span></code> values to SI, element for element as <code class="docutils literal notranslate"><span class="pre">to_si</span></code> does.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bar_to_pa</span></code>(x)</p></td>
+<td><p>Convert [bar] to [Pa]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">1e5</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bar_to_psi</span></code>(x)</p></td>
+<td><p>Convert [bar] to [psi]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">14.503774</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bbl_per_day_to_m3s</span></code>(x)</p></td>
+<td><p>Convert [bbl/day] to [m3/s]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">/</span> <span class="pre">543439.650564</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">bhp_to_w</span></code>(x)</p></td>
+<td><p>Convert [bhp] to [W]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">745.7</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">c_to_f</span></code>(x)</p></td>
+<td><p>Convert [degC] to [degF]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">1.8</span> <span class="pre">+</span> <span class="pre">32</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">c_to_k</span></code>(x)</p></td>
+<td><p>Convert [degC] to [K]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">+</span> <span class="pre">273.15</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">convert</span></code>(value, from_unit, to_unit[, quantity])</p></td>
+<td><p>Convert a scalar between units of the same dimension through SI.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cp_to_pas</span></code>(x)</p></td>
+<td><p>Convert [cP] to [Pa s]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">1e-3</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">define_quantity</span></code>(name, unit)</p></td>
+<td><p>Record that the quantity <code class="docutils literal notranslate"><span class="pre">name</span></code> is stored in the SI unit <code class="docutils literal notranslate"><span class="pre">unit</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">deg_to_rad</span></code>(x)</p></td>
+<td><p>Convert [deg] to [rad]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">pi</span> <span class="pre">/</span> <span class="pre">180</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">family</span></code>(quantity)</p></td>
+<td><p>Return the first quantity defined with the SI unit of <code class="docutils literal notranslate"><span class="pre">quantity</span></code>, the head of its family.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fits</span></code>(unit, quantity)</p></td>
+<td><p>Whether <code class="docutils literal notranslate"><span class="pre">unit</span></code> is a known unit of the named <code class="docutils literal notranslate"><span class="pre">quantity</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;pressure&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;power&quot;</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ft_head_to_pa</span></code>(x)</p></td>
+<td><p>Convert [ft head] to [Pa]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">2988.30167</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ft_to_m</span></code>(x)</p></td>
+<td><p>Convert [ft] to [m]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">0.3048</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">inch_to_m</span></code>(x)</p></td>
+<td><p>Convert [inch] to [m]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">0.0254</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">index_from_si</span></code>(x)</p></td>
+<td><p>Convert [m3/s/Pa] to [m3/h/bar]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">3600</span> <span class="pre">*</span> <span class="pre">1e5</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">index_to_si</span></code>(x)</p></td>
+<td><p>Convert [m3/h/bar] to [m3/s/Pa]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">/</span> <span class="pre">3600</span> <span class="pre">/</span> <span class="pre">1e5</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">k_to_c</span></code>(x)</p></td>
+<td><p>Convert [K] to [degC]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">-</span> <span class="pre">273.15</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">kgm3_to_lbmft3</span></code>(x)</p></td>
+<td><p>Convert [kg/m3] to [lbm/ft3]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">/</span> <span class="pre">16.01846</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">lbmft3_to_kgm3</span></code>(x)</p></td>
+<td><p>Convert [lbm/ft3] to [kg/m3]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">16.01846</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">m2_to_md</span></code>(x)</p></td>
+<td><p>Convert [m2] to [mD]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">/</span> <span class="pre">9.869233e-16</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">m2_to_mm2</span></code>(x)</p></td>
+<td><p>Convert [m2] to [mm2]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">1e6</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">m3day_to_m3s</span></code>(x)</p></td>
+<td><p>Convert [m3/day] to [m3/s]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">/</span> <span class="pre">86400</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">m3h_to_m3s</span></code>(x)</p></td>
+<td><p>Convert [m3/h] to [m3/s]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">/</span> <span class="pre">3600</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">m3s_to_bbl_per_day</span></code>(x)</p></td>
+<td><p>Convert [m3/s] to [bbl/day]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">543439.650564</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">m3s_to_m3day</span></code>(x)</p></td>
+<td><p>Convert [m3/s] to [m3/day]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">86400</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">m3s_to_m3h</span></code>(x)</p></td>
+<td><p>Convert [m3/s] to [m3/h]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">3600</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">m_to_ft</span></code>(x)</p></td>
+<td><p>Convert [m] to [ft]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">/</span> <span class="pre">0.3048</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">m_to_mm</span></code>(x)</p></td>
+<td><p>Convert [m] to [mm]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">1000</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">md_to_m2</span></code>(x)</p></td>
+<td><p>Convert [mD] to [m2]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">9.869233e-16</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mol_l_bar_to_mol_m3_pa</span></code>(x)</p></td>
+<td><p>Convert Henry solubility constant [mol/l/bar] to [mol/m3/Pa]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">0.01</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ms_to_mm_year</span></code>(x)</p></td>
+<td><p>Convert penetration speed [m/s] to [mm/year]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">1000</span> <span class="pre">*</span> <span class="pre">31557600</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">names</span></code>([quantity])</p></td>
+<td><p>Return the sorted unit names, or those of one quantity such as <code class="docutils literal notranslate"><span class="pre">&quot;pressure&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pa_to_bar</span></code>(x)</p></td>
+<td><p>Convert [Pa] to [bar]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">/</span> <span class="pre">1e5</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pa_to_ft_head</span></code>(x)</p></td>
+<td><p>Convert [Pa] to [ft head]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">/</span> <span class="pre">2988.30167</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pa_to_gpa</span></code>(x)</p></td>
+<td><p>Convert [Pa] to [GPa]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">/</span> <span class="pre">1e9</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pas_to_cp</span></code>(x)</p></td>
+<td><p>Convert [Pa s] to [cP]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">/</span> <span class="pre">1e-3</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">rad_to_deg</span></code>(x)</p></td>
+<td><p>Convert [rad] to [deg]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">180</span> <span class="pre">/</span> <span class="pre">pi</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">si_conversion</span></code>(unit[, quantity])</p></td>
+<td><p>Return <code class="docutils literal notranslate"><span class="pre">(scale,</span> <span class="pre">offset)</span></code> with <code class="docutils literal notranslate"><span class="pre">to_si(value)</span> <span class="pre">==</span> <span class="pre">float(value)</span> <span class="pre">*</span> <span class="pre">scale</span> <span class="pre">+</span> <span class="pre">offset</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">si_unit</span></code>(unit)</p></td>
+<td><p>Return the SI unit that <code class="docutils literal notranslate"><span class="pre">unit</span></code> converts to, or <code class="docutils literal notranslate"><span class="pre">None</span></code> for an unknown unit.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_si</span></code>(value, unit[, quantity])</p></td>
+<td><p>Convert a bound scalar to SI; volume flow remains [m3/s] until density is known.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">value_in_si</span></code>(value[, expected_unit, path, ...])</p></td>
+<td><p>Convert a <code class="docutils literal notranslate"><span class="pre">Quantity</span></code> or its dict to a declaration's SI unit.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">w_to_bhp</span></code>(x)</p></td>
+<td><p>Convert [W] to [bhp]: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">/</span> <span class="pre">745.7</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Classes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Quantity</span></code>(value, unit)</p></td>
+<td><p>A number or array with its unit: the one shape of a value with a dimension.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Unit</span></code>(*values)</p></td>
+<td><p>The units of the unit table, as strings: <code class="docutils literal notranslate"><span class="pre">Unit.M3_PER_H</span> <span class="pre">==</span> <span class="pre">'m3/h'</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gemini.units.bare.html" class="btn btn-neutral float-left" title="gemini.units.bare" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gemini.units.display.html" class="btn btn-neutral float-right" title="gemini.units.display" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

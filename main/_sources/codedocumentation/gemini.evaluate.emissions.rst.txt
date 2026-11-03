@@ -1,0 +1,12 @@
+gemini.evaluate.emissions
+=========================
+
+.. automodule:: gemini.evaluate.emissions
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      co2
+   

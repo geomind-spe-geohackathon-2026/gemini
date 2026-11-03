@@ -1,0 +1,12 @@
+gemini.modules.grids.chemicalgrid
+=================================
+
+.. automodule:: gemini.modules.grids.chemicalgrid
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ChemicalGrid
+   

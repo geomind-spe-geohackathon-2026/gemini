@@ -1,0 +1,20 @@
+gemini.ops.registry
+===================
+
+.. automodule:: gemini.ops.registry
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      get
+      register
+      registered
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      OpDef
+   

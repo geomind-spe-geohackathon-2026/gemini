@@ -1,0 +1,22 @@
+gemini.runtime
+==============
+
+.. automodule:: gemini.runtime
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      KEEP
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      get_display_units
+      get_precision
+      get_processes
+      settings
+      state
+   

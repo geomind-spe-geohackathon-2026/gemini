@@ -1,0 +1,20 @@
+gemini.ops.solvers
+==================
+
+.. automodule:: gemini.ops.solvers
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      BRENT_RTOL
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      brentq
+      newton
+      wegstein
+   

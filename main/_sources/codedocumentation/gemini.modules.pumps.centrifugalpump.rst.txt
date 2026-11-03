@@ -1,0 +1,12 @@
+gemini.modules.pumps.centrifugalpump
+====================================
+
+.. automodule:: gemini.modules.pumps.centrifugalpump
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      CentrifugalPump
+   

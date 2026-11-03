@@ -1,0 +1,14 @@
+gemini.errors.lookup
+====================
+
+.. automodule:: gemini.errors.lookup
+
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      UnknownKey
+      UnknownMember
+      UnknownPort
+   

@@ -1,0 +1,435 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.ops.dispatch &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../codedocumentation/gemini.html">gemini</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">gemini.ops.dispatch</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for gemini.ops.dispatch</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Op dispatch: record an op on traced values, otherwise evaluate it on a backend.</span>
+
+<span class="sd">``dispatch(name, *operands)`` is the single entry of every op. When an operand is</span>
+<span class="sd">``Symbolic`` (a traced value of the compiler), the op is recorded in its graph.</span>
+<span class="sd">Otherwise every ``Constant`` operand is replaced by its plain Python value and the op runs on</span>
+<span class="sd">the backend that ``gemini.ops.kernels.select`` chooses. ``Operators`` gives a class the Python</span>
+<span class="sd">operators through the same entry.</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.ops</span><span class="w"> </span><span class="kn">import</span> <span class="n">kernels</span><span class="p">,</span> <span class="n">registry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.ops.failedrows</span><span class="w"> </span><span class="kn">import</span> <span class="n">FailedRows</span><span class="p">,</span> <span class="n">applied</span>
+
+<span class="n">SCALARS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">})</span>
+<span class="sd">"""Exact types of the scalars of the fast path: Python numbers, ``None`` (a ``where`` branch)</span>
+<span class="sd">and the NumPy scalars of the eager scope and of arithmetic on rows of a dataset."""</span>
+
+<span class="n">_PYTHON</span> <span class="o">=</span> <span class="n">kernels</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"python"</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Symbolic</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Base of traced values: an op with a ``Symbolic`` operand is recorded, not evaluated."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">definition</span><span class="p">,</span> <span class="n">operands</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Record ``definition`` applied to ``operands`` and return the traced result."""</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> does not record ops"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="dispatch">
+<a class="viewcode-back" href="../../../codedocumentation/gemini.ops.dispatch.html#gemini.ops.dispatch">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">dispatch</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">operands</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Apply the op ``name`` to ``operands``: record it on traced values, else evaluate it."""</span>
+    <span class="n">failing</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">operand</span> <span class="ow">in</span> <span class="n">operands</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operand</span><span class="p">,</span> <span class="n">Symbolic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">operand</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="n">registry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="n">operands</span><span class="p">,</span> <span class="n">attributes</span><span class="p">)</span>
+        <span class="n">failing</span> <span class="o">=</span> <span class="n">failing</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">operand</span><span class="p">)</span> <span class="ow">is</span> <span class="n">FailedRows</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+        <span class="n">operand</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operand</span><span class="p">,</span> <span class="n">Constant</span><span class="p">)</span> <span class="k">else</span> <span class="n">operand</span> <span class="k">for</span> <span class="n">operand</span> <span class="ow">in</span> <span class="n">operands</span>
+    <span class="p">)</span>
+    <span class="n">method</span> <span class="o">=</span> <span class="n">kernels</span><span class="o">.</span><span class="n">implementation</span><span class="p">(</span><span class="n">kernels</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">failing</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">applied</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">attributes</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">method</span><span class="p">(</span><span class="o">*</span><span class="n">values</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="n">attributes</span> <span class="ow">or</span> <span class="p">{}))</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">elementwise_op</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">arity</span><span class="p">,</span> <span class="n">summary</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Register the elementwise op ``name`` and return its function, cheap on plain scalars.</span>
+
+<span class="sd">    The function evaluates scalars of the types in ``SCALARS`` (exact types, never subclasses)</span>
+<span class="sd">    directly on the Python backend's method, resolved once here, as long as no</span>
+<span class="sd">    ``runtime.settings(backend=...)`` is active. Anything else (arrays, NumPy scalars,</span>
+<span class="sd">    ``Constant``, traced values, a forced backend) goes through ``dispatch``.</span>
+<span class="sd">    """</span>
+    <span class="n">registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">"elementwise"</span><span class="p">,</span> <span class="n">arity</span><span class="p">)</span>
+    <span class="n">method</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">_PYTHON</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">arity</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">unary</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="n">SCALARS</span> <span class="ow">and</span> <span class="n">kernels</span><span class="o">.</span><span class="n">forced_name</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">method</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">_described</span><span class="p">(</span><span class="n">unary</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">summary</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">arity</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">binary</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">left</span><span class="p">)</span> <span class="ow">in</span> <span class="n">SCALARS</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">right</span><span class="p">)</span> <span class="ow">in</span> <span class="n">SCALARS</span> <span class="ow">and</span> <span class="n">kernels</span><span class="o">.</span><span class="n">forced_name</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">method</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">_described</span><span class="p">(</span><span class="n">binary</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">summary</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">ternary</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">,</span> <span class="n">third</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">type</span><span class="p">(</span><span class="n">first</span><span class="p">)</span> <span class="ow">in</span> <span class="n">SCALARS</span>
+            <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">second</span><span class="p">)</span> <span class="ow">in</span> <span class="n">SCALARS</span>
+            <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">third</span><span class="p">)</span> <span class="ow">in</span> <span class="n">SCALARS</span>
+            <span class="ow">and</span> <span class="n">kernels</span><span class="o">.</span><span class="n">forced_name</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="n">method</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">,</span> <span class="n">third</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">,</span> <span class="n">third</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_described</span><span class="p">(</span><span class="n">ternary</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">summary</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_described</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">summary</span><span class="p">):</span>
+    <span class="n">function</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="n">function</span><span class="o">.</span><span class="vm">__qualname__</span> <span class="o">=</span> <span class="n">name</span>
+    <span class="n">function</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">summary</span>
+    <span class="k">return</span> <span class="n">function</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Operators</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Python arithmetic and comparison operators that dispatch to the ops."""</span>
+
+    <span class="n">__array_ufunc__</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``self + other``."""</span>
+        <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"add"</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``other + self``."""</span>
+        <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"add"</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``self - other``."""</span>
+        <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"sub"</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``other - self``."""</span>
+        <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"sub"</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``self * other``."""</span>
+        <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"mul"</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``other * self``."""</span>
+        <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"mul"</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``self / other``."""</span>
+        <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"truediv"</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__rtruediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``other / self``."""</span>
+        <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"truediv"</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``self ** other``."""</span>
+        <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"pow"</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__rpow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``other ** self``."""</span>
+        <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"pow"</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__mod__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``self % other``."""</span>
+        <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"mod"</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__rmod__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``other % self``."""</span>
+        <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"mod"</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__floordiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``self // other``."""</span>
+        <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"floordiv"</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__rfloordiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``other // self``."""</span>
+        <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"floordiv"</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``-self``."""</span>
+        <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"neg"</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__abs__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``abs(self)``."""</span>
+        <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"abs"</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``self &lt; other``."""</span>
+        <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"lt"</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__le__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``self &lt;= other``."""</span>
+        <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"le"</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``self &gt; other``."""</span>
+        <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"gt"</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__ge__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``self &gt;= other``."""</span>
+        <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"ge"</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Constant</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A named physical or model constant: fixed by default, a named graph input when traced.</span>
+
+<span class="sd">    On concrete values a constant acts exactly like its Python float, including NumPy's</span>
+<span class="sd">    weak-scalar promotion, so ``np.float32(x) / constant`` stays float32. It is deliberately not</span>
+<span class="sd">    a ``float`` subclass, which NumPy 2 would promote to float64. Its operators compute on</span>
+<span class="sd">    ``value`` directly, without ``dispatch``, unless the other operand is ``Symbolic``: then the</span>
+<span class="sd">    op is recorded and the constant becomes one graph input named ``name``, so a sensitivity</span>
+<span class="sd">    study can release it without retracing. As with floats, ``/``, ``//``, ``%`` and ``**`` on</span>
+<span class="sd">    invalid operands raise outside an eager scope; inside one (``gemini.ops.scope``) the operators</span>
+<span class="sd">    compute on ``np.float64`` and are silent like the ops.</span>
+<span class="sd">    """</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"name"</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">,</span> <span class="s2">"unit"</span><span class="p">,</span> <span class="s2">"description"</span><span class="p">,</span> <span class="s2">"_scalar"</span><span class="p">)</span>
+    <span class="n">__array_ufunc__</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">description</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Declare a constant with its SI ``value`` and ``unit``."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scalar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="n">unit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_number</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the value as ``np.float64`` inside a wrapping eager scope, else as ``float``."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scalar</span> <span class="k">if</span> <span class="n">kernels</span><span class="o">.</span><span class="n">scope_mode</span><span class="p">()</span> <span class="ow">is</span> <span class="n">kernels</span><span class="o">.</span><span class="n">WRAP</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__float__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the value."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__format__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Format the value."""</span>
+        <span class="k">return</span> <span class="nb">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``Constant(name=value unit)``."""</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"Constant(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="si">!r}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">unit</span><span class="si">}</span><span class="s2">)"</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``self + other``."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Symbolic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"add"</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number</span><span class="p">()</span> <span class="o">+</span> <span class="n">other</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``other + self``."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Symbolic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"add"</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">other</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``self - other``."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Symbolic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"sub"</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number</span><span class="p">()</span> <span class="o">-</span> <span class="n">other</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``other - self``."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Symbolic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"sub"</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">other</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``self * other``."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Symbolic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"mul"</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number</span><span class="p">()</span> <span class="o">*</span> <span class="n">other</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``other * self``."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Symbolic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"mul"</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">other</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``self / other``."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Symbolic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"truediv"</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number</span><span class="p">()</span> <span class="o">/</span> <span class="n">other</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__rtruediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``other / self``."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Symbolic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"truediv"</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">other</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``self ** other``."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Symbolic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"pow"</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number</span><span class="p">()</span> <span class="o">**</span> <span class="n">other</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__rpow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``other ** self``."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Symbolic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"pow"</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">other</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__mod__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``self % other``."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Symbolic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"mod"</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number</span><span class="p">()</span> <span class="o">%</span> <span class="n">other</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__rmod__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``other % self``."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Symbolic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"mod"</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">other</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__floordiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``self // other``."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Symbolic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"floordiv"</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number</span><span class="p">()</span> <span class="o">//</span> <span class="n">other</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__rfloordiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``other // self``."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Symbolic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"floordiv"</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">other</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``self &lt; other``."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Symbolic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"lt"</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;</span> <span class="n">other</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__le__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``self &lt;= other``."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Symbolic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"le"</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;=</span> <span class="n">other</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``self &gt; other``."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Symbolic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"gt"</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="n">other</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__ge__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``self &gt;= other``."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Symbolic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">dispatch</span><span class="p">(</span><span class="s2">"ge"</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;=</span> <span class="n">other</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``-self``."""</span>
+        <span class="k">return</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_number</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__abs__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``abs(self)``."""</span>
+        <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_number</span><span class="p">())</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

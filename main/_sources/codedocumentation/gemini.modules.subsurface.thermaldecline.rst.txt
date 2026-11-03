@@ -1,0 +1,12 @@
+gemini.modules.subsurface.thermaldecline
+========================================
+
+.. automodule:: gemini.modules.subsurface.thermaldecline
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ThermalDecline
+   

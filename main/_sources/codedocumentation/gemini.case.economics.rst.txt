@@ -1,0 +1,23 @@
+gemini.case.economics
+=====================
+
+.. automodule:: gemini.case.economics
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Accounting
+      Allocation
+      Capex
+      Carbon
+      DepthTable
+      Economics
+      Energy
+      Gwp
+      Opex
+      Revenue
+      Subsidy
+      Variable
+   

@@ -1,0 +1,12 @@
+gemini.modules.piping.pipe
+==========================
+
+.. automodule:: gemini.modules.piping.pipe
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Pipe
+   

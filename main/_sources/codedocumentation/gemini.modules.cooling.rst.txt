@@ -1,0 +1,14 @@
+gemini.modules.cooling
+======================
+
+.. automodule:: gemini.modules.cooling
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   absorptionunit
+   adsorptionchiller

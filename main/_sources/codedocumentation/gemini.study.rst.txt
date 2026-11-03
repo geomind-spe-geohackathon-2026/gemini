@@ -1,0 +1,20 @@
+gemini.study
+============
+
+.. automodule:: gemini.study
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   calibrate
+   kinds
+   minimize
+   result
+   sample
+   sensitivity
+   size
+   study

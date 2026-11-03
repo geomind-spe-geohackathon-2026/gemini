@@ -1,0 +1,14 @@
+gemini.case.utilities
+=====================
+
+.. automodule:: gemini.case.utilities
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Electricity
+      Gas
+      Utilities
+   

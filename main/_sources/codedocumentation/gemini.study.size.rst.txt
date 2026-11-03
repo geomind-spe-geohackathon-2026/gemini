@@ -1,0 +1,6 @@
+gemini.study.size
+=================
+
+.. currentmodule:: gemini.study
+
+.. autofunction:: size

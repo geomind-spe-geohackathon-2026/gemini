@@ -1,0 +1,12 @@
+gemini.plants.coolingsubstation
+===============================
+
+.. automodule:: gemini.plants.coolingsubstation
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      CoolingSubstation
+   

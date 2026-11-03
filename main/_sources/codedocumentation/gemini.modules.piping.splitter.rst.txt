@@ -1,0 +1,12 @@
+gemini.modules.piping.splitter
+==============================
+
+.. automodule:: gemini.modules.piping.splitter
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Splitter
+   

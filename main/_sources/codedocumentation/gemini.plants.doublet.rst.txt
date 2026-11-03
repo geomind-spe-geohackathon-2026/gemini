@@ -1,0 +1,12 @@
+gemini.plants.doublet
+=====================
+
+.. automodule:: gemini.plants.doublet
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Doublet
+   

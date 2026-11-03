@@ -1,0 +1,19 @@
+gemini.modules.call
+===================
+
+.. automodule:: gemini.modules.call
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      UNITS
+      FLOW
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      evaluate
+   

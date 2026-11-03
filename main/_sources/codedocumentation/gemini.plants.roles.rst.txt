@@ -1,0 +1,6 @@
+gemini.plants.roles
+===================
+
+.. currentmodule:: gemini.plants
+
+.. autofunction:: roles

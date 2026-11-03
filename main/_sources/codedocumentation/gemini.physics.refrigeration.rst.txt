@@ -1,0 +1,41 @@
+gemini.physics.refrigeration
+============================
+
+.. automodule:: gemini.physics.refrigeration
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DEFAULT_CARNOT_FRACTION
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      carnot_cooling_sink_outlet
+      carnot_cop_cooling
+      carnot_cop_heating
+      carnot_fraction_cop_cooling
+      carnot_fraction_cop_heating
+      carnot_heating_source_outlet
+      characteristic_evaporator_duty
+      characteristic_sensitivity
+      characteristic_temperature_difference
+      coefficient_of_performance
+      cooling_condenser_duty
+      cooling_minimum_sink_rate
+      heating_cop_minimum_source
+      heating_evaporator_duty
+      log_mean_temperature
+      lorenz_cop_heating
+      lorenz_fraction_cop_heating
+      lorenz_source_surplus
+      part_load_duty
+      sorption_delivered_duty
+      sorption_duties
+      sorption_evaporator_capacity
+      sorption_rejection_ratio
+      source_limit_shortfall
+   

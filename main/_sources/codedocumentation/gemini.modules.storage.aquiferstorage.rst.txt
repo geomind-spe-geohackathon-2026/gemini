@@ -1,0 +1,22 @@
+gemini.modules.storage.aquiferstorage
+=====================================
+
+.. automodule:: gemini.modules.storage.aquiferstorage
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      STORES
+      MODES
+      CHARGE
+      DISCHARGE
+      IDLE
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      AquiferStorage
+   

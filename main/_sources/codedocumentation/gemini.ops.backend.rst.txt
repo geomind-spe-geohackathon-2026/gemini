@@ -1,0 +1,29 @@
+gemini.ops.backend
+==================
+
+.. automodule:: gemini.ops.backend
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      forced_name
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      get
+      implementation
+      quiet
+      register
+      select
+      settings
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Backend
+   

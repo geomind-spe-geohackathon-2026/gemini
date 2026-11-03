@@ -1,0 +1,12 @@
+gemini.plants.nodaldoublet
+==========================
+
+.. automodule:: gemini.plants.nodaldoublet
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      NodalDoublet
+   

@@ -1,0 +1,21 @@
+gemini.engine.apply
+===================
+
+.. automodule:: gemini.engine.apply
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      RESERVOIRS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      applied_in_place
+      apply_case
+      remember_case
+      started
+   

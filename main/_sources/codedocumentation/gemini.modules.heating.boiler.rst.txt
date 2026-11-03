@@ -1,0 +1,13 @@
+gemini.modules.heating.boiler
+=============================
+
+.. automodule:: gemini.modules.heating.boiler
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Boiler
+      ElectricBoiler
+   

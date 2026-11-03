@@ -1,0 +1,24 @@
+gemini.compiler.cache
+=====================
+
+.. automodule:: gemini.compiler.cache
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      MAXSIZE
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      graph_cache
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      GraphCache
+   

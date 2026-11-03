@@ -1,0 +1,852 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.evaluate.verdict &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../codedocumentation/gemini.html">gemini</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">gemini.evaluate.verdict</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for gemini.evaluate.verdict</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Whether a finished run is acceptable: bounds, requirements, failed rows and the one verdict."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">Counter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini._utils.jsonable</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_plain</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini._utils.strings</span><span class="w"> </span><span class="kn">import</span> <span class="n">join_path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.case</span><span class="w"> </span><span class="kn">import</span> <span class="n">Requirement</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.case._utils.node</span><span class="w"> </span><span class="kn">import</span> <span class="n">si_unit_of</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.engine.apply</span><span class="w"> </span><span class="kn">import</span> <span class="n">apply_case</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.errors.rows</span><span class="w"> </span><span class="kn">import</span> <span class="n">SKIPPED</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate._utils.co2_steps</span><span class="w"> </span><span class="kn">import</span> <span class="n">emitted_steps</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate._utils.columns</span><span class="w"> </span><span class="kn">import</span> <span class="n">field_of</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">is_parameter</span><span class="p">,</span> <span class="n">parameter_values</span><span class="p">,</span> <span class="n">series</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate._utils.operating</span><span class="w"> </span><span class="kn">import</span> <span class="n">breaches</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate._utils.series</span><span class="w"> </span><span class="kn">import</span> <span class="n">burned_gas</span><span class="p">,</span> <span class="n">edge_power</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate._utils.tally</span><span class="w"> </span><span class="kn">import</span> <span class="n">tally</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate.balances</span><span class="w"> </span><span class="kn">import</span> <span class="n">energy_balance</span><span class="p">,</span> <span class="n">mass_balance</span><span class="p">,</span> <span class="n">plant_balance</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate.summary</span><span class="w"> </span><span class="kn">import</span> <span class="n">totals</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.modules.declarations</span><span class="w"> </span><span class="kn">import</span> <span class="n">Output</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.plants.roles</span><span class="w"> </span><span class="kn">import</span> <span class="n">delivery_ports</span><span class="p">,</span> <span class="n">reads</span><span class="p">,</span> <span class="n">units_of</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.units.quantities</span><span class="w"> </span><span class="kn">import</span> <span class="n">Temperature</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.units.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">check</span><span class="p">,</span> <span class="n">measure</span>
+
+<span class="n">_OUTSIDE</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"ge"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">less</span><span class="p">,</span>
+    <span class="s2">"gt"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">less_equal</span><span class="p">,</span>
+    <span class="s2">"le"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">greater</span><span class="p">,</span>
+    <span class="s2">"lt"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">greater_equal</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="sd">"""For each limit of ``Declaration.limits``, the comparison that a violating value satisfies."""</span>
+
+
+<span class="n">_TEMPERATURE</span> <span class="o">=</span> <span class="n">Output</span><span class="p">(</span><span class="n">Temperature</span><span class="p">)</span>
+<span class="sd">"""The declaration whose limits judge the temperature of a port."""</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_outside</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">limits</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return how many values violate any of the ``limits``; a missing value never does."""</span>
+    <span class="n">array</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">violated</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">limit</span> <span class="ow">in</span> <span class="n">limits</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">violated</span> <span class="o">|=</span> <span class="n">_OUTSIDE</span><span class="p">[</span><span class="n">key</span><span class="p">](</span><span class="n">array</span><span class="p">,</span> <span class="n">limit</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">violated</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_limits</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">field</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the limits of a column: an output's, or those of a port's absolute temperature."""</span>
+    <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">outputs</span><span class="p">[</span><span class="n">field</span><span class="p">]</span><span class="o">.</span><span class="n">limits</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">_TEMPERATURE</span><span class="o">.</span><span class="n">limits</span><span class="p">()</span> <span class="k">if</span> <span class="n">field</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">".temperature"</span><span class="p">)</span> <span class="k">else</span> <span class="p">{}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">bounds</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Check that every recorded output is inside the limits its module declares.</span>
+
+<span class="sd">    The limits are those of the output's declaration (``ge``, ``gt``, ``le``, ``lt`` from its</span>
+<span class="sd">    quantity and its bounds, see ``Declaration.limits``), read from the module at the</span>
+<span class="sd">    column's path. Boolean and text columns, outputs without a limit and the health columns are</span>
+<span class="sd">    not judged.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    plant : Module</span>
+<span class="sd">        The plant that produced ``results``; a path of the results it lacks raises</span>
+<span class="sd">        ``ValidationError``.</span>
+<span class="sd">    case : Case</span>
+<span class="sd">        The case of the run; the check does not read it.</span>
+<span class="sd">    results : Results</span>
+<span class="sd">        A finished run.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        ``{name: "bounds", passed, value, limit}``: ``value`` is the number of values outside</span>
+<span class="sd">        their limits, over all columns and ticks, and ``limit`` is 0. ``passed`` is ``None``,</span>
+<span class="sd">        with a ``reason`` in ``value``, when no recorded output has a limit.</span>
+<span class="sd">    """</span>
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span>
+    <span class="n">judged</span><span class="p">,</span> <span class="n">violations</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">names</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">names</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">plant</span><span class="o">.</span><span class="n">get_submodule</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">outputs</span><span class="p">(</span><span class="n">recurse</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+            <span class="n">limits</span> <span class="o">=</span> <span class="n">_limits</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span>
+            <span class="n">column</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="n">join_path</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">field</span><span class="p">)]</span> <span class="k">if</span> <span class="n">limits</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">limits</span> <span class="ow">and</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_numeric_dtype</span><span class="p">(</span><span class="n">column</span><span class="p">)</span> <span class="ow">and</span> <span class="n">column</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="nb">bool</span><span class="p">:</span>
+                <span class="n">judged</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">violations</span> <span class="o">+=</span> <span class="n">_outside</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">limits</span><span class="p">)</span>
+    <span class="n">limit</span> <span class="o">=</span> <span class="n">measure</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">judged</span><span class="p">:</span>
+        <span class="n">reason</span> <span class="o">=</span> <span class="s2">"no recorded output has a declared limit"</span>
+        <span class="k">return</span> <span class="n">check</span><span class="p">(</span><span class="s2">"bounds"</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">measure</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">,</span> <span class="n">reason</span><span class="p">),</span> <span class="n">limit</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">check</span><span class="p">(</span><span class="s2">"bounds"</span><span class="p">,</span> <span class="n">violations</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">measure</span><span class="p">(</span><span class="n">violations</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">),</span> <span class="n">limit</span><span class="p">)</span>
+
+
+<span class="n">FIELDS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"path"</span><span class="p">,</span> <span class="s2">"code"</span><span class="p">,</span> <span class="s2">"kind"</span><span class="p">,</span> <span class="s2">"count"</span><span class="p">,</span> <span class="s2">"first"</span><span class="p">,</span> <span class="s2">"last"</span><span class="p">,</span> <span class="s2">"message"</span><span class="p">)</span>
+<span class="sd">"""The columns of ``Failures.to_frame``, one row per group."""</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Failures</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The groups of failed and skipped rows of a run, the most frequent first.</span>
+
+<span class="sd">    Each group is ``{path, code, kind, count, first, last, message}``: the module path, the code of</span>
+<span class="sd">    ``gm.errors.ROW_CODES``, ``"skipped"`` or ``"failed"``, the number of rows, the time of the</span>
+<span class="sd">    first and the last row, and the message of the first row. A run with no failed or skipped row</span>
+<span class="sd">    has no group.</span>
+<span class="sd">    """</span>
+
+    <span class="n">groups</span><span class="p">:</span> <span class="nb">tuple</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Count the groups."""</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">total</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""The number of failed and skipped rows."""</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">group</span><span class="p">[</span><span class="s2">"count"</span><span class="p">]</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``{total, groups}`` as plain JSON."""</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"total"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">total</span><span class="p">,</span> <span class="s2">"groups"</span><span class="p">:</span> <span class="p">[</span><span class="nb">dict</span><span class="p">(</span><span class="n">group</span><span class="p">)</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">]}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the groups as a table with the columns ``FIELDS``, in the same order."""</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">FIELDS</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">failures</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Group the failed and skipped rows of ``results`` by module path and error code.</span>
+
+<span class="sd">    ``results`` is the ``Results`` of a run. Rows come from ``results.errors()``, which are in</span>
+<span class="sd">    time order. The groups are sorted by count, largest first, then by path and code.</span>
+<span class="sd">    """</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">errors</span><span class="p">():</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"path"</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">"code"</span><span class="p">])</span>
+        <span class="n">group</span> <span class="o">=</span> <span class="n">found</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">group</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kind</span> <span class="o">=</span> <span class="s2">"skipped"</span> <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">"code"</span><span class="p">]</span> <span class="o">==</span> <span class="n">SKIPPED</span> <span class="k">else</span> <span class="s2">"failed"</span>
+            <span class="n">found</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">"path"</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s2">"path"</span><span class="p">],</span>
+                <span class="s2">"code"</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s2">"code"</span><span class="p">],</span>
+                <span class="s2">"kind"</span><span class="p">:</span> <span class="n">kind</span><span class="p">,</span>
+                <span class="s2">"count"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s2">"first"</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s2">"time"</span><span class="p">],</span>
+                <span class="s2">"last"</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s2">"time"</span><span class="p">],</span>
+                <span class="s2">"message"</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s2">"message"</span><span class="p">],</span>
+            <span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">group</span><span class="p">[</span><span class="s2">"count"</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">group</span><span class="p">[</span><span class="s2">"last"</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">"time"</span><span class="p">]</span>
+    <span class="n">ordered</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="n">found</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">group</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="n">group</span><span class="p">[</span><span class="s2">"count"</span><span class="p">],</span> <span class="n">group</span><span class="p">[</span><span class="s2">"path"</span><span class="p">],</span> <span class="n">group</span><span class="p">[</span><span class="s2">"code"</span><span class="p">])</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">Failures</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">ordered</span><span class="p">))</span>
+
+
+<span class="n">TOLERANCE</span> <span class="o">=</span> <span class="mf">1e-9</span>
+<span class="sd">"""Relative margin of a limit: a value on the limit passes through its rounding; numerical."""</span>
+
+<span class="n">AGGREGATES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"sum"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">,</span> <span class="s2">"mean"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="s2">"max"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">,</span> <span class="s2">"min"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">}</span>
+<span class="sd">"""How a requirement with ``over`` other than ``each`` and ``duration`` reads the run."""</span>
+
+<span class="n">NO_VALUE</span> <span class="o">=</span> <span class="s2">"no_value: the run gives no value of this field"</span>
+<span class="sd">"""The reason when the field is not among the results."""</span>
+
+<span class="n">NO_FLOW</span> <span class="o">=</span> <span class="s2">"the module carried no flow in this run"</span>
+<span class="sd">"""The reason when ``when="running"`` leaves no step."""</span>
+
+<span class="n">DEMANDED</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"unmet_demand"</span><span class="p">:</span> <span class="s2">"heating_demand"</span><span class="p">,</span> <span class="s2">"unmet_sensible"</span><span class="p">:</span> <span class="s2">"cooling_demand"</span><span class="p">}</span>
+<span class="sd">"""The column of ``case.demand.frame`` holding the demand, for each unmet output of a consumer."""</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">requirements</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Check every requirement of ``case`` and the supply temperatures of its services.</span>
+
+<span class="sd">    A ``Requirement`` is on a role and a quantity of it (``gm.plants.roles()``); it applies to every</span>
+<span class="sd">    unit of the role in ``plant`` on its own, the units being found by class and wiring. A result</span>
+<span class="sd">    field is read over the run, a composite's through the leaves its formula names; with</span>
+<span class="sd">    ``when="running"`` only the steps in which the module carried flow count, without ``when``</span>
+<span class="sd">    every step counts. ``over`` gives how the run is read: ``each`` judges every step and reports</span>
+<span class="sd">    the worst; ``sum``, ``mean``, ``max``</span>
+<span class="sd">    and ``min`` judge one figure of the run; ``duration`` judges the total time of the steps</span>
+<span class="sd">    that count. A parameter is judged once, or at each date inside the run when it changes over</span>
+<span class="sd">    time, with the case applied to the plant. ``count`` of ``doublet`` is the number of doublets</span>
+<span class="sd">    of the plant and ``unmet_share`` of a supply the unmet energy over the energy its service</span>
+<span class="sd">    demanded in the run, each one figure of the period. ``reinjection_ratio`` is the injected over</span>
+<span class="sd">    the produced liquid volume flow of the doublet. A value on a limit passes within</span>
+<span class="sd">    ``TOLERANCE``, a</span>
+<span class="sd">    duration within half a step.</span>
+
+<span class="sd">    The service requirement is checked as well: each ``HeatingGrid`` must receive water at least at</span>
+<span class="sd">    ``demand.heating.supply_temperature`` and each ``CoolingGrid`` at most at</span>
+<span class="sd">    ``demand.cooling.supply_temperature``, in the steps in which it runs. A service without a</span>
+<span class="sd">    supply temperature adds no check. A role with no unit in the plant gives one check with</span>
+<span class="sd">    ``passed`` ``None`` and ``unit_path`` ``None``, whose value says ``no_value``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    plant : Module</span>
+<span class="sd">        The plant of the run.</span>
+<span class="sd">    case : Case</span>
+<span class="sd">        The case whose requirements and services are checked, and that gives design values.</span>
+<span class="sd">    results : Results</span>
+<span class="sd">        A finished run.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of dict</span>
+<span class="sd">        One check ``{name, role, unit_path, quantity, passed, value, limit, worst_step}`` per unit</span>
+<span class="sd">        and requirement: ``name`` is that of the requirement, ``role`` and ``quantity`` those of</span>
+<span class="sd">        it, ``unit_path`` the path of the unit (``""`` for the plant, and for the role</span>
+<span class="sd">        ``plant``, whose figures are named by the quantity alone). ``value`` is a</span>
+<span class="sd">        ``Quantity`` (SI, ``s`` for ``duration``): the worst value of the run for ``each`` and the</span>
+<span class="sd">        figure otherwise, and ``limit`` the bound that was violated, else the nearest.</span>
+<span class="sd">        ``worst_step`` is the ISO 8601 time of the worst step, ``None`` for a figure of the run and</span>
+<span class="sd">        for a parameter. ``passed`` is ``None``, with the reason in ``value``, for a unit that</span>
+<span class="sd">        carried no flow, and with ``no_value`` for a field the run does not hold.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValidationError</span>
+<span class="sd">        With code ``unknown_name`` for a role quantity that a unit of the plant does not hold.</span>
+<span class="sd">    """</span>
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span>
+    <span class="n">sited</span> <span class="o">=</span> <span class="n">apply_case</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">)</span>
+    <span class="n">checks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">requirement</span> <span class="ow">in</span> <span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">requirements</span> <span class="ow">or</span> <span class="p">()),</span> <span class="o">*</span><span class="n">_services</span><span class="p">(</span><span class="n">case</span><span class="p">)):</span>
+        <span class="n">checks</span> <span class="o">+=</span> <span class="n">_checks</span><span class="p">(</span><span class="n">sited</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">requirement</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">checks</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_checks</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">requirement</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the checks of one requirement: one per unit of its role, or one for a count."""</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">units_of</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">requirement</span><span class="o">.</span><span class="n">on</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">reads</span><span class="p">(</span><span class="n">requirement</span><span class="o">.</span><span class="n">on</span><span class="p">,</span> <span class="n">requirement</span><span class="o">.</span><span class="n">quantity</span><span class="p">)</span><span class="o">.</span><span class="n">source</span> <span class="o">==</span> <span class="s2">"count"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">_count</span><span class="p">(</span><span class="n">requirement</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">))]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">_no_unit</span><span class="p">(</span><span class="n">requirement</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">_check</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">requirement</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">found</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_unit_of</span><span class="p">(</span><span class="n">requirement</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the SI unit of the figure a requirement judges."""</span>
+    <span class="k">if</span> <span class="n">requirement</span><span class="o">.</span><span class="n">over</span> <span class="o">==</span> <span class="s2">"duration"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"s"</span>
+    <span class="k">return</span> <span class="s2">"-"</span> <span class="k">if</span> <span class="n">requirement</span><span class="o">.</span><span class="n">dimension</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">si_unit_of</span><span class="p">(</span><span class="n">requirement</span><span class="o">.</span><span class="n">dimension</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_no_unit</span><span class="p">(</span><span class="n">requirement</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the undecided check of a requirement whose role has no unit in the plant."""</span>
+    <span class="n">reason</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"no_value: the plant has no unit of the role </span><span class="si">{</span><span class="n">requirement</span><span class="o">.</span><span class="n">on</span><span class="si">!r}</span><span class="s2">"</span>
+    <span class="k">return</span> <span class="n">_undecided</span><span class="p">(</span><span class="n">requirement</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reason</span><span class="p">,</span> <span class="n">_unit_of</span><span class="p">(</span><span class="n">requirement</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_count</span><span class="p">(</span><span class="n">requirement</span><span class="p">,</span> <span class="n">number</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the check of the number of units of the role of ``requirement``."""</span>
+    <span class="k">return</span> <span class="n">_judged</span><span class="p">(</span><span class="n">requirement</span><span class="p">,</span> <span class="s2">""</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">number</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_judged</span><span class="p">(</span><span class="n">requirement</span><span class="p">,</span> <span class="n">unit_path</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">measured</span><span class="p">,</span> <span class="n">margin</span><span class="p">,</span> <span class="n">unit</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the check of one figure against the bounds of ``requirement``."""</span>
+    <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">=</span> <span class="n">_requirement_limits</span><span class="p">(</span><span class="n">requirement</span><span class="p">)</span>
+    <span class="n">passed</span> <span class="o">=</span> <span class="p">(</span><span class="n">lower</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">measured</span> <span class="o">&gt;=</span> <span class="n">lower</span> <span class="o">-</span> <span class="n">margin</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span>
+        <span class="n">upper</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">measured</span> <span class="o">&lt;=</span> <span class="n">upper</span> <span class="o">+</span> <span class="n">margin</span>
+    <span class="p">)</span>
+    <span class="n">limit</span> <span class="o">=</span> <span class="n">measure</span><span class="p">(</span><span class="n">_nearest</span><span class="p">(</span><span class="n">measured</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">),</span> <span class="n">unit</span><span class="p">)</span>
+    <span class="n">verdict</span> <span class="o">=</span> <span class="n">check</span><span class="p">(</span><span class="n">requirement</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">bool</span><span class="p">(</span><span class="n">passed</span><span class="p">),</span> <span class="n">measure</span><span class="p">(</span><span class="n">measured</span><span class="p">,</span> <span class="n">unit</span><span class="p">),</span> <span class="n">limit</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">verdict</span> <span class="o">|</span> <span class="n">_where</span><span class="p">(</span><span class="n">requirement</span><span class="p">,</span> <span class="n">unit_path</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_services</span><span class="p">(</span><span class="n">case</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the requirements that the supply temperatures of the services of ``case`` make."""</span>
+    <span class="n">demand</span> <span class="o">=</span> <span class="n">case</span><span class="o">.</span><span class="n">demand</span>
+    <span class="k">if</span> <span class="n">demand</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">required</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">demand</span><span class="o">.</span><span class="n">heating</span><span class="p">,</span> <span class="s2">"heating_supply"</span><span class="p">,</span> <span class="s2">"min"</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">demand</span><span class="o">.</span><span class="n">cooling</span><span class="p">,</span> <span class="s2">"cooling_supply"</span><span class="p">,</span> <span class="s2">"max"</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">Requirement</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">"name"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">role</span><span class="si">}</span><span class="s2">_temperature"</span><span class="p">,</span>
+                <span class="s2">"on"</span><span class="p">:</span> <span class="n">role</span><span class="p">,</span>
+                <span class="s2">"quantity"</span><span class="p">:</span> <span class="s2">"temperature"</span><span class="p">,</span>
+                <span class="s2">"unit"</span><span class="p">:</span> <span class="s2">"K"</span><span class="p">,</span>
+                <span class="s2">"over"</span><span class="p">:</span> <span class="s2">"each"</span><span class="p">,</span>
+                <span class="s2">"when"</span><span class="p">:</span> <span class="s2">"running"</span><span class="p">,</span>
+                <span class="n">bound</span><span class="p">:</span> <span class="n">service</span><span class="o">.</span><span class="n">supply_temperature</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">service</span><span class="p">,</span> <span class="n">role</span><span class="p">,</span> <span class="n">bound</span> <span class="ow">in</span> <span class="n">required</span>
+        <span class="k">if</span> <span class="n">service</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">service</span><span class="o">.</span><span class="n">supply_temperature</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_requirement_limits</span><span class="p">(</span><span class="n">requirement</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``(lower, upper)`` of a requirement."""</span>
+    <span class="k">return</span> <span class="n">requirement</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="n">requirement</span><span class="o">.</span><span class="n">max</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_over</span><span class="p">(</span><span class="n">requirement</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return how the run is read: a property or a window quantity is judged once, as ``each``."""</span>
+    <span class="k">return</span> <span class="n">requirement</span><span class="o">.</span><span class="n">over</span> <span class="ow">or</span> <span class="s2">"each"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_reading</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">requirement</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``(values, keep)`` of a field: its values and the steps that count."""</span>
+    <span class="k">if</span> <span class="n">is_parameter</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">parameter_values</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">values</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="n">values</span><span class="p">,</span> <span class="n">active</span> <span class="o">=</span> <span class="n">series</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">keep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">values</span><span class="p">,</span> <span class="n">keep</span> <span class="o">&amp;</span> <span class="n">active</span> <span class="k">if</span> <span class="n">requirement</span><span class="o">.</span><span class="n">when</span> <span class="o">==</span> <span class="s2">"running"</span> <span class="k">else</span> <span class="n">keep</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_worst_index</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the position of the value furthest out, or nearest the limit inside."""</span>
+    <span class="k">if</span> <span class="n">upper</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">argmin</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">lower</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">argmax</span><span class="p">())</span>
+    <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">argmin</span><span class="p">()),</span> <span class="nb">int</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">argmax</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">low</span> <span class="k">if</span> <span class="n">lower</span> <span class="o">-</span> <span class="n">values</span><span class="p">[</span><span class="n">low</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">values</span><span class="p">[</span><span class="n">high</span><span class="p">]</span> <span class="o">-</span> <span class="n">upper</span> <span class="k">else</span> <span class="n">high</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_measure</span><span class="p">(</span><span class="n">requirement</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">keep</span><span class="p">,</span> <span class="n">durations</span><span class="p">,</span> <span class="n">bounds</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``(measured, margin, position)``; ``position`` is the worst step of ``each``."""</span>
+    <span class="n">over</span> <span class="o">=</span> <span class="n">_over</span><span class="p">(</span><span class="n">requirement</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">over</span> <span class="o">==</span> <span class="s2">"duration"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">durations</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()),</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">durations</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="n">judged</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">over</span> <span class="o">==</span> <span class="s2">"each"</span><span class="p">:</span>
+        <span class="n">worst</span> <span class="o">=</span> <span class="n">_worst_index</span><span class="p">(</span><span class="n">judged</span><span class="p">,</span> <span class="o">*</span><span class="n">bounds</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">judged</span><span class="p">[</span><span class="n">worst</span><span class="p">]),</span> <span class="n">TOLERANCE</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">judged</span><span class="p">[</span><span class="n">worst</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">keep</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="n">worst</span><span class="p">])</span>
+    <span class="n">measured</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">AGGREGATES</span><span class="p">[</span><span class="n">over</span><span class="p">](</span><span class="n">judged</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">measured</span><span class="p">,</span> <span class="n">TOLERANCE</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">measured</span><span class="p">),</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_nearest</span><span class="p">(</span><span class="n">measured</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the bound that was violated, else the one nearest to ``measured``."""</span>
+    <span class="k">if</span> <span class="n">lower</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">upper</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">upper</span> <span class="k">if</span> <span class="n">lower</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">lower</span>
+    <span class="k">if</span> <span class="n">measured</span> <span class="o">&lt;</span> <span class="n">lower</span> <span class="ow">or</span> <span class="n">measured</span> <span class="o">&gt;</span> <span class="n">upper</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">lower</span> <span class="k">if</span> <span class="n">measured</span> <span class="o">&lt;</span> <span class="n">lower</span> <span class="k">else</span> <span class="n">upper</span>
+    <span class="k">return</span> <span class="n">lower</span> <span class="k">if</span> <span class="n">measured</span> <span class="o">-</span> <span class="n">lower</span> <span class="o">&lt;=</span> <span class="n">upper</span> <span class="o">-</span> <span class="n">measured</span> <span class="k">else</span> <span class="n">upper</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_no_reason</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">keep</span><span class="p">,</span> <span class="n">over</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return why nothing can be judged, or ``None``."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">values</span><span class="o">.</span><span class="n">size</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">NO_VALUE</span>
+    <span class="k">if</span> <span class="n">over</span> <span class="o">!=</span> <span class="s2">"duration"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">keep</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">NO_FLOW</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_leaf_flags</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return, per step, whether any leaf of the plant carried flow."""</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">join_path</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"operating"</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">plant</span><span class="o">.</span><span class="n">named_modules</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">is_leaf</span> <span class="ow">and</span> <span class="n">join_path</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"operating"</span><span class="p">)</span> <span class="ow">in</span> <span class="n">frame</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">columns</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">frame</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">frame</span><span class="p">[</span><span class="n">columns</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_plant_values</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``(values, active, unit)`` of a figure of the plant as a whole."""</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"co2"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">emitted_steps</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">),</span> <span class="n">_leaf_flags</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">frame</span><span class="p">),</span> <span class="s2">"kg"</span>
+    <span class="n">unit</span> <span class="o">=</span> <span class="s2">"kg/s"</span> <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"gas_burned"</span> <span class="k">else</span> <span class="s2">"W"</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">burned_gas</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">frame</span><span class="p">)</span> <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"gas_burned"</span> <span class="k">else</span> <span class="n">edge_power</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">),</span> <span class="n">unit</span>
+    <span class="k">return</span> <span class="n">found</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="n">_leaf_flags</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">frame</span><span class="p">),</span> <span class="n">unit</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_delivery_values</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">requirement</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``(values, active)`` of the power a unit delivers: its two ports less one another."""</span>
+    <span class="n">ports</span> <span class="o">=</span> <span class="n">delivery_ports</span><span class="p">(</span><span class="n">plant</span><span class="o">.</span><span class="n">get_submodule</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="n">requirement</span><span class="o">.</span><span class="n">on</span><span class="p">)</span>
+    <span class="n">first</span><span class="p">,</span> <span class="n">second</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">port</span><span class="si">}</span><span class="s2">.enthalpy_flow"</span> <span class="k">for</span> <span class="n">port</span> <span class="ow">in</span> <span class="n">ports</span><span class="p">)</span>
+    <span class="n">one</span><span class="p">,</span> <span class="n">active</span> <span class="o">=</span> <span class="n">series</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">first</span><span class="p">)</span>
+    <span class="n">other</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">series</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">one</span><span class="o">.</span><span class="n">size</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">other</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">one</span> <span class="o">-</span> <span class="n">other</span><span class="p">,</span> <span class="n">active</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_values</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">requirement</span><span class="p">,</span> <span class="n">unit_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``(values, keep, unit, label, timed)`` of what a requirement reads on one unit."""</span>
+    <span class="n">read</span> <span class="o">=</span> <span class="n">reads</span><span class="p">(</span><span class="n">requirement</span><span class="o">.</span><span class="n">on</span><span class="p">,</span> <span class="n">requirement</span><span class="o">.</span><span class="n">quantity</span><span class="p">)</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="n">join_path</span><span class="p">(</span><span class="n">unit_path</span><span class="p">,</span> <span class="n">read</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">read</span><span class="o">.</span><span class="n">source</span> <span class="o">==</span> <span class="s2">"plant"</span><span class="p">:</span>
+        <span class="n">values</span><span class="p">,</span> <span class="n">active</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="n">_plant_values</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">read</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">keep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">active</span> <span class="k">if</span> <span class="n">requirement</span><span class="o">.</span><span class="n">when</span> <span class="o">==</span> <span class="s2">"running"</span> <span class="k">else</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">values</span><span class="p">,</span> <span class="n">keep</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="n">read</span><span class="o">.</span><span class="n">source</span> <span class="o">==</span> <span class="s2">"delivery"</span><span class="p">:</span>
+        <span class="n">values</span><span class="p">,</span> <span class="n">active</span> <span class="o">=</span> <span class="n">_delivery_values</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">requirement</span><span class="p">,</span> <span class="n">unit_path</span><span class="p">)</span>
+        <span class="n">keep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">active</span> <span class="k">if</span> <span class="n">requirement</span><span class="o">.</span><span class="n">when</span> <span class="o">==</span> <span class="s2">"running"</span> <span class="k">else</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">values</span><span class="p">,</span> <span class="n">keep</span><span class="p">,</span> <span class="n">si_unit_of</span><span class="p">(</span><span class="s2">"power"</span><span class="p">),</span> <span class="n">label</span><span class="p">,</span> <span class="kc">True</span>
+    <span class="n">path</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">field_of</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+    <span class="n">values</span><span class="p">,</span> <span class="n">keep</span> <span class="o">=</span> <span class="n">_reading</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">requirement</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">values</span><span class="p">,</span>
+        <span class="n">keep</span><span class="p">,</span>
+        <span class="n">fields</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">path</span><span class="p">)[</span><span class="n">name</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">join_path</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="p">),</span>
+        <span class="ow">not</span> <span class="n">is_parameter</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_share</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">requirement</span><span class="p">,</span> <span class="n">unit_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the check of the unmet energy over the demand of the case for one supply unit.</span>
+
+<span class="sd">    A service that demands nothing has nothing unmet: its share is 0.</span>
+<span class="sd">    """</span>
+    <span class="n">read</span> <span class="o">=</span> <span class="n">reads</span><span class="p">(</span><span class="n">requirement</span><span class="o">.</span><span class="n">on</span><span class="p">,</span> <span class="n">requirement</span><span class="o">.</span><span class="n">quantity</span><span class="p">)</span>
+    <span class="n">unmet</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">series</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">unit_path</span><span class="p">,</span> <span class="n">read</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">unmet</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_undecided</span><span class="p">(</span><span class="n">requirement</span><span class="p">,</span> <span class="n">unit_path</span><span class="p">,</span> <span class="n">NO_VALUE</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">)</span>
+    <span class="n">column</span> <span class="o">=</span> <span class="n">DEMANDED</span><span class="p">[</span><span class="n">read</span><span class="o">.</span><span class="n">path</span><span class="p">]</span>
+    <span class="n">demand</span> <span class="o">=</span> <span class="n">case</span><span class="o">.</span><span class="n">demand</span><span class="o">.</span><span class="n">frame</span><span class="p">[</span><span class="n">column</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">wanted</span> <span class="o">=</span> <span class="nb">float</span><span class="p">((</span><span class="n">demand</span> <span class="o">*</span> <span class="n">results</span><span class="o">.</span><span class="n">durations</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+    <span class="n">spent</span> <span class="o">=</span> <span class="nb">float</span><span class="p">((</span><span class="n">unmet</span> <span class="o">*</span> <span class="n">results</span><span class="o">.</span><span class="n">durations</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+    <span class="n">measured</span> <span class="o">=</span> <span class="n">spent</span> <span class="o">/</span> <span class="n">wanted</span> <span class="k">if</span> <span class="n">wanted</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.0</span>
+    <span class="k">return</span> <span class="n">_judged</span><span class="p">(</span><span class="n">requirement</span><span class="p">,</span> <span class="n">unit_path</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">measured</span><span class="p">,</span> <span class="n">TOLERANCE</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">measured</span><span class="p">),</span> <span class="s2">"-"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_undecided</span><span class="p">(</span><span class="n">requirement</span><span class="p">,</span> <span class="n">unit_path</span><span class="p">,</span> <span class="n">reason</span><span class="p">,</span> <span class="n">unit</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the check of a figure that cannot be judged, with the ``reason``."""</span>
+    <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">=</span> <span class="n">_requirement_limits</span><span class="p">(</span><span class="n">requirement</span><span class="p">)</span>
+    <span class="n">limit</span> <span class="o">=</span> <span class="n">measure</span><span class="p">(</span><span class="n">lower</span> <span class="k">if</span> <span class="n">lower</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">upper</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
+    <span class="n">verdict</span> <span class="o">=</span> <span class="n">check</span><span class="p">(</span><span class="n">requirement</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">measure</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">reason</span><span class="p">),</span> <span class="n">limit</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">verdict</span> <span class="o">|</span> <span class="n">_where</span><span class="p">(</span><span class="n">requirement</span><span class="p">,</span> <span class="n">unit_path</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">requirement</span><span class="p">,</span> <span class="n">unit_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the check of one requirement on one unit of its role."""</span>
+    <span class="k">if</span> <span class="n">reads</span><span class="p">(</span><span class="n">requirement</span><span class="o">.</span><span class="n">on</span><span class="p">,</span> <span class="n">requirement</span><span class="o">.</span><span class="n">quantity</span><span class="p">)</span><span class="o">.</span><span class="n">source</span> <span class="o">==</span> <span class="s2">"share"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_share</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">requirement</span><span class="p">,</span> <span class="n">unit_path</span><span class="p">)</span>
+    <span class="n">values</span><span class="p">,</span> <span class="n">keep</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">timed</span> <span class="o">=</span> <span class="n">_values</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">requirement</span><span class="p">,</span> <span class="n">unit_path</span><span class="p">)</span>
+    <span class="n">unit</span> <span class="o">=</span> <span class="s2">"s"</span> <span class="k">if</span> <span class="n">requirement</span><span class="o">.</span><span class="n">over</span> <span class="o">==</span> <span class="s2">"duration"</span> <span class="k">else</span> <span class="n">unit</span>
+    <span class="n">bounds</span> <span class="o">=</span> <span class="n">_requirement_limits</span><span class="p">(</span><span class="n">requirement</span><span class="p">)</span>
+    <span class="n">reason</span> <span class="o">=</span> <span class="n">_no_reason</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">keep</span><span class="p">,</span> <span class="n">_over</span><span class="p">(</span><span class="n">requirement</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">reason</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_undecided</span><span class="p">(</span><span class="n">requirement</span><span class="p">,</span> <span class="n">unit_path</span><span class="p">,</span> <span class="n">reason</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
+    <span class="n">measured</span><span class="p">,</span> <span class="n">margin</span><span class="p">,</span> <span class="n">position</span> <span class="o">=</span> <span class="n">_measure</span><span class="p">(</span><span class="n">requirement</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">keep</span><span class="p">,</span> <span class="n">results</span><span class="o">.</span><span class="n">durations</span><span class="p">,</span> <span class="n">bounds</span><span class="p">)</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">position</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">timed</span> <span class="k">else</span> <span class="n">frame</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">position</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">_judged</span><span class="p">(</span><span class="n">requirement</span><span class="p">,</span> <span class="n">unit_path</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">measured</span><span class="p">,</span> <span class="n">margin</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_where</span><span class="p">(</span><span class="n">requirement</span><span class="p">,</span> <span class="n">unit_path</span><span class="p">,</span> <span class="n">step</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the keys of a check: its role, unit and quantity, and the time of the worst step."""</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"role"</span><span class="p">:</span> <span class="n">requirement</span><span class="o">.</span><span class="n">on</span><span class="p">,</span>
+        <span class="s2">"unit_path"</span><span class="p">:</span> <span class="n">unit_path</span><span class="p">,</span>
+        <span class="s2">"quantity"</span><span class="p">:</span> <span class="n">requirement</span><span class="o">.</span><span class="n">quantity</span><span class="p">,</span>
+        <span class="s2">"worst_step"</span><span class="p">:</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">step</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">step</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+    <span class="p">}</span>
+
+
+<span class="n">SERVICES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"heating"</span><span class="p">:</span> <span class="s2">"heat_delivered"</span><span class="p">,</span> <span class="s2">"cooling"</span><span class="p">:</span> <span class="s2">"cold_delivered"</span><span class="p">}</span>
+<span class="sd">"""The figure that shows a service of the case being delivered."""</span>
+
+<span class="n">LARGEST_VIOLATION</span> <span class="o">=</span> <span class="mf">1e6</span>
+<span class="sd">"""The violation of a failed step: above that of any design that ran."""</span>
+
+<span class="n">NOT_CONVERGED</span> <span class="o">=</span> <span class="s2">"loop_not_converged"</span>
+<span class="sd">"""The code of a failed row that is a numerical failure: an iteration that did not converge."""</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Verdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The verdict of a run: ``feasible`` and the ``reasons`` it is not, with ``to_dict``."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``{feasible, reasons}`` as plain JSON, every ``Quantity`` as ``{value, unit}``."""</span>
+        <span class="k">return</span> <span class="n">to_plain</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="verdict">
+<a class="viewcode-back" href="../../../codedocumentation/gemini.evaluate.verdict.html#gemini.evaluate.verdict">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">verdict</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return whether a finished run is feasible, and why not.</span>
+
+<span class="sd">    The one place that decides feasibility; ``report``, ``compare`` and the study use it. A run is</span>
+<span class="sd">    feasible when it has no reason. A reason has a ``kind``:</span>
+
+<span class="sd">    - ``requirement``: a requirement of the case, or a supply temperature of a service, that</span>
+<span class="sd">      failed (``requirements``); no requirement could be checked; when some passed and none</span>
+<span class="sd">      failed, each one that could not be judged (without a ``violation``), except an idle unit</span>
+<span class="sd">      and the supply of a service reported as not delivered; a service of the case that the run</span>
+<span class="sd">      does not deliver.</span>
+<span class="sd">    - ``failed_step``: rows of the run that failed or were skipped.</span>
+<span class="sd">    - ``numerical``: a mass or energy residual above the tolerances of ``mass_balance``,</span>
+<span class="sd">      ``energy_balance`` and ``plant_balance``, or a loop that did not converge.</span>
+<span class="sd">    - ``bound``: a recorded output outside the limits its module declares (``bounds``), or an</span>
+<span class="sd">      output past an operating limit of a module (``Module.operating_limits``) in the steps in</span>
+<span class="sd">      which the module carried flow.</span>
+
+<span class="sd">    The case is applied to the plant once; the plant of the user never changes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    plant : Module</span>
+<span class="sd">        The plant of the run.</span>
+<span class="sd">    case : Case</span>
+<span class="sd">        The case of the run.</span>
+<span class="sd">    results : Results</span>
+<span class="sd">        A finished run.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Verdict</span>
+<span class="sd">        A dict ``{feasible, reasons}`` (``to_dict()`` gives plain JSON). A reason is ``{kind,</span>
+<span class="sd">        name, message}`` and, when it has them, ``path`` (the module or the output), ``value``,</span>
+<span class="sd">        ``limit`` (values) and ``worst_step`` (ISO 8601). A ``requirement`` reason of a check also</span>
+<span class="sd">        has its ``role`` and ``quantity``.</span>
+<span class="sd">    """</span>
+    <span class="n">sited</span> <span class="o">=</span> <span class="n">apply_case</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">)</span>
+    <span class="n">checks</span> <span class="o">=</span> <span class="n">requirements</span><span class="p">(</span><span class="n">sited</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">judged</span><span class="p">(</span><span class="n">sited</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">checks</span><span class="p">,</span> <span class="n">totals</span><span class="p">(</span><span class="n">sited</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">))</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">judged</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">checks</span><span class="p">,</span> <span class="n">edge</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the ``Verdict`` of a run whose ``checks`` and ``edge`` totals are already read.</span>
+
+<span class="sd">    ``plant`` carries the case (``apply_case``); ``report`` calls this with what it read, so that</span>
+<span class="sd">    no figure is computed twice.</span>
+<span class="sd">    """</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">errors</span><span class="p">()</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="o">*</span><span class="n">_requirement_reasons</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="n">checks</span><span class="p">,</span> <span class="n">edge</span><span class="p">),</span>
+        <span class="o">*</span><span class="n">_failed_rows</span><span class="p">(</span><span class="n">rows</span><span class="p">),</span>
+        <span class="o">*</span><span class="n">_balances</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">rows</span><span class="p">),</span>
+        <span class="o">*</span><span class="n">_bounds</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">_distinct</span><span class="p">(</span><span class="n">found</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Verdict</span><span class="p">(</span><span class="n">feasible</span><span class="o">=</span><span class="ow">not</span> <span class="n">found</span><span class="p">,</span> <span class="n">reasons</span><span class="o">=</span><span class="n">found</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_distinct</span><span class="p">(</span><span class="n">found</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the reasons with one for each name, the first; a missing service says it once."""</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">found</span><span class="p">:</span>
+        <span class="n">names</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span> <span class="n">item</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">names</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">ranked</span><span class="p">(</span><span class="n">found</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the reasons of a verdict that a design variable can change: those with a violation.</span>
+
+<span class="sd">    A search ranks a trial by the ``violation`` of these (their sum, at most</span>
+<span class="sd">    ``LARGEST_VIOLATION``). A reason without one is structural, such as a service the plant has no</span>
+<span class="sd">    unit for, and stays in the verdict of the run without ranking the trials of a search.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">found</span><span class="p">[</span><span class="s2">"reasons"</span><span class="p">]</span> <span class="k">if</span> <span class="s2">"violation"</span> <span class="ow">in</span> <span class="n">item</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">excess</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">limit</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return how far ``value`` is from ``limit``, relative to the larger of the two.</span>
+
+<span class="sd">    A value the run could not give (NaN: its steps failed) is the largest violation.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">limit</span><span class="o">.</span><span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">LARGEST_VIOLATION</span>
+    <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">value</span> <span class="o">-</span> <span class="n">limit</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">value</span><span class="p">),</span> <span class="nb">abs</span><span class="p">(</span><span class="n">limit</span><span class="o">.</span><span class="n">value</span><span class="p">))</span> <span class="ow">or</span> <span class="mf">1.0</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">reason</span><span class="p">(</span><span class="n">kind</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="o">**</span><span class="n">parts</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return one reason: ``kind``, ``name`` and ``message``, then the parts that are given.</span>
+
+<span class="sd">    ``violation`` is the relative size of the breach for a reason a design can change, absent for</span>
+<span class="sd">    a structural one.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"kind"</span><span class="p">:</span> <span class="n">kind</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span> <span class="s2">"message"</span><span class="p">:</span> <span class="n">message</span><span class="p">}</span> <span class="o">|</span> <span class="p">{</span>
+        <span class="n">key</span><span class="p">:</span> <span class="n">item</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">parts</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_text</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return a value as text for a message: its number and unit."""</span>
+    <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"no value"</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">unit</span><span class="si">}</span><span class="s2">"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_requirement_reasons</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="n">checks</span><span class="p">,</span> <span class="n">edge</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the requirement reasons: failed or undecided checks, none checked, a missing service.</span>
+
+<span class="sd">    A check that could not be judged is a reason when another one passed and none failed, unless</span>
+<span class="sd">    the unit never ran or its service is already reported as not delivered. It has no</span>
+<span class="sd">    ``violation``.</span>
+<span class="sd">    """</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">[</span><span class="n">_failed</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">checks</span> <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">"passed"</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">]</span>
+    <span class="n">outcome</span> <span class="o">=</span> <span class="n">tally</span><span class="p">([</span><span class="n">item</span><span class="p">[</span><span class="s2">"passed"</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">checks</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">checks</span> <span class="ow">and</span> <span class="n">outcome</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reason</span><span class="p">(</span><span class="s2">"requirement"</span><span class="p">,</span> <span class="s2">"requirements"</span><span class="p">,</span> <span class="s2">"no requirement could be checked"</span><span class="p">))</span>
+    <span class="n">missing</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">service</span><span class="p">:</span> <span class="n">key</span>
+        <span class="k">for</span> <span class="n">service</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">SERVICES</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">_asked</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="n">service</span><span class="p">)</span> <span class="ow">and</span> <span class="n">edge</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">outcome</span><span class="p">:</span>
+        <span class="n">skipped</span> <span class="o">=</span> <span class="p">{</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">service</span><span class="si">}</span><span class="s2">_supply"</span> <span class="k">for</span> <span class="n">service</span> <span class="ow">in</span> <span class="n">missing</span><span class="p">}</span>
+        <span class="n">found</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_unjudged</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">checks</span> <span class="k">if</span> <span class="n">_unjudgeable</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">skipped</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">service</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">missing</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reason</span><span class="p">(</span><span class="s2">"requirement"</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"the run gives no </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> for the </span><span class="si">{</span><span class="n">service</span><span class="si">}</span><span class="s2">"</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">found</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_unjudgeable</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">skipped</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return whether an undecided check is a gap: not an idle unit, not a ``skipped`` role."""</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">item</span><span class="p">[</span><span class="s2">"passed"</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">item</span><span class="p">[</span><span class="s2">"value"</span><span class="p">]</span><span class="o">.</span><span class="n">reason</span> <span class="o">!=</span> <span class="n">NO_FLOW</span> <span class="ow">and</span> <span class="n">item</span><span class="p">[</span><span class="s2">"role"</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">skipped</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_unjudged</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the reason of a requirement check that could not be judged."""</span>
+    <span class="k">return</span> <span class="n">reason</span><span class="p">(</span>
+        <span class="s2">"requirement"</span><span class="p">,</span>
+        <span class="n">item</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">item</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">item</span><span class="p">[</span><span class="s1">'value'</span><span class="p">]</span><span class="o">.</span><span class="n">reason</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">item</span><span class="p">[</span><span class="s2">"unit_path"</span><span class="p">]</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="n">item</span><span class="p">[</span><span class="s2">"value"</span><span class="p">],</span>
+        <span class="n">limit</span><span class="o">=</span><span class="n">item</span><span class="p">[</span><span class="s2">"limit"</span><span class="p">],</span>
+        <span class="n">role</span><span class="o">=</span><span class="n">item</span><span class="p">[</span><span class="s2">"role"</span><span class="p">],</span>
+        <span class="n">quantity</span><span class="o">=</span><span class="n">item</span><span class="p">[</span><span class="s2">"quantity"</span><span class="p">],</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_asked</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="n">service</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return whether the demand of the case asks for ``service``."""</span>
+    <span class="k">return</span> <span class="n">case</span><span class="o">.</span><span class="n">demand</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">demand</span><span class="p">,</span> <span class="n">service</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_failed</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the reason of a requirement check that failed."""</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">item</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">_text</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s1">'value'</span><span class="p">])</span><span class="si">}</span><span class="s2"> against the limit </span><span class="si">{</span><span class="n">_text</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s1">'limit'</span><span class="p">])</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">return</span> <span class="n">reason</span><span class="p">(</span>
+        <span class="s2">"requirement"</span><span class="p">,</span>
+        <span class="n">item</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span>
+        <span class="n">message</span><span class="p">,</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">item</span><span class="p">[</span><span class="s2">"unit_path"</span><span class="p">]</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">value</span><span class="o">=</span><span class="n">item</span><span class="p">[</span><span class="s2">"value"</span><span class="p">],</span>
+        <span class="n">limit</span><span class="o">=</span><span class="n">item</span><span class="p">[</span><span class="s2">"limit"</span><span class="p">],</span>
+        <span class="n">worst_step</span><span class="o">=</span><span class="n">item</span><span class="p">[</span><span class="s2">"worst_step"</span><span class="p">],</span>
+        <span class="n">role</span><span class="o">=</span><span class="n">item</span><span class="p">[</span><span class="s2">"role"</span><span class="p">],</span>
+        <span class="n">quantity</span><span class="o">=</span><span class="n">item</span><span class="p">[</span><span class="s2">"quantity"</span><span class="p">],</span>
+        <span class="n">violation</span><span class="o">=</span><span class="n">excess</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">"value"</span><span class="p">],</span> <span class="n">item</span><span class="p">[</span><span class="s2">"limit"</span><span class="p">]),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_failed_rows</span><span class="p">(</span><span class="n">rows</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the reason of the rows that failed or were skipped, apart from the loops."""</span>
+    <span class="n">failed</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span> <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">"code"</span><span class="p">]</span> <span class="o">!=</span> <span class="n">NOT_CONVERGED</span><span class="p">]</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">failed</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">count</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">top</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">((</span><span class="n">row</span><span class="p">[</span><span class="s2">"path"</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">"code"</span><span class="p">])</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">failed</span><span class="p">)</span><span class="o">.</span><span class="n">most_common</span><span class="p">(</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">first</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">failed</span> <span class="k">if</span> <span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"path"</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">"code"</span><span class="p">])</span> <span class="o">==</span> <span class="n">top</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2"> steps failed; most frequent: </span><span class="si">{</span><span class="n">top</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">top</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">top</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> rows): "</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">first</span><span class="p">[</span><span class="s1">'message'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">reason</span><span class="p">(</span>
+            <span class="s2">"failed_step"</span><span class="p">,</span>
+            <span class="s2">"failed_steps"</span><span class="p">,</span>
+            <span class="n">message</span><span class="p">,</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">measure</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">),</span>
+            <span class="n">violation</span><span class="o">=</span><span class="n">LARGEST_VIOLATION</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_balances</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">rows</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the numerical reasons: balances out of their tolerance, loops not converged."""</span>
+    <span class="n">loops</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"code"</span><span class="p">]</span> <span class="o">==</span> <span class="n">NOT_CONVERGED</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">)</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">loops</span><span class="p">:</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">loops</span><span class="si">}</span><span class="s2"> steps did not converge"</span>
+        <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">reason</span><span class="p">(</span>
+                <span class="s2">"numerical"</span><span class="p">,</span>
+                <span class="n">NOT_CONVERGED</span><span class="p">,</span>
+                <span class="n">message</span><span class="p">,</span>
+                <span class="n">value</span><span class="o">=</span><span class="n">measure</span><span class="p">(</span><span class="n">loops</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">),</span>
+                <span class="n">violation</span><span class="o">=</span><span class="n">LARGEST_VIOLATION</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="n">checks</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">mass_balance</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">),</span>
+        <span class="n">energy_balance</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">),</span>
+        <span class="o">*</span><span class="n">plant_balance</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">checks</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">"passed"</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">item</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">_text</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s1">'value'</span><span class="p">])</span><span class="si">}</span><span class="s2"> above </span><span class="si">{</span><span class="n">_text</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s1">'limit'</span><span class="p">])</span><span class="si">}</span><span class="s2">"</span>
+            <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">reason</span><span class="p">(</span>
+                    <span class="s2">"numerical"</span><span class="p">,</span>
+                    <span class="n">item</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span>
+                    <span class="n">message</span><span class="p">,</span>
+                    <span class="n">value</span><span class="o">=</span><span class="n">item</span><span class="p">[</span><span class="s2">"value"</span><span class="p">],</span>
+                    <span class="n">limit</span><span class="o">=</span><span class="n">item</span><span class="p">[</span><span class="s2">"limit"</span><span class="p">],</span>
+                    <span class="n">violation</span><span class="o">=</span><span class="n">excess</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">"value"</span><span class="p">],</span> <span class="n">item</span><span class="p">[</span><span class="s2">"limit"</span><span class="p">]),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="n">found</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_bounds</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the bound reasons: declared limits of the outputs and operating limits of modules."""</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">declared</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">declared</span><span class="p">[</span><span class="s2">"passed"</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">declared</span><span class="p">[</span><span class="s2">"value"</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2"> recorded values are outside the limits their module declares"</span>
+        <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reason</span><span class="p">(</span><span class="s2">"bound"</span><span class="p">,</span> <span class="s2">"bounds"</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">declared</span><span class="p">[</span><span class="s2">"value"</span><span class="p">],</span> <span class="n">violation</span><span class="o">=</span><span class="mf">1.0</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">breach</span> <span class="ow">in</span> <span class="n">breaches</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">results</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()):</span>
+        <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_breach</span><span class="p">(</span><span class="n">breach</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">found</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_breach</span><span class="p">(</span><span class="n">breach</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the bound reason of an operating limit that a run breaches."""</span>
+    <span class="n">word</span> <span class="o">=</span> <span class="s2">"below"</span> <span class="k">if</span> <span class="n">breach</span><span class="p">[</span><span class="s2">"sense"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"min"</span> <span class="k">else</span> <span class="s2">"above"</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="n">breach</span><span class="p">[</span><span class="s2">"step"</span><span class="p">]</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">breach</span><span class="p">[</span><span class="s1">'path'</span><span class="p">]</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">breach</span><span class="p">[</span><span class="s1">'output'</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">_text</span><span class="p">(</span><span class="n">breach</span><span class="p">[</span><span class="s1">'worst'</span><span class="p">])</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">word</span><span class="si">}</span><span class="s2"> the limit "</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_text</span><span class="p">(</span><span class="n">breach</span><span class="p">[</span><span class="s1">'limit'</span><span class="p">])</span><span class="si">}</span><span class="s2"> at </span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2">"</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">reason</span><span class="p">(</span>
+        <span class="s2">"bound"</span><span class="p">,</span>
+        <span class="n">breach</span><span class="p">[</span><span class="s2">"output"</span><span class="p">],</span>
+        <span class="n">message</span><span class="p">,</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">breach</span><span class="p">[</span><span class="s2">"path"</span><span class="p">],</span>
+        <span class="n">value</span><span class="o">=</span><span class="n">breach</span><span class="p">[</span><span class="s2">"worst"</span><span class="p">],</span>
+        <span class="n">limit</span><span class="o">=</span><span class="n">breach</span><span class="p">[</span><span class="s2">"limit"</span><span class="p">],</span>
+        <span class="n">worst_step</span><span class="o">=</span><span class="n">step</span><span class="p">,</span>
+        <span class="n">violation</span><span class="o">=</span><span class="n">excess</span><span class="p">(</span><span class="n">breach</span><span class="p">[</span><span class="s2">"worst"</span><span class="p">],</span> <span class="n">breach</span><span class="p">[</span><span class="s2">"limit"</span><span class="p">]),</span>
+    <span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

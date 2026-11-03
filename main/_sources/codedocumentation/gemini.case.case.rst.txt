@@ -1,0 +1,12 @@
+gemini.case.case
+================
+
+.. automodule:: gemini.case.case
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Case
+   

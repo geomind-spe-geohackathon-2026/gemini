@@ -1,0 +1,6 @@
+gemini.case.missing
+===================
+
+.. currentmodule:: gemini.case
+
+.. autofunction:: missing

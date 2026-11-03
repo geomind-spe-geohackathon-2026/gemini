@@ -1,0 +1,6 @@
+gemini.study.sample
+===================
+
+.. currentmodule:: gemini.study
+
+.. autofunction:: sample

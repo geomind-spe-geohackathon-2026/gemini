@@ -1,0 +1,537 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.study.size &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../codedocumentation/gemini.html">gemini</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">gemini.study.size</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for gemini.study.size</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Size the units of a plant for a case."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini</span><span class="w"> </span><span class="kn">import</span> <span class="n">units</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.analysis.nodal</span><span class="w"> </span><span class="kn">import</span> <span class="n">WELLHEAD_PRESSURES</span><span class="p">,</span> <span class="n">solve_injection_pressure</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.case._utils.access</span><span class="w"> </span><span class="kn">import</span> <span class="n">require</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.engine.apply</span><span class="w"> </span><span class="kn">import</span> <span class="n">apply_case</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.engine.check</span><span class="w"> </span><span class="kn">import</span> <span class="n">check</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.engine.simulate</span><span class="w"> </span><span class="kn">import</span> <span class="n">simulate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">PhysicsError</span><span class="p">,</span> <span class="n">RunError</span><span class="p">,</span> <span class="n">ValidationError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.errors.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">raise_issues</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate</span><span class="w"> </span><span class="kn">import</span> <span class="n">requirements</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.modules.pumps</span><span class="w"> </span><span class="kn">import</span> <span class="n">InjectionPump</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.physics.fluid</span><span class="w"> </span><span class="kn">import</span> <span class="n">FluidProperties</span><span class="p">,</span> <span class="n">heat_capacity_rate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.plants._utils.resize</span><span class="w"> </span><span class="kn">import</span> <span class="n">resized</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.plants.roles</span><span class="w"> </span><span class="kn">import</span> <span class="n">units_of</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.streams.flows</span><span class="w"> </span><span class="kn">import</span> <span class="n">Stream</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.shown</span><span class="w"> </span><span class="kn">import</span> <span class="n">display_quantity</span><span class="p">,</span> <span class="n">display_text</span>
+
+<span class="n">POLICIES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"none"</span><span class="p">,</span> <span class="s2">"peak"</span><span class="p">)</span>
+<span class="sd">"""The backup policies of ``size``."""</span>
+<span class="n">BACKUP</span> <span class="o">=</span> <span class="s2">"params.backup"</span>
+<span class="sd">"""The path of the backup policy in the plant file."""</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_limit</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="n">quantity</span><span class="p">,</span> <span class="n">bound</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the ``bound`` of the requirement on ``quantity`` of each doublet.</span>
+
+<span class="sd">    Without it, ``None`` when not ``required``, else ``missing_value`` is raised.</span>
+<span class="sd">    """</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">case</span><span class="o">.</span><span class="n">requirements</span> <span class="ow">or</span> <span class="p">():</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">on</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">quantity</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">over</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="s2">"doublet"</span><span class="p">,</span> <span class="n">quantity</span><span class="p">,</span> <span class="s2">"each"</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">bound</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">bound</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">required</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"requirements is missing a </span><span class="si">{</span><span class="n">bound</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">quantity</span><span class="si">}</span><span class="s2"> on each doublet; expected a value in the "</span>
+        <span class="s2">"case (it has no default)"</span><span class="p">,</span>
+        <span class="n">path</span><span class="o">=</span><span class="s2">"requirements"</span><span class="p">,</span>
+        <span class="n">code</span><span class="o">=</span><span class="s2">"missing_value"</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_peak</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="n">service</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the largest demand [W] of ``heating`` or ``cooling``, or raise ``missing_value``."""</span>
+    <span class="n">require</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"demand.</span><span class="si">{</span><span class="n">service</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">demand</span><span class="o">.</span><span class="n">frame</span><span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">service</span><span class="si">}</span><span class="s2">_demand"</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_note</span><span class="p">(</span><span class="n">notes</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">reason</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Record one size and the reason for it."""</span>
+    <span class="n">notes</span><span class="p">[</span><span class="s2">"sized"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"path"</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">:</span> <span class="n">display_quantity</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">unit</span><span class="p">),</span> <span class="s2">"reason"</span><span class="p">:</span> <span class="n">reason</span><span class="p">})</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_takes_doublets</span><span class="p">(</span><span class="n">plant</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Whether the class of the plant takes the structural size ``doublets``."""</span>
+    <span class="k">return</span> <span class="s2">"doublets"</span> <span class="ow">in</span> <span class="n">plant</span><span class="o">.</span><span class="n">size</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_doublet_range</span><span class="p">(</span><span class="n">plant</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the ``range`` of ``size.doublets`` of the plant, or raise ``missing_value``."""</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">plant</span><span class="o">.</span><span class="n">ranges</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"size.doublets"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">found</span><span class="o">.</span><span class="n">min</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">found</span><span class="o">.</span><span class="n">max</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="s2">"size.doublets.range is missing; expected a min and a max of the number of doublets "</span>
+            <span class="s2">"in the plant (it has no default)"</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="s2">"size.doublets.range"</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"missing_value"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">found</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_doublets</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">peak</span><span class="p">,</span> <span class="n">notes</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``(plant, heat)``: the plant on the smallest number of doublets that covers ``peak``.</span>
+
+<span class="sd">    ``heat`` is the heat [W] of all its doublets at the flow limit and the brine cooling limit.</span>
+<span class="sd">    Each doublet is rated for the largest flow the case lets it run: the flow limit.</span>
+<span class="sd">    """</span>
+    <span class="n">density</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="s2">"site.fluid.density"</span><span class="p">)</span>
+    <span class="n">flow_max</span> <span class="o">=</span> <span class="n">_limit</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="s2">"production_flow"</span><span class="p">,</span> <span class="s2">"max"</span><span class="p">)</span>
+    <span class="n">cooling_max</span> <span class="o">=</span> <span class="n">_limit</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="s2">"brine_cooling"</span><span class="p">,</span> <span class="s2">"max"</span><span class="p">)</span>
+    <span class="n">heat</span> <span class="o">=</span> <span class="n">heat_capacity_rate</span><span class="p">(</span><span class="n">density</span> <span class="o">*</span> <span class="n">flow_max</span><span class="p">,</span> <span class="n">FluidProperties</span><span class="p">()</span><span class="o">.</span><span class="n">cp_l</span><span class="p">)</span> <span class="o">*</span> <span class="n">cooling_max</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">units_of</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="s2">"doublet"</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">_takes_doublets</span><span class="p">(</span><span class="n">plant</span><span class="p">):</span>
+        <span class="n">top</span> <span class="o">=</span> <span class="n">_doublet_range</span><span class="p">(</span><span class="n">plant</span><span class="p">)</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">top</span><span class="o">.</span><span class="n">min</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">top</span><span class="o">.</span><span class="n">max</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">n</span> <span class="o">*</span> <span class="n">heat</span> <span class="o">&gt;=</span> <span class="n">peak</span><span class="p">),</span> <span class="n">top</span><span class="o">.</span><span class="n">max</span>
+        <span class="p">)</span>
+        <span class="n">design</span> <span class="o">=</span> <span class="n">resized</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">count</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">design</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">plant</span><span class="p">)</span>
+    <span class="n">covered</span> <span class="o">=</span> <span class="s2">"covers"</span> <span class="k">if</span> <span class="n">count</span> <span class="o">*</span> <span class="n">heat</span> <span class="o">&gt;=</span> <span class="n">peak</span> <span class="k">else</span> <span class="s2">"does not cover"</span>
+    <span class="n">notes</span><span class="p">[</span><span class="s2">"sized"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">"path"</span><span class="p">:</span> <span class="s2">"size.doublets"</span><span class="p">,</span>
+            <span class="s2">"value"</span><span class="p">:</span> <span class="n">units</span><span class="o">.</span><span class="n">Quantity</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">),</span>
+            <span class="s2">"reason"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2"> doublet(s) of </span><span class="si">{</span><span class="n">display_text</span><span class="p">(</span><span class="n">heat</span><span class="p">,</span><span class="w"> </span><span class="s1">'W'</span><span class="p">)</span><span class="si">}</span><span class="s2"> each at the flow limit "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">display_text</span><span class="p">(</span><span class="n">flow_max</span><span class="p">,</span><span class="w"> </span><span class="s1">'m3/s'</span><span class="p">)</span><span class="si">}</span><span class="s2"> and the brine cooling limit "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">display_text</span><span class="p">(</span><span class="n">cooling_max</span><span class="p">,</span><span class="w"> </span><span class="s1">'K'</span><span class="p">,</span><span class="w"> </span><span class="n">difference</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">covered</span><span class="si">}</span><span class="s2"> the heating peak "</span>
+            <span class="sa">f</span><span class="s2">"of </span><span class="si">{</span><span class="n">display_text</span><span class="p">(</span><span class="n">peak</span><span class="p">,</span><span class="w"> </span><span class="s1">'W'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">units_of</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="s2">"doublet"</span><span class="p">):</span>
+        <span class="n">design</span><span class="o">.</span><span class="n">_set_si_params</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="p">{</span><span class="s2">"nominal_flow"</span><span class="p">:</span> <span class="n">flow_max</span><span class="p">})</span>
+        <span class="n">_note</span><span class="p">(</span><span class="n">notes</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">.nominal_flow"</span><span class="p">,</span> <span class="n">flow_max</span><span class="p">,</span> <span class="s2">"m3/s"</span><span class="p">,</span> <span class="s2">"the flow limit of the case"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">design</span><span class="p">,</span> <span class="n">count</span> <span class="o">*</span> <span class="n">heat</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_closes_series</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Whether the chiller at ``path`` is the last of its chilled-water circuit."""</span>
+    <span class="n">module</span> <span class="o">=</span> <span class="n">design</span><span class="o">.</span><span class="n">get_submodule</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">port</span> <span class="o">=</span> <span class="s2">"source_out"</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">"source_out"</span><span class="p">)</span> <span class="k">else</span> <span class="s2">"chilled_out"</span>
+    <span class="n">chillers</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">units_of</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="s2">"chiller"</span><span class="p">))</span> <span class="o">-</span> <span class="p">{</span><span class="n">path</span><span class="p">}</span>
+    <span class="k">return</span> <span class="ow">not</span> <span class="n">chillers</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">design</span><span class="o">.</span><span class="n">feeds</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">port</span><span class="si">}</span><span class="s2">"</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_drive_heat</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">case</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the drive heat [W] each step of the demand asks of the boilers for sorption chillers.</span>
+
+<span class="sd">    A sorption chiller (a unit with a ``thermal_cop``) whose generator is fed by a boiler turns</span>
+<span class="sd">    the cooling demand into evaporator duty, upstream units first, each up to its capacity, and</span>
+<span class="sd">    draws that duty over its ``thermal_cop`` from the heating side. The chillers must be sized.</span>
+<span class="sd">    """</span>
+    <span class="n">applied</span> <span class="o">=</span> <span class="n">apply_case</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">case</span><span class="p">)</span>
+    <span class="n">chillers</span> <span class="o">=</span> <span class="n">units_of</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="s2">"chiller"</span><span class="p">)</span>
+    <span class="n">fed</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">boiler</span> <span class="ow">in</span> <span class="n">units_of</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="s2">"boiler"</span><span class="p">):</span>
+        <span class="n">fed</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">design</span><span class="o">.</span><span class="n">feeds</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">boiler</span><span class="si">}</span><span class="s2">.fluid_out"</span><span class="p">))</span>
+    <span class="n">drive</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">path</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">chillers</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">fed</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">applied</span><span class="o">.</span><span class="n">get_submodule</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="s2">"thermal_cop"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">downstream</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">chillers</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">design</span><span class="o">.</span><span class="n">feeds</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">.chilled_out"</span><span class="p">)))</span>
+
+    <span class="n">left</span> <span class="o">=</span> <span class="n">case</span><span class="o">.</span><span class="n">demand</span><span class="o">.</span><span class="n">frame</span><span class="p">[</span><span class="s2">"cooling_demand"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">heat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">left</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">drive</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">downstream</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">module</span> <span class="o">=</span> <span class="n">applied</span><span class="o">.</span><span class="n">get_submodule</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">duty</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">module</span><span class="o">.</span><span class="n">capacity</span><span class="p">)</span>
+        <span class="n">left</span> <span class="o">-=</span> <span class="n">duty</span>
+        <span class="n">heat</span> <span class="o">+=</span> <span class="n">duty</span> <span class="o">/</span> <span class="n">module</span><span class="o">.</span><span class="n">thermal_cop</span>
+    <span class="k">return</span> <span class="n">heat</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_boiler_peak</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">backup</span><span class="p">,</span> <span class="n">cover</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the heat [W] the boilers are rated for under the policy ``backup``.</span>
+
+<span class="sd">    The step where the heating demand and the drive heat of the sorption chillers peak together</span>
+<span class="sd">    sets it. ``"peak"`` rates for all of it; ``"none"`` for what the doublets cannot reach: that</span>
+<span class="sd">    step less the heat of the doublets, at least the part of it the reservoir temperature</span>
+<span class="sd">    cannot reach.</span>
+<span class="sd">    """</span>
+    <span class="n">heating</span> <span class="o">=</span> <span class="n">case</span><span class="o">.</span><span class="n">demand</span><span class="o">.</span><span class="n">frame</span><span class="p">[</span><span class="s2">"heating_demand"</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="nb">float</span><span class="p">((</span><span class="n">heating</span> <span class="o">+</span> <span class="n">_drive_heat</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">case</span><span class="p">))</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">backup</span> <span class="o">==</span> <span class="s2">"peak"</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">units_of</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="s2">"doublet"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">total</span>
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">total</span> <span class="o">-</span> <span class="n">cover</span><span class="p">,</span> <span class="n">_lift_share</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">case</span><span class="p">)</span> <span class="o">*</span> <span class="n">total</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_capacities</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">notes</span><span class="p">,</span> <span class="n">backup</span><span class="p">,</span> <span class="n">cover</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Set the capacity of each heat pump, boiler and chiller from the demand peaks."""</span>
+    <span class="k">for</span> <span class="n">role</span><span class="p">,</span> <span class="n">service</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"chiller"</span><span class="p">,</span> <span class="s2">"cooling"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"boiler"</span><span class="p">,</span> <span class="s2">"heating"</span><span class="p">),</span> <span class="p">(</span><span class="s2">"heat_pump"</span><span class="p">,</span> <span class="s2">"heating"</span><span class="p">)):</span>
+        <span class="n">paths</span> <span class="o">=</span> <span class="n">units_of</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">role</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">paths</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">peak</span> <span class="o">=</span> <span class="n">_peak</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="n">service</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">peak</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">_skip</span><span class="p">(</span><span class="n">notes</span><span class="p">,</span> <span class="n">paths</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"the case has no </span><span class="si">{</span><span class="n">service</span><span class="si">}</span><span class="s2"> demand"</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="s2">"heat_pump"</span><span class="p">:</span>
+            <span class="n">part</span> <span class="o">=</span> <span class="n">_lift_share</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">case</span><span class="p">)</span>
+            <span class="n">duty</span> <span class="o">=</span> <span class="n">part</span> <span class="o">*</span> <span class="n">peak</span>
+        <span class="k">elif</span> <span class="n">role</span> <span class="o">==</span> <span class="s2">"boiler"</span><span class="p">:</span>
+            <span class="n">duty</span> <span class="o">=</span> <span class="n">_boiler_peak</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">backup</span><span class="p">,</span> <span class="n">cover</span><span class="p">)</span>
+            <span class="n">part</span> <span class="o">=</span> <span class="n">duty</span> <span class="o">/</span> <span class="n">peak</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">part</span><span class="p">,</span> <span class="n">duty</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">peak</span>
+        <span class="k">if</span> <span class="n">duty</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">why</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">"the reservoir is hotter than the heating supply temperature"</span>
+                <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="s2">"heat_pump"</span>
+                <span class="k">else</span> <span class="s2">"the doublets cover the whole heating peak"</span>
+            <span class="p">)</span>
+            <span class="n">_skip</span><span class="p">(</span><span class="n">notes</span><span class="p">,</span> <span class="n">paths</span><span class="p">,</span> <span class="n">why</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="s2">"chiller"</span> <span class="ow">and</span> <span class="n">_closes_series</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+                <span class="n">value</span><span class="p">,</span> <span class="n">reason</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">peak</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"the whole </span><span class="si">{</span><span class="n">service</span><span class="si">}</span><span class="s2"> peak of </span><span class="si">{</span><span class="n">display_text</span><span class="p">(</span><span class="n">peak</span><span class="p">,</span><span class="w"> </span><span class="s1">'W'</span><span class="p">)</span><span class="si">}</span><span class="s2">: it closes the series"</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">duty</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span>
+                <span class="n">reason</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">part</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2"> of the </span><span class="si">{</span><span class="n">service</span><span class="si">}</span><span class="s2"> peak of </span><span class="si">{</span><span class="n">display_text</span><span class="p">(</span><span class="n">peak</span><span class="p">,</span><span class="w"> </span><span class="s1">'W'</span><span class="p">)</span><span class="si">}</span><span class="s2"> "</span>
+                    <span class="sa">f</span><span class="s2">"shared by </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">role</span><span class="si">}</span><span class="s2"> unit(s)"</span>
+                <span class="p">)</span>
+            <span class="n">design</span><span class="o">.</span><span class="n">_set_si_params</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="p">{</span><span class="s2">"capacity"</span><span class="p">:</span> <span class="n">value</span><span class="p">})</span>
+            <span class="n">_note</span><span class="p">(</span><span class="n">notes</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">.capacity"</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="s2">"W"</span><span class="p">,</span> <span class="n">reason</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">role</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"chp"</span><span class="p">,</span> <span class="s2">"heat_exchanger"</span><span class="p">):</span>
+        <span class="n">_skip</span><span class="p">(</span><span class="n">notes</span><span class="p">,</span> <span class="n">units_of</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">role</span><span class="p">),</span> <span class="s2">"not sized from the demand"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_injection_head</span><span class="p">(</span><span class="n">applied</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the pressure rise [Pa] that the doublet at ``path`` asks of an injection pump.</span>
+
+<span class="sd">    The wellhead pressure that injects the nominal flow, less the pressure of the production</span>
+<span class="sd">    wellhead (``nominal_wellhead_pressure``), which the pump suction can be at best; zero when the</span>
+<span class="sd">    column of brine injects the flow alone. The brine is injected at the reservoir temperature</span>
+<span class="sd">    less the brine cooling limit.</span>
+<span class="sd">    """</span>
+    <span class="n">doublet</span> <span class="o">=</span> <span class="n">applied</span><span class="o">.</span><span class="n">get_submodule</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">cooling</span> <span class="o">=</span> <span class="n">_limit</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="s2">"brine_cooling"</span><span class="p">,</span> <span class="s2">"max"</span><span class="p">)</span>
+    <span class="n">temperature</span> <span class="o">=</span> <span class="n">case</span><span class="o">.</span><span class="n">site</span><span class="o">.</span><span class="n">temperature_at</span><span class="p">(</span><span class="n">doublet</span><span class="o">.</span><span class="n">depth</span><span class="p">)</span> <span class="o">-</span> <span class="n">cooling</span>
+    <span class="n">rate</span> <span class="o">=</span> <span class="n">doublet</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">density</span> <span class="o">*</span> <span class="n">doublet</span><span class="o">.</span><span class="n">nominal_flow</span>
+    <span class="n">stream</span> <span class="o">=</span> <span class="n">Stream</span><span class="o">.</span><span class="n">_si</span><span class="p">(</span>
+        <span class="n">m_dot</span><span class="o">=</span><span class="n">rate</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">doublet</span><span class="o">.</span><span class="n">nominal_wellhead_pressure</span><span class="p">,</span> <span class="n">fluid</span><span class="o">=</span><span class="n">doublet</span><span class="o">.</span><span class="n">fluid</span>
+    <span class="p">)</span>
+    <span class="n">low</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">doublet</span><span class="o">.</span><span class="n">nominal_wellhead_pressure</span><span class="p">)</span>
+    <span class="n">needed</span> <span class="o">=</span> <span class="n">solve_injection_pressure</span><span class="p">(</span>
+        <span class="n">doublet</span><span class="o">.</span><span class="n">injector</span><span class="p">,</span> <span class="n">doublet</span><span class="o">.</span><span class="n">sink</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">WELLHEAD_PRESSURES</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="n">needed</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">needed</span> <span class="o">-</span> <span class="n">low</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_lacking</span><span class="p">(</span><span class="n">applied</span><span class="p">,</span> <span class="n">served</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return why a pump cannot be rated for the doublets ``served``, or ``None`` when it can."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">served</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"it serves no doublet of the plant"</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">served</span><span class="p">:</span>
+        <span class="n">doublet</span> <span class="o">=</span> <span class="n">applied</span><span class="o">.</span><span class="n">get_submodule</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"depth"</span><span class="p">,</span> <span class="s2">"nominal_flow"</span><span class="p">,</span> <span class="s2">"nominal_wellhead_pressure"</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">doublet</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> is missing"</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_injection_pumps</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">notes</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Rate each injection pump for the doublets it serves: their total flow and the head.</span>
+
+<span class="sd">    A pump serves the doublets that its brine reaches in the plant, found from the wiring. The</span>
+<span class="sd">    nominal flow is the sum of their nominal flows and the nominal head the largest head one of</span>
+<span class="sd">    them asks (``_injection_head``), floored at zero. A pump that serves no doublet of the plant,</span>
+<span class="sd">    or whose doublets lack a design value, is left unsized with a note.</span>
+<span class="sd">    """</span>
+    <span class="n">pumps</span> <span class="o">=</span> <span class="p">[</span><span class="n">path</span> <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">design</span><span class="o">.</span><span class="n">named_modules</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">InjectionPump</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pumps</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">applied</span> <span class="o">=</span> <span class="n">apply_case</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">case</span><span class="p">)</span>
+    <span class="n">doublets</span> <span class="o">=</span> <span class="n">units_of</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="s2">"doublet"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">pumps</span><span class="p">:</span>
+        <span class="n">served</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">design</span><span class="o">.</span><span class="n">feeds</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">.fluid_out"</span><span class="p">)</span> <span class="k">if</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">doublets</span><span class="p">]</span>
+        <span class="n">reason</span> <span class="o">=</span> <span class="n">_lacking</span><span class="p">(</span><span class="n">applied</span><span class="p">,</span> <span class="n">served</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">reason</span><span class="p">:</span>
+            <span class="n">_skip</span><span class="p">(</span><span class="n">notes</span><span class="p">,</span> <span class="p">[</span><span class="n">path</span><span class="p">],</span> <span class="sa">f</span><span class="s2">"not sized: </span><span class="si">{</span><span class="n">reason</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">flow</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">applied</span><span class="o">.</span><span class="n">get_submodule</span><span class="p">(</span><span class="n">item</span><span class="p">)</span><span class="o">.</span><span class="n">nominal_flow</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">served</span><span class="p">)</span>
+        <span class="n">head</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">_injection_head</span><span class="p">(</span><span class="n">applied</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">served</span><span class="p">)</span>
+        <span class="n">design</span><span class="o">.</span><span class="n">_set_si_params</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="p">{</span><span class="s2">"nominal_flow"</span><span class="p">:</span> <span class="n">flow</span><span class="p">,</span> <span class="s2">"nominal_head"</span><span class="p">:</span> <span class="n">head</span><span class="p">})</span>
+        <span class="n">why</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"the flow of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">served</span><span class="p">)</span><span class="si">}</span><span class="s2"> doublet(s) it serves, and the head that injects it"</span>
+        <span class="n">_note</span><span class="p">(</span><span class="n">notes</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">.nominal_flow"</span><span class="p">,</span> <span class="n">flow</span><span class="p">,</span> <span class="s2">"m3/s"</span><span class="p">,</span> <span class="n">why</span><span class="p">)</span>
+        <span class="n">_note</span><span class="p">(</span><span class="n">notes</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">.nominal_head"</span><span class="p">,</span> <span class="n">head</span><span class="p">,</span> <span class="s2">"Pa"</span><span class="p">,</span> <span class="n">why</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_skip</span><span class="p">(</span><span class="n">notes</span><span class="p">,</span> <span class="n">paths</span><span class="p">,</span> <span class="n">reason</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Record the units a size was not computed for."""</span>
+    <span class="n">notes</span><span class="p">[</span><span class="s2">"unchanged"</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">({</span><span class="s2">"path"</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span> <span class="s2">"reason"</span><span class="p">:</span> <span class="n">reason</span><span class="p">}</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_lift_share</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">case</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the part of the heating peak that the reservoir cannot reach by itself, 0 to 1.</span>
+
+<span class="sd">    ``(supply - reservoir) / (supply - return)`` with the reservoir temperature at the depth of the</span>
+<span class="sd">    plant: the water of the heating network warms to the reservoir temperature in the exchanger</span>
+<span class="sd">    and the heat pump lifts it the rest of the way. Zero when the reservoir is hotter than the</span>
+<span class="sd">    supply temperature.</span>
+<span class="sd">    """</span>
+    <span class="n">depth</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="s2">"depth"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">depth</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">doublet</span> <span class="o">=</span> <span class="n">units_of</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="s2">"doublet"</span><span class="p">)</span>
+        <span class="n">depth</span> <span class="o">=</span> <span class="n">design</span><span class="o">.</span><span class="n">get_submodule</span><span class="p">(</span><span class="n">doublet</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">depth</span> <span class="k">if</span> <span class="n">doublet</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">depth</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="s2">"depth is missing; expected a value of the plant (it has no default)"</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="s2">"depth"</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"missing_value"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">supply</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="s2">"demand.heating.supply_temperature"</span><span class="p">)</span>
+    <span class="n">back</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="s2">"demand.heating.return_temperature"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">supply</span> <span class="o">==</span> <span class="n">back</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"demand.heating: supply_temperature = return_temperature = </span><span class="si">{</span><span class="n">supply</span><span class="si">}</span><span class="s2"> K; expected a "</span>
+            <span class="s2">"supply above the return"</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="s2">"demand.heating.supply_temperature"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">reservoir</span> <span class="o">=</span> <span class="n">case</span><span class="o">.</span><span class="n">site</span><span class="o">.</span><span class="n">temperature_at</span><span class="p">(</span><span class="n">depth</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="p">(</span><span class="n">supply</span> <span class="o">-</span> <span class="n">reservoir</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">supply</span> <span class="o">-</span> <span class="n">back</span><span class="p">)))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">notes</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Simulate the sized plant once and note each requirement it breaks."""</span>
+    <span class="n">notes</span><span class="p">[</span><span class="s2">"broken"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">simulate</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">case</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">ValidationError</span><span class="p">,</span> <span class="n">PhysicsError</span><span class="p">,</span> <span class="n">RunError</span><span class="p">)</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="n">notes</span><span class="p">[</span><span class="s2">"simulation"</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"not simulated: </span><span class="si">{</span><span class="n">error</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">return</span>
+    <span class="n">notes</span><span class="p">[</span><span class="s2">"simulation"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"simulated"</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">requirements</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="s2">"passed"</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">notes</span><span class="p">[</span><span class="s2">"broken"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="n">key</span><span class="p">:</span> <span class="n">item</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"unit_path"</span><span class="p">,</span> <span class="s2">"role"</span><span class="p">,</span> <span class="s2">"quantity"</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">,</span> <span class="s2">"limit"</span><span class="p">,</span> <span class="s2">"worst_step"</span><span class="p">)</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_policy</span><span class="p">(</span><span class="n">plant</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the backup policy the plant states, or raise ``missing_value`` naming its path."""</span>
+    <span class="k">if</span> <span class="n">plant</span><span class="o">.</span><span class="n">backup</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">BACKUP</span><span class="si">}</span><span class="s2"> is missing; expected one of </span><span class="si">{</span><span class="n">POLICIES</span><span class="si">}</span><span class="s2"> (it has no default)"</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">BACKUP</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"missing_value"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">plant</span><span class="o">.</span><span class="n">backup</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_checked</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Raise the issues of ``gm.check`` but the parameters of the plant that have no value."""</span>
+    <span class="n">raise_issues</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">item</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">check</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">"missing"</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"params."</span><span class="p">))</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="size">
+<a class="viewcode-back" href="../../../codedocumentation/gemini.study.size.html#gemini.study.size">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">size</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return a new plant with first sizes from the case; the plant itself is not changed.</span>
+
+<span class="sd">    The sizes use gemini physics only. In order:</span>
+
+<span class="sd">    - the number of doublets, the smallest in the ``range`` of ``size.doublets`` of the plant whose</span>
+<span class="sd">      heat at the flow</span>
+<span class="sd">      limit and the brine cooling limit of the case's requirements covers the heating peak (the</span>
+<span class="sd">      largest, with a note, when none does), for a plant class that takes the structural size</span>
+<span class="sd">      ``doublets``; the nominal flow of each doublet is the flow limit, the largest flow the case</span>
+<span class="sd">      lets it run, so that its share in ``gm.evaluate.capacities`` is at most one;</span>
+<span class="sd">    - the capacity of each ``boiler`` by the policy ``backup`` (below); the capacity of each</span>
+<span class="sd">      ``heat_pump``: the part of the heating peak the reservoir cannot reach, ``(supply -</span>
+<span class="sd">      reservoir) / (supply - return)`` of it, shared by the units of the role, the reservoir</span>
+<span class="sd">      temperature taken at the depth of the plant and the temperatures from ``demand.heating`` (a</span>
+<span class="sd">      heat pump is left unsized, with a note, when the reservoir is hotter than the supply</span>
+<span class="sd">      temperature); the capacity of each ``chiller``: the cooling peak shared by the units, except</span>
+<span class="sd">      the chiller that closes the chilled-water series, which gets the whole peak because a</span>
+<span class="sd">      sorption unit delivers less than its rating when its characteristic map says so at the peak</span>
+<span class="sd">      conditions and the last chiller makes up the difference;</span>
+<span class="sd">    - the ``nominal_flow`` and ``nominal_head`` of each ``InjectionPump``: the total nominal flow</span>
+<span class="sd">      of the doublets its brine reaches, and the largest pressure rise one of them asks, the</span>
+<span class="sd">      wellhead pressure that injects its flow less ``nominal_wellhead_pressure`` as the best</span>
+<span class="sd">      suction, floored at zero (the injection well and aquifer of the case, ``gm.analysis``'s</span>
+<span class="sd">      ``solve_injection_pressure``). A pump that serves no doublet of the plant, such as the one</span>
+<span class="sd">      of a ``NodalDoublet``, or whose doublet lacks a depth or a wellhead pressure, is left</span>
+<span class="sd">      unsized with a note.</span>
+
+<span class="sd">    The heat pump share assumes an ideal exchanger: a finite approach leaves the water colder at</span>
+<span class="sd">    the heat pump, which a boiler downstream makes up; a plant with a heat pump and no boiler may</span>
+<span class="sd">    then fall short of its supply temperature at the peak.</span>
+
+<span class="sd">    A size that is not computed for a module kind (``chp``, ``heat_exchanger``, a heat pump that</span>
+<span class="sd">    is not needed) leaves it unchanged and lists it. The sized plant is then simulated once on the</span>
+<span class="sd">    case and every requirement it breaks is listed: size never hides an infeasible start.</span>
+
+<span class="sd">    The plant states the design policy of the top-up units in ``params.backup``, which has no</span>
+<span class="sd">    default (a plant without it raises ``missing_value`` naming the path):</span>
+
+<span class="sd">    - ``"none"``: a boiler covers only the heat the doublets cannot reach, the larger of the step</span>
+<span class="sd">      of the heating plus the drive heat of the sorption chillers less the heat of the doublets at</span>
+<span class="sd">      their limits and the part of it that the reservoir temperature cannot reach; a plant</span>
+<span class="sd">      without doublets gets the peak;</span>
+<span class="sd">    - ``"peak"``: a boiler covers the whole heating plus drive heat of the sorption chillers (the</span>
+<span class="sd">      unit that draws heat from the boiler) at the step where they peak together, with the</span>
+<span class="sd">      doublets off, so that it carries the peak when a doublet is out.</span>
+
+<span class="sd">    ``gm.check`` runs first and raises its issues, except the parameters of the plant that have</span>
+<span class="sd">    no value: completing a template plant is what ``size`` is for.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    plant : Plant</span>
+<span class="sd">        A plant with parameter values and its ``backup``.</span>
+<span class="sd">    case : Case</span>
+<span class="sd">        The demand, the requirements on each doublet (a maximum production flow and brine cooling),</span>
+<span class="sd">        the reservoir and the fluid.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Plant</span>
+<span class="sd">        A new plant. Its attribute ``sizing`` holds the notes: ``{"sized": [...], "unchanged":</span>
+<span class="sd">        [...], "broken": [...], "simulation": str}``. Each size is ``{path, value, reason}`` with a</span>
+<span class="sd">        ``Quantity`` value, each unit left unchanged ``{path, reason}``, each broken requirement</span>
+<span class="sd">        ``{unit_path, role, quantity, value, limit, worst_step}`` as ``gm.evaluate.requirements``</span>
+<span class="sd">        gives it, and ``simulation`` says ``simulated``, or ``not simulated: &lt;code&gt;: &lt;reason&gt;``</span>
+<span class="sd">        when the sized plant cannot run (a value it still lacks, a design the case refuses).</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValidationError</span>
+<span class="sd">        ``missing_value`` naming ``params.backup`` or the path of what a size needs and the case or</span>
+<span class="sd">        plant lacks; ``invalid_design`` for a</span>
+<span class="sd">        plant that has doublets but whose class takes no structural size ``doublets``.</span>
+<span class="sd">    """</span>
+    <span class="n">backup</span> <span class="o">=</span> <span class="n">_policy</span><span class="p">(</span><span class="n">plant</span><span class="p">)</span>
+    <span class="n">_checked</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">)</span>
+    <span class="n">require</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="s2">"demand"</span><span class="p">)</span>
+    <span class="n">notes</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"sized"</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">"unchanged"</span><span class="p">:</span> <span class="p">[]}</span>
+    <span class="n">design</span><span class="p">,</span> <span class="n">cover</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">plant</span><span class="p">),</span> <span class="mf">0.0</span>
+    <span class="k">if</span> <span class="n">units_of</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="s2">"doublet"</span><span class="p">):</span>
+        <span class="n">design</span><span class="p">,</span> <span class="n">cover</span> <span class="o">=</span> <span class="n">_doublets</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">_peak</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="s2">"heating"</span><span class="p">),</span> <span class="n">notes</span><span class="p">)</span>
+    <span class="n">_capacities</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">notes</span><span class="p">,</span> <span class="n">backup</span><span class="p">,</span> <span class="n">cover</span><span class="p">)</span>
+    <span class="n">_injection_pumps</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">notes</span><span class="p">)</span>
+    <span class="n">_check</span><span class="p">(</span><span class="n">design</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">notes</span><span class="p">)</span>
+    <span class="n">design</span><span class="o">.</span><span class="n">sizing</span> <span class="o">=</span> <span class="n">notes</span>
+    <span class="k">return</span> <span class="n">design</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

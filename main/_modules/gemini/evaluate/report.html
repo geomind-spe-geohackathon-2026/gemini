@@ -1,0 +1,493 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.evaluate.report &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../codedocumentation/gemini.html">gemini</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">gemini.evaluate.report</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for gemini.evaluate.report</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""One report of a finished run (totals, costs, CO2, failures, verdict), and report comparison."""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini._utils.jsonable</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_plain</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini._utils.strings</span><span class="w"> </span><span class="kn">import</span> <span class="n">close_matches</span><span class="p">,</span> <span class="n">did_you_mean</span><span class="p">,</span> <span class="n">join_names</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.engine.apply</span><span class="w"> </span><span class="kn">import</span> <span class="n">apply_case</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ValidationError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate._utils.cost</span><span class="w"> </span><span class="kn">import</span> <span class="n">equipment</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate._utils.display</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DISPLAY</span><span class="p">,</span>
+    <span class="n">checked_or_map</span><span class="p">,</span>
+    <span class="n">display_units</span><span class="p">,</span>
+    <span class="n">in_unit</span><span class="p">,</span>
+    <span class="n">shown</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate._utils.ratings</span><span class="w"> </span><span class="kn">import</span> <span class="n">rating_of</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate._utils.series</span><span class="w"> </span><span class="kn">import</span> <span class="n">energy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate._utils.tally</span><span class="w"> </span><span class="kn">import</span> <span class="n">tally</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate.costs</span><span class="w"> </span><span class="kn">import</span> <span class="n">capex</span><span class="p">,</span> <span class="n">lcoc</span><span class="p">,</span> <span class="n">lcoh</span><span class="p">,</span> <span class="n">lcts</span><span class="p">,</span> <span class="n">opex</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate.emissions</span><span class="w"> </span><span class="kn">import</span> <span class="n">co2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate.summary</span><span class="w"> </span><span class="kn">import</span> <span class="n">capacities</span><span class="p">,</span> <span class="n">totals</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate.verdict</span><span class="w"> </span><span class="kn">import</span> <span class="n">failures</span><span class="p">,</span> <span class="n">judged</span><span class="p">,</span> <span class="n">requirements</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.units</span><span class="w"> </span><span class="kn">import</span> <span class="n">Quantity</span><span class="p">,</span> <span class="n">si_unit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.units.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">by_si_unit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.units.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">measure</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Report</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The report of a run: a dict of the figures of ``report``, with ``to_dict`` for plain JSON."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the report as plain JSON in display units, a ``Quantity`` as ``{value, unit}``.</span>
+
+<span class="sd">        The values inside the report stay SI; the dict shows them in the display table of</span>
+<span class="sd">        ``gm.evaluate`` (energy in MWh, power in MW, money in MEUR, LCTS in EUR/MWh, CO2 in kt,</span>
+<span class="sd">        flow in m3/h, temperature in degC), also inside ``capacities`` and ``requirements`` and in</span>
+<span class="sd">        the parts of a value (annualised cost in MEUR/yr, energy per year in MWh/yr, mass in kt,</span>
+<span class="sd">        durations in days; ``analysis_period`` and ``payback`` in yr, a</span>
+<span class="sd">        temperature difference in K). A part that is dimensionless or text stays as it is.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        units : dict, optional</span>
+<span class="sd">            ``{metric: unit}`` that replaces the display unit of a metric of the report, and of</span>
+<span class="sd">            every part of the same SI unit. A name that is not a metric with a display unit raises</span>
+<span class="sd">            ``invalid_value``; a unit of another dimension raises ``invalid_unit``.</span>
+<span class="sd">        """</span>
+        <span class="n">chosen</span> <span class="o">=</span> <span class="n">display_units</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">units</span><span class="p">)</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">by_si_unit</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">to_plain</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="n">name</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="n">shown</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">base</span> <span class="o">|</span> <span class="p">{</span><span class="n">si_unit</span><span class="p">(</span><span class="n">DISPLAY</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">1</span><span class="p">]):</span> <span class="n">chosen</span><span class="p">[</span><span class="n">name</span><span class="p">]})</span>
+                    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">chosen</span>
+                    <span class="k">else</span> <span class="n">shown</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the report as the JSON text of ``to_dict()``."""</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="report">
+<a class="viewcode-back" href="../../../codedocumentation/gemini.evaluate.report.html#gemini.evaluate.report">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">report</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the energy, capacities, costs, CO2, requirements, verdict and failures of a run.</span>
+
+<span class="sd">    The costs are read with ``on_error="record"``: a cost that the case or the plant cannot give is</span>
+<span class="sd">    a value ``None`` with a ``reason``, so that reports of many designs stay comparable.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    plant : Module</span>
+<span class="sd">        The plant of the run.</span>
+<span class="sd">    case : Case</span>
+<span class="sd">        The case of the run.</span>
+<span class="sd">    results : Results</span>
+<span class="sd">        A finished run.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Report</span>
+<span class="sd">        A dict with ``heat_delivered``, ``cold_delivered``, ``boiler_heat``,</span>
+<span class="sd">        ``electricity_bought`` and ``gas_bought`` (J over the run, ``Quantity`` values;</span>
+<span class="sd">        ``boiler_heat`` is the heat of the boilers), ``capacities`` (see ``capacities``), ``capex``,</span>
+<span class="sd">        ``opex``, ``lcts``, ``lcoh``, ``lcoc`` and ``co2`` (values; ``capex`` and ``opex`` keep</span>
+<span class="sd">        their parts, per module and per kind), ``requirements`` (the list of ``requirements``),</span>
+<span class="sd">        ``passed`` (``False`` if any requirement failed, ``True`` if none failed and one passed,</span>
+<span class="sd">        else ``None``), ``verdict`` (``gm.evaluate.verdict``, the one answer ``compare`` reads),</span>
+<span class="sd">        ``failed_steps`` (the number of steps that failed), ``failures`` (the failed</span>
+<span class="sd">        and skipped rows grouped by module path and code, see ``failures``; empty when nothing</span>
+<span class="sd">        failed) and ``services`` (the services the case asks for, ``"heating"`` and ``"cooling"``).</span>
+<span class="sd">        ``to_dict(units=None)`` gives plain JSON in display units.</span>
+<span class="sd">    """</span>
+    <span class="n">sited</span> <span class="o">=</span> <span class="n">apply_case</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">)</span>
+    <span class="n">edge</span> <span class="o">=</span> <span class="n">totals</span><span class="p">(</span><span class="n">sited</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">)</span>
+    <span class="n">checks</span> <span class="o">=</span> <span class="n">requirements</span><span class="p">(</span><span class="n">sited</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Report</span><span class="p">(</span>
+        <span class="n">heat_delivered</span><span class="o">=</span><span class="n">edge</span><span class="p">[</span><span class="s2">"heat_delivered"</span><span class="p">],</span>
+        <span class="n">cold_delivered</span><span class="o">=</span><span class="n">edge</span><span class="p">[</span><span class="s2">"cold_delivered"</span><span class="p">],</span>
+        <span class="n">boiler_heat</span><span class="o">=</span><span class="n">_boiler_heat</span><span class="p">(</span><span class="n">sited</span><span class="p">,</span> <span class="n">results</span><span class="p">),</span>
+        <span class="n">electricity_bought</span><span class="o">=</span><span class="n">edge</span><span class="p">[</span><span class="s2">"electricity_bought"</span><span class="p">],</span>
+        <span class="n">gas_bought</span><span class="o">=</span><span class="n">edge</span><span class="p">[</span><span class="s2">"gas_bought"</span><span class="p">],</span>
+        <span class="n">capacities</span><span class="o">=</span><span class="n">capacities</span><span class="p">(</span><span class="n">sited</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">),</span>
+        <span class="n">capex</span><span class="o">=</span><span class="n">capex</span><span class="p">(</span><span class="n">sited</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="s2">"record"</span><span class="p">),</span>
+        <span class="n">opex</span><span class="o">=</span><span class="n">opex</span><span class="p">(</span><span class="n">sited</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="s2">"record"</span><span class="p">),</span>
+        <span class="n">lcts</span><span class="o">=</span><span class="n">lcts</span><span class="p">(</span><span class="n">sited</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">on_error</span><span class="o">=</span><span class="s2">"record"</span><span class="p">),</span>
+        <span class="n">lcoh</span><span class="o">=</span><span class="n">lcoh</span><span class="p">(</span><span class="n">sited</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">on_error</span><span class="o">=</span><span class="s2">"record"</span><span class="p">),</span>
+        <span class="n">lcoc</span><span class="o">=</span><span class="n">lcoc</span><span class="p">(</span><span class="n">sited</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">on_error</span><span class="o">=</span><span class="s2">"record"</span><span class="p">),</span>
+        <span class="n">co2</span><span class="o">=</span><span class="n">co2</span><span class="p">(</span><span class="n">sited</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="s2">"record"</span><span class="p">),</span>
+        <span class="n">requirements</span><span class="o">=</span><span class="n">checks</span><span class="p">,</span>
+        <span class="n">passed</span><span class="o">=</span><span class="n">tally</span><span class="p">([</span><span class="n">item</span><span class="p">[</span><span class="s2">"passed"</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">checks</span><span class="p">]),</span>
+        <span class="n">verdict</span><span class="o">=</span><span class="n">judged</span><span class="p">(</span><span class="n">sited</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">checks</span><span class="p">,</span> <span class="n">edge</span><span class="p">),</span>
+        <span class="n">failed_steps</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">errors</span><span class="p">()),</span>
+        <span class="n">failures</span><span class="o">=</span><span class="n">failures</span><span class="p">(</span><span class="n">results</span><span class="p">),</span>
+        <span class="n">services</span><span class="o">=</span><span class="n">_services</span><span class="p">(</span><span class="n">case</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_services</span><span class="p">(</span><span class="n">case</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the services that the demand of the case asks for."""</span>
+    <span class="k">if</span> <span class="n">case</span><span class="o">.</span><span class="n">demand</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"heating"</span><span class="p">,</span> <span class="s2">"cooling"</span><span class="p">)</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">case</span><span class="o">.</span><span class="n">demand</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_boiler_heat</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">results</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the heat [J] that the boilers of ``plant`` gave over the run, as a value."""</span>
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span>
+    <span class="n">boilers</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">module</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">equipment</span><span class="p">(</span><span class="n">plant</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">equipment_kind</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"boiler"</span><span class="p">,</span> <span class="s2">"electric_boiler"</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">boilers</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">measure</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"J"</span><span class="p">,</span> <span class="s2">"the plant has no boiler"</span><span class="p">)</span>
+    <span class="n">powers</span> <span class="o">=</span> <span class="p">[</span><span class="n">rating_of</span><span class="p">(</span><span class="n">module</span><span class="p">)</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">boilers</span><span class="p">]</span>
+    <span class="n">shown</span> <span class="o">=</span> <span class="p">[</span><span class="n">power</span> <span class="k">for</span> <span class="n">power</span> <span class="ow">in</span> <span class="n">powers</span> <span class="k">if</span> <span class="n">power</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">shown</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">measure</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">"J"</span><span class="p">,</span> <span class="s2">"the run shows no use of the boilers"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">measure</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">energy</span><span class="p">(</span><span class="n">power</span><span class="p">,</span> <span class="n">results</span><span class="o">.</span><span class="n">durations</span><span class="p">)</span> <span class="k">for</span> <span class="n">power</span> <span class="ow">in</span> <span class="n">shown</span><span class="p">),</span> <span class="s2">"J"</span><span class="p">)</span>
+
+
+<span class="n">SENSES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"min"</span><span class="p">,</span> <span class="s2">"max"</span><span class="p">)</span>
+<span class="sd">"""The two ways to prefer a metric: the smaller or the larger value."""</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Comparison</span><span class="p">(</span><span class="nb">list</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A list of ``{index, values, ranks, pareto, feasible}``, one per report in the order given."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return one row per report: its metrics, its ``rank_&lt;metric&gt;``, ``pareto``, ``feasible``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        units : dict, optional</span>
+<span class="sd">            ``{metric: unit}``. A metric is shown in its display unit (energy in MWh, power in</span>
+<span class="sd">            MW, money in MEUR, LCTS in EUR/MWh, mass in kt) unless a unit is given; its column is</span>
+<span class="sd">            named ``&lt;metric&gt; [&lt;unit&gt;]``. A metric without a display unit stays in SI under its</span>
+<span class="sd">            own name. A name that is not a metric, or a unit of another dimension, raises</span>
+<span class="sd">            ``invalid_value`` or ``invalid_unit``.</span>
+<span class="sd">        """</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"values"</span><span class="p">])</span> <span class="k">if</span> <span class="bp">self</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="n">shown</span> <span class="o">=</span> <span class="n">display_units</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">units</span><span class="p">)</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="o">**</span><span class="p">{</span>
+                    <span class="n">_label</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">shown</span><span class="p">):</span> <span class="p">(</span>
+                        <span class="n">in_unit</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">_number</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">"values"</span><span class="p">][</span><span class="n">name</span><span class="p">]),</span> <span class="n">shown</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+                        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">shown</span>
+                        <span class="k">else</span> <span class="n">_number</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">"values"</span><span class="p">][</span><span class="n">name</span><span class="p">])</span>
+                    <span class="p">)</span>
+                    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span>
+                <span class="p">},</span>
+                <span class="o">**</span><span class="p">{</span><span class="sa">f</span><span class="s2">"rank_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">:</span> <span class="n">rank</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">rank</span> <span class="ow">in</span> <span class="n">entry</span><span class="p">[</span><span class="s2">"ranks"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+                <span class="s2">"pareto"</span><span class="p">:</span> <span class="n">entry</span><span class="p">[</span><span class="s2">"pareto"</span><span class="p">],</span>
+                <span class="s2">"feasible"</span><span class="p">:</span> <span class="n">entry</span><span class="p">[</span><span class="s2">"feasible"</span><span class="p">],</span>
+            <span class="p">}</span>
+            <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="bp">self</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="n">entry</span><span class="p">[</span><span class="s2">"index"</span><span class="p">]</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">"index"</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the entries as plain JSON: every ``Quantity`` as ``{value, unit}``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        units : {"si", "display"} or dict, optional</span>
+<span class="sd">            ``None`` or ``"si"`` (the default) keeps SI. ``"display"`` shows each metric in its</span>
+<span class="sd">            display unit (as ``to_frame``, the table of ``gm.units.display``); a dict</span>
+<span class="sd">            ``{metric: unit}`` does too and replaces the unit of the metrics it names. A name</span>
+<span class="sd">            that is not a metric, or a unit of another dimension, raises ``invalid_value`` or</span>
+<span class="sd">            ``invalid_unit``.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">units</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">checked_or_map</span><span class="p">(</span><span class="n">units</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"si"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">to_plain</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"values"</span><span class="p">])</span> <span class="k">if</span> <span class="bp">self</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="n">chosen</span> <span class="o">=</span> <span class="n">display_units</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">units</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">by_si_unit</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">to_plain</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="p">{</span>
+                    <span class="o">**</span><span class="n">entry</span><span class="p">,</span>
+                    <span class="s2">"values"</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="n">name</span><span class="p">:</span> <span class="p">(</span>
+                            <span class="n">shown</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">base</span> <span class="o">|</span> <span class="p">{</span><span class="n">si_unit</span><span class="p">(</span><span class="n">DISPLAY</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">1</span><span class="p">]):</span> <span class="n">chosen</span><span class="p">[</span><span class="n">name</span><span class="p">]})</span>
+                            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">chosen</span>
+                            <span class="k">else</span> <span class="n">shown</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+                        <span class="p">)</span>
+                        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">entry</span><span class="p">[</span><span class="s2">"values"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                    <span class="p">},</span>
+                <span class="p">}</span>
+                <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="bp">self</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the ``Comparison`` of what ``to_dict`` gave; a metric is a ``Quantity`` again.</span>
+
+<span class="sd">        The ``reasons`` stay plain dicts, as ``to_dict`` wrote them.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="o">**</span><span class="n">entry</span><span class="p">,</span>
+                <span class="s2">"values"</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="n">name</span><span class="p">:</span> <span class="n">Quantity</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">item</span>
+                    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">entry</span><span class="p">[</span><span class="s2">"values"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="p">},</span>
+            <span class="p">}</span>
+            <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">data</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_number</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the SI number of a comparison value: a ``Quantity``, a plain number or ``None``."""</span>
+    <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">si</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Quantity</span><span class="p">)</span> <span class="k">else</span> <span class="n">value</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_label</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">shown</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the column name of a metric: with its unit in brackets when it has one."""</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">shown</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="si">}</span><span class="s2">]"</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">shown</span> <span class="k">else</span> <span class="n">name</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">compare</span><span class="p">(</span><span class="n">reports</span><span class="p">,</span> <span class="n">by</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Rank reports by the given metrics and mark the Pareto front of the feasible ones.</span>
+
+<span class="sd">    A report is feasible when its ``verdict`` (``gm.evaluate.verdict``) has no reason; compare</span>
+<span class="sd">    decides nothing itself. A dict without a ``verdict`` raises ``missing_value``: there is no</span>
+<span class="sd">    silent feasible. Feasible reports rank before all infeasible ones; the infeasible are</span>
+<span class="sd">    ordered by their number of reasons, then by the metrics.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    reports : list of dict</span>
+<span class="sd">        Reports as ``gm.evaluate.report`` returns them, each with its ``verdict``.</span>
+<span class="sd">    by : str, list of str or dict</span>
+<span class="sd">        The metrics, keys of the reports whose value is a ``Quantity`` or a number. A name or a list</span>
+<span class="sd">        prefers the smaller value of each; a dict ``{metric: "min" or "max"}`` says which. A report</span>
+<span class="sd">        without a value of a metric (``None``) ranks last for it and is never on the front.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Comparison</span>
+<span class="sd">        One entry per report, in the order given: ``index`` (its position), ``values`` (the</span>
+<span class="sd">        metrics as ``gm.units.Quantity`` in SI; a plain number stays a float; ``None`` for no</span>
+<span class="sd">        value), ``ranks`` (1 is best; equal values share a rank), ``pareto`` (whether no other</span>
+<span class="sd">        feasible report is at least as good in every metric and better in one; an infeasible</span>
+<span class="sd">        report is never on it), ``feasible`` and, when not feasible,</span>
+<span class="sd">        ``reasons``: those of the ``verdict`` of the report.</span>
+<span class="sd">        With one metric the front is its best reports. ``to_frame()`` gives a table in display</span>
+<span class="sd">        units and ``to_dict()`` plain JSON.</span>
+<span class="sd">    """</span>
+    <span class="n">senses</span> <span class="o">=</span> <span class="n">_senses</span><span class="p">(</span><span class="n">by</span><span class="p">,</span> <span class="n">reports</span><span class="p">)</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="p">[</span><span class="n">_value</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">reports</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">senses</span><span class="p">}</span>
+    <span class="n">quantities</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="p">[</span><span class="n">_quantity</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">reports</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">senses</span><span class="p">}</span>
+    <span class="n">reasons</span> <span class="o">=</span> <span class="p">[</span><span class="n">_reasons</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">position</span><span class="p">)</span> <span class="k">for</span> <span class="n">position</span><span class="p">,</span> <span class="n">report</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">reports</span><span class="p">)]</span>
+    <span class="n">feasible</span> <span class="o">=</span> <span class="p">[</span><span class="ow">not</span> <span class="n">found</span> <span class="k">for</span> <span class="n">found</span> <span class="ow">in</span> <span class="n">reasons</span><span class="p">]</span>
+    <span class="n">ranks</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">_ranks</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">senses</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">reasons</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">senses</span><span class="p">}</span>
+    <span class="n">front</span> <span class="o">=</span> <span class="n">_front</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">senses</span><span class="p">,</span> <span class="n">feasible</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Comparison</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">"index"</span><span class="p">:</span> <span class="n">position</span><span class="p">,</span>
+            <span class="s2">"values"</span><span class="p">:</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">quantities</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">position</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">senses</span><span class="p">},</span>
+            <span class="s2">"ranks"</span><span class="p">:</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">ranks</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">position</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">senses</span><span class="p">},</span>
+            <span class="s2">"pareto"</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">front</span><span class="p">[</span><span class="n">position</span><span class="p">]),</span>
+            <span class="s2">"feasible"</span><span class="p">:</span> <span class="n">feasible</span><span class="p">[</span><span class="n">position</span><span class="p">],</span>
+            <span class="o">**</span><span class="p">({}</span> <span class="k">if</span> <span class="n">feasible</span><span class="p">[</span><span class="n">position</span><span class="p">]</span> <span class="k">else</span> <span class="p">{</span><span class="s2">"reasons"</span><span class="p">:</span> <span class="n">reasons</span><span class="p">[</span><span class="n">position</span><span class="p">]}),</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">position</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">reports</span><span class="p">))</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_reasons</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">position</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return why a report is not feasible: the reasons of its verdict; a report needs one."""</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">report</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"verdict"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"reports[</span><span class="si">{</span><span class="n">position</span><span class="si">}</span><span class="s2">]: verdict is missing; expected the report of gm.evaluate.report"</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"reports[</span><span class="si">{</span><span class="n">position</span><span class="si">}</span><span class="s2">].verdict"</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"missing_value"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">found</span><span class="p">[</span><span class="s2">"reasons"</span><span class="p">])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_senses</span><span class="p">(</span><span class="n">by</span><span class="p">,</span> <span class="n">reports</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``{metric: "min" or "max"}`` and check the names against the reports."""</span>
+    <span class="n">senses</span> <span class="o">=</span> <span class="n">_normal</span><span class="p">(</span><span class="n">by</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">senses</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="s2">"by = []; expected at least one metric"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"by"</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_value"</span>
+        <span class="p">)</span>
+    <span class="n">known</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">name</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">reports</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">report</span><span class="p">})</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">sense</span> <span class="ow">in</span> <span class="n">senses</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">sense</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SENSES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"by.</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">sense</span><span class="si">!r}</span><span class="s2">; expected one of </span><span class="si">{</span><span class="n">join_names</span><span class="p">(</span><span class="n">SENSES</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"by.</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_value"</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">reports</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">name</span> <span class="ow">in</span> <span class="n">report</span> <span class="k">for</span> <span class="n">report</span> <span class="ow">in</span> <span class="n">reports</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"by = </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">; expected a key of the reports"</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">did_you_mean</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">known</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">path</span><span class="o">=</span><span class="s2">"by"</span><span class="p">,</span>
+                <span class="n">code</span><span class="o">=</span><span class="s2">"unknown_name"</span><span class="p">,</span>
+                <span class="n">suggestions</span><span class="o">=</span><span class="n">close_matches</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">known</span><span class="p">),</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="n">senses</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_normal</span><span class="p">(</span><span class="n">by</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``by`` as ``{metric: sense}``."""</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">by</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">by</span><span class="p">:</span> <span class="s2">"min"</span><span class="p">}</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">by</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">by</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">by</span><span class="p">,</span> <span class="s2">"min"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_value</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the SI number of metric ``name`` of a report, or ``None``."""</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">report</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">number</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">found</span><span class="p">,</span> <span class="s2">"si"</span><span class="p">,</span> <span class="n">found</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">number</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">number</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_quantity</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return metric ``name`` of a report as a ``Quantity`` in SI, a plain number, or ``None``."""</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">report</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">number</span> <span class="o">=</span> <span class="n">_value</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">number</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">found</span><span class="p">,</span> <span class="n">Quantity</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">number</span>
+    <span class="k">return</span> <span class="n">Quantity</span><span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="n">si_unit</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">unit</span><span class="p">)))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_worse</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">sense</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the values as numbers where a smaller one is better; no value or NaN is infinite."""</span>
+    <span class="n">sign</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">sense</span> <span class="o">==</span> <span class="s2">"min"</span> <span class="k">else</span> <span class="o">-</span><span class="mf">1.0</span>
+    <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="k">if</span> <span class="n">gap</span> <span class="k">else</span> <span class="n">sign</span> <span class="o">*</span> <span class="n">value</span> <span class="k">for</span> <span class="n">gap</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">missing</span><span class="p">,</span> <span class="n">values</span><span class="p">)])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ranks</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">sense</span><span class="p">,</span> <span class="n">reasons</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the rank of each report, 1 for the best; the infeasible come after the feasible.</span>
+
+<span class="sd">    Equal reports share the lowest rank. The infeasible are ordered by their number of reasons,</span>
+<span class="sd">    then by the metric.</span>
+<span class="sd">    """</span>
+    <span class="n">keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">)</span> <span class="k">for</span> <span class="n">found</span> <span class="ow">in</span> <span class="n">reasons</span><span class="p">),</span> <span class="n">_worse</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">sense</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="p">[</span><span class="mi">1</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">(</span><span class="n">other</span> <span class="o">&lt;</span> <span class="n">key</span> <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_front</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">senses</span><span class="p">,</span> <span class="n">feasible</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return which feasible reports no other feasible report dominates."""</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">_worse</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">senses</span><span class="p">[</span><span class="n">name</span><span class="p">])</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">senses</span><span class="p">])</span>
+    <span class="n">front</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">feasible</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="n">allowed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">feasible</span><span class="p">)</span>
+    <span class="n">rivals</span> <span class="o">=</span> <span class="n">table</span><span class="p">[</span><span class="n">allowed</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">position</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">allowed</span><span class="p">):</span>
+        <span class="n">valued</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="n">position</span><span class="p">])</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="n">beaten</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">rivals</span> <span class="o">&lt;=</span> <span class="n">table</span><span class="p">[</span><span class="n">position</span><span class="p">])</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">rivals</span> <span class="o">&lt;</span> <span class="n">table</span><span class="p">[</span><span class="n">position</span><span class="p">])</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>
+        <span class="n">front</span><span class="p">[</span><span class="n">position</span><span class="p">]</span> <span class="o">=</span> <span class="n">valued</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">beaten</span>
+    <span class="k">return</span> <span class="n">front</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

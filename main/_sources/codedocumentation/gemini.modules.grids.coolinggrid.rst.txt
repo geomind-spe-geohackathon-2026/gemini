@@ -1,0 +1,12 @@
+gemini.modules.grids.coolinggrid
+================================
+
+.. automodule:: gemini.modules.grids.coolinggrid
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      CoolingGrid
+   

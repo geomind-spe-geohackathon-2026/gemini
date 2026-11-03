@@ -1,0 +1,6 @@
+gemini.ops.logic
+================
+
+.. automodule:: gemini.ops.logic
+
+   

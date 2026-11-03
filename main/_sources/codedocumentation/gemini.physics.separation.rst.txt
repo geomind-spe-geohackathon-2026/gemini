@@ -1,0 +1,15 @@
+gemini.physics.separation
+=========================
+
+.. automodule:: gemini.physics.separation
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      cyclone_sand
+      degasser_split
+      dosing_flows
+      split_flow
+   

@@ -1,0 +1,12 @@
+gemini.modules.heating.chp
+==========================
+
+.. automodule:: gemini.modules.heating.chp
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      CHP
+   

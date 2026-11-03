@@ -1,0 +1,12 @@
+gemini.modules.environment.atmosphere
+=====================================
+
+.. automodule:: gemini.modules.environment.atmosphere
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Atmosphere
+   

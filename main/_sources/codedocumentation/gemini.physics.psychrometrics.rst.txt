@@ -1,0 +1,25 @@
+gemini.physics.psychrometrics
+=============================
+
+.. automodule:: gemini.physics.psychrometrics
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      MINIMUM_TEMPERATURE
+      MAXIMUM_TEMPERATURE
+      MOLAR_MASS_RATIO
+      DEFAULT_LATENT_HEAT
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      dew_point
+      evaporation_rate
+      humidity_ratio
+      saturation_pressure
+      wet_bulb_temperature
+   

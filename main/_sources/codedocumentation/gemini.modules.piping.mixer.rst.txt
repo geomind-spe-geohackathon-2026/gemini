@@ -1,0 +1,12 @@
+gemini.modules.piping.mixer
+===========================
+
+.. automodule:: gemini.modules.piping.mixer
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Mixer
+   

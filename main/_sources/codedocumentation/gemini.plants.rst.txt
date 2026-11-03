@@ -1,0 +1,30 @@
+gemini.plants
+=============
+
+.. automodule:: gemini.plants
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   atesplant
+   boilerchpplant
+   coolingsubstation
+   districtenergyplant
+   districtnetwork
+   doublet
+   doubletheatplant
+   heatingabsorptioncoolingplant
+   heatingcoolingplant
+   heatingfullcoolingplant
+   heatingheatpumpcoolingplant
+   heatingplant
+   heatingsubstation
+   multiwellplant
+   nodaldoublet
+   parallelexchangerplant
+   plant
+   roles

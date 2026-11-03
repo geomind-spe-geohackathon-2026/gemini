@@ -1,0 +1,15 @@
+gemini.modules.heating
+======================
+
+.. automodule:: gemini.modules.heating
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   boiler
+   chp
+   heatpump

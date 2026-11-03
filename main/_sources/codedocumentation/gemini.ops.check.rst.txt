@@ -1,0 +1,6 @@
+gemini.ops.check
+================
+
+.. currentmodule:: gemini.ops
+
+.. autofunction:: check

@@ -1,0 +1,12 @@
+gemini.modules.treatment.filter
+===============================
+
+.. automodule:: gemini.modules.treatment.filter
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Filter
+   

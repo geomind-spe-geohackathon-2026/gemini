@@ -1,0 +1,27 @@
+gemini.streams.flows
+====================
+
+.. automodule:: gemini.streams.flows
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      STREAM_FIELDS
+      FIELD_QUANTITIES
+      FIELD_SI
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      mass_flow
+      stream_valid
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Stream
+   

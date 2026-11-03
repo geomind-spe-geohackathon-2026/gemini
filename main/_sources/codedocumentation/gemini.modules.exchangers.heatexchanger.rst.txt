@@ -1,0 +1,12 @@
+gemini.modules.exchangers.heatexchanger
+=======================================
+
+.. automodule:: gemini.modules.exchangers.heatexchanger
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      HeatExchanger
+   

@@ -1,0 +1,30 @@
+gemini.physics.hydraulics
+=========================
+
+.. automodule:: gemini.physics.hydraulics
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      affine_correction
+      beggs_brill_dp
+      darcy_weisbach_dp
+      design_pump_head
+      hydrostatic_dp
+      hydrostatic_pressure
+      injectivity_index
+      injectivity_pressure
+      pipe_conductance
+      pipe_friction_drop
+      productivity_index
+      productivity_pressure
+      pump_setting_depth
+      quadratic_pressure_drop
+      radial_index
+      radial_pressure_drops
+      reynolds_number
+      valve_flow_coefficient
+      valve_pressure_drop
+   

@@ -1,0 +1,18 @@
+gemini.units
+============
+
+.. automodule:: gemini.units
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   bare
+   conversions
+   display
+   inputs
+   quantities
+   shapes

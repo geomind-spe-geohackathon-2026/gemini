@@ -1,0 +1,12 @@
+gemini.modules.power.separator
+==============================
+
+.. automodule:: gemini.modules.power.separator
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Separator
+   

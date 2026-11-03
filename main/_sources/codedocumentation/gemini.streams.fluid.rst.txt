@@ -1,0 +1,24 @@
+gemini.streams.fluid
+====================
+
+.. automodule:: gemini.streams.fluid
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      FLUE_CO2
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      grid_gas
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Fluid
+   

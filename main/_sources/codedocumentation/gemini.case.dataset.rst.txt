@@ -1,0 +1,19 @@
+gemini.case.dataset
+===================
+
+.. automodule:: gemini.case.dataset
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      as_dataset
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ColumnInfo
+      Dataset
+   

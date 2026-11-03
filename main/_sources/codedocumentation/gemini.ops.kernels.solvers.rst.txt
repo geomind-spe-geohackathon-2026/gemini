@@ -1,0 +1,13 @@
+gemini.ops.kernels.solvers
+==========================
+
+.. automodule:: gemini.ops.kernels.solvers
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      brent_roots
+      newton_roots
+   

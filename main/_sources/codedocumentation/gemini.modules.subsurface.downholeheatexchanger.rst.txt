@@ -1,0 +1,12 @@
+gemini.modules.subsurface.downholeheatexchanger
+===============================================
+
+.. automodule:: gemini.modules.subsurface.downholeheatexchanger
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      DownholeHeatExchanger
+   

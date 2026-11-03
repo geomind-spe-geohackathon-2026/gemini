@@ -1,0 +1,224 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.evaluate.balances &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gemini.evaluate.costs" href="gemini.evaluate.costs.html" />
+    <link rel="prev" title="gemini.evaluate" href="gemini.evaluate.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="gemini.html">gemini</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gemini.analysis.html">gemini.analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.case.html">gemini.case</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.compiler.html">gemini.compiler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.engine.html">gemini.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.errors.html">gemini.errors</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="gemini.evaluate.html">gemini.evaluate</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gemini.evaluate.balances</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.evaluate.costs.html">gemini.evaluate.costs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.evaluate.coverage.html">gemini.evaluate.coverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.evaluate.emissions.html">gemini.evaluate.emissions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.evaluate.metrics.html">gemini.evaluate.metrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.evaluate.report.html">gemini.evaluate.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.evaluate.summary.html">gemini.evaluate.summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.evaluate.verdict.html">gemini.evaluate.verdict</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.modules.html">gemini.modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.ops.html">gemini.ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.physics.html">gemini.physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.plants.html">gemini.plants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.runtime.html">gemini.runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.streams.html">gemini.streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.study.html">gemini.study</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.units.html">gemini.units</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="gemini.html">gemini</a></li>
+          <li class="breadcrumb-item"><a href="gemini.evaluate.html">gemini.evaluate</a></li>
+      <li class="breadcrumb-item active">gemini.evaluate.balances</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/codedocumentation/gemini.evaluate.balances.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-gemini.evaluate.balances">
+<span id="gemini-evaluate-balances"></span><h1>gemini.evaluate.balances<a class="headerlink" href="#module-gemini.evaluate.balances" title="Link to this heading"></a></h1>
+<p>The ledgers of a finished run and of one call: energy, mass, plant balance and the module audits.</p>
+<p><code class="docutils literal notranslate"><span class="pre">energy_balance</span></code>, <code class="docutils literal notranslate"><span class="pre">mass_balance</span></code> and <code class="docutils literal notranslate"><span class="pre">plant_balance</span></code> judge the columns of a finished run.
+<code class="docutils literal notranslate"><span class="pre">call_energy_balance</span></code>, <code class="docutils literal notranslate"><span class="pre">call_mass_balance</span></code>, <code class="docutils literal notranslate"><span class="pre">collect_flows</span></code> and <code class="docutils literal notranslate"><span class="pre">call_emissions</span></code> audit the
+retained evaluation tree of one <code class="docutils literal notranslate"><span class="pre">gm.call</span></code>.</p>
+<p>A leaf exchanges energy outside its streams through its ports: <code class="docutils literal notranslate"><span class="pre">power_in</span></code> and <code class="docutils literal notranslate"><span class="pre">power_out</span></code> carry
+electricity and <code class="docutils literal notranslate"><span class="pre">loss_out</span></code> heat to the surroundings, signed. <code class="docutils literal notranslate"><span class="pre">fuel</span></code> is the one energy on no port
+of a leaf, and <code class="docutils literal notranslate"><span class="pre">heat_accumulation</span></code> the rate of increase of the energy a leaf stores, counted as
+an outflow. The legacy isothermal pumps do not allocate electricity to fluid enthalpy, mechanical
+work or environmental loss. Report that unresolved energy explicitly; never manufacture heat loss
+to force a first-law residual to zero.</p>
+<p class="rubric">Module Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ENERGY_TOLERANCE</span></code></p></td>
+<td><p>Smallest negative power [W] still read as zero.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MASS_TOLERANCE</span></code></p></td>
+<td><p>Smallest negative mass flow [kg/s] still read as zero.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MODULE_TOLERANCE</span></code></p></td>
+<td><p>Largest relative residual of a module, in or out, the larger of the two; numerical.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">PLANT_TOLERANCE</span></code></p></td>
+<td><p>Largest relative residual of the root; numerical, the iterations of a loop stop near it.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ENERGY_INPUTS</span></code></p></td>
+<td><p>Energy [W] that enters a leaf from outside its streams, as <code class="docutils literal notranslate"><span class="pre">collect_flows</span></code> names it.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ENERGY_OUTPUTS</span></code></p></td>
+<td><p>Energy [W] that leaves a leaf other than through its streams.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">EDGE_CATEGORIES</span></code></p></td>
+<td><p>The categories of the modules at the plant's edge.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">call_emissions</span></code>(result_tree, fuel_factor, ...)</p></td>
+<td><p>Return the CO2 emission rate [kg/s] of the fuel burnt and the grid electricity drawn.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">call_energy_balance</span></code>(module, result)</p></td>
+<td><p>Return sensible enthalpy/energy fluxes [W] and an honest sum(in)-sum(out).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">call_mass_balance</span></code>(module, result)</p></td>
+<td><p>Audit mass [kg/s], including explicit aquifer withdrawal/deposition boundaries.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">collect_flows</span></code>(result_tree)</p></td>
+<td><p>Sum the energy flows of the leaves once, read from their ports [W].</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">column_ledger</span></code>(module, read)</p></td>
+<td><p>Return the ledger of leaf <code class="docutils literal notranslate"><span class="pre">module</span></code> over a run; <code class="docutils literal notranslate"><span class="pre">read(field)</span></code> gives a column or zero.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">energy_balance</span></code>(plant, case, results)</p></td>
+<td><p>Check the energy ledger of a finished run: the energy outputs have their sign.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">flow_work</span></code>(module, ledger)</p></td>
+<td><p>Return the pressure energy [W] a centrifugal pump gives, which the audit does not value.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">leaf_energy</span></code>(module, ledger)</p></td>
+<td><p>Audit one leaf; aquifers are open boundaries.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">leaf_mass</span></code>(module, ledger)</p></td>
+<td><p>Return a leaf's mass in- and outflow, counting aquifers and edges as open boundaries.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mass_balance</span></code>(plant, case, results)</p></td>
+<td><p>Check the mass-flow ledger of a finished run: no mass flow is negative or infinite.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plant_balance</span></code>(plant, case, results)</p></td>
+<td><p>Check that mass and energy close for every module and for the whole plant.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plant_totals</span></code>(plant, ends, read)</p></td>
+<td><p>Return what crosses the plant's edge over a run, in columns of <code class="docutils literal notranslate"><span class="pre">read(path,</span> <span class="pre">field)</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">scale</span></code>(incoming, outgoing)</p></td>
+<td><p>Return the larger magnitude of the two flows, at least one, to normalise a residual.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Classes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Ledger</span></code>(inlets, outlets, flows, burned, flow_work)</p></td>
+<td><p>What one leaf exchanges, read from a call or from the columns of a run.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gemini.evaluate.html" class="btn btn-neutral float-left" title="gemini.evaluate" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gemini.evaluate.costs.html" class="btn btn-neutral float-right" title="gemini.evaluate.costs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

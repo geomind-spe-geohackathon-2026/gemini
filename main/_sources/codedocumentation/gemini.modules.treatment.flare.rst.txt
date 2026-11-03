@@ -1,0 +1,12 @@
+gemini.modules.treatment.flare
+==============================
+
+.. automodule:: gemini.modules.treatment.flare
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Flare
+   

@@ -1,0 +1,15 @@
+gemini.ops.reductions
+=====================
+
+.. automodule:: gemini.ops.reductions
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      cumsum
+      interp
+      mean
+      sum
+   

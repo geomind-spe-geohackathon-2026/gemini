@@ -1,0 +1,19 @@
+gemini.evaluate.summary
+=======================
+
+.. automodule:: gemini.evaluate.summary
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      KPI_NAMES
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      capacities
+      totals
+   

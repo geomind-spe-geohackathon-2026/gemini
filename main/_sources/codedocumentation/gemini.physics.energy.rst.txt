@@ -1,0 +1,23 @@
+gemini.physics.energy
+=====================
+
+.. automodule:: gemini.physics.energy
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      circuit_flow
+      input_power
+      net_exchange
+      output_power
+      temperature_after
+      total_power
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      GridExchange
+   

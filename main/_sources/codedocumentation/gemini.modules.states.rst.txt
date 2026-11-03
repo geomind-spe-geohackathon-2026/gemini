@@ -1,0 +1,19 @@
+gemini.modules.states
+=====================
+
+.. automodule:: gemini.modules.states
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      merged
+      nested
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Stateful
+   

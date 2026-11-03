@@ -1,0 +1,43 @@
+gemini.physics.ground
+=====================
+
+.. automodule:: gemini.physics.ground
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      EULER_GAMMA
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      aquifer_stored_energy
+      aquifer_volumetric_heat_capacity
+      borehole_field_capacity
+      borehole_field_surroundings_conductance
+      borehole_field_temperature_change
+      borehole_loop_conductance
+      cylinder_store_conductance
+      doublet_breakthrough_time
+      doublet_breakthrough_volume
+      doublet_cold_fraction
+      doublet_temperature_drop
+      geotherm_temperature
+      injected_volume
+      mix_store
+      ramey_fluid_temperature
+      ramey_relaxation_length
+      ramey_rock_resistance
+      ramey_time_function
+      reservoir_pressure
+      reservoir_temperature
+      steady_flux_resistance
+      store_conductance
+      store_relaxation
+      stored_heat
+      thermal_recovery
+      vertical_cylinder_conductance
+   

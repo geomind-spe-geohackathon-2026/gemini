@@ -1,0 +1,26 @@
+gemini.modules.results
+======================
+
+.. automodule:: gemini.modules.results
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      NOT_ASSESSED
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      row_value
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Health
+      ModuleResult
+      Values
+   

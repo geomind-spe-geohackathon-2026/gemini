@@ -1,0 +1,19 @@
+gemini.evaluate.costs
+=====================
+
+.. automodule:: gemini.evaluate.costs
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      annualised_cost
+      capex
+      lcoc
+      lcoh
+      lcts
+      npv
+      opex
+      payback
+   

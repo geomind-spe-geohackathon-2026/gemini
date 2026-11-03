@@ -1,0 +1,16 @@
+gemini.modules.subsurface
+=========================
+
+.. automodule:: gemini.modules.subsurface
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   boreholefield
+   downholeheatexchanger
+   reservoir
+   thermaldecline

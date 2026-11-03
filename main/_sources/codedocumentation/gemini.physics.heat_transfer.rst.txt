@@ -1,0 +1,55 @@
+gemini.physics.heat\_transfer
+=============================
+
+.. automodule:: gemini.physics.heat_transfer
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DEFAULT_CP
+      DUTY_AGREEMENT_TOLERANCE
+      DETERMINED
+      NONPOSITIVE_INPUT
+      DISAGREEING_DUTIES
+      NO_LMTD
+      DEFAULT_ICE_LATENT_HEAT
+      DEFAULT_FREEZING_TEMPERATURE
+      DEFAULT_WATER_HEAT_CAPACITY
+      DEFAULT_ICE_HEAT_CAPACITY
+      MAX_SEGMENTS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      ambient_effectiveness
+      apparent_conductance
+      circuit_conductance
+      effectiveness_counterflow
+      effectiveness_outlet_temperature
+      effectiveness_parallel
+      exchanger_balance
+      exponential_relaxation
+      fan_power
+      heat_rate
+      ice_advance
+      ice_step
+      ice_stored_cold
+      lmtd
+      logarithmic_mean
+      mean_temperature
+      mixed_temperature
+      ntu
+      pipe_temperature_change
+      relaxation_factor
+      sensible_latent_loads
+      setpoint_duty
+      signed_parts
+      tank_capacity
+      tank_relaxation
+      tank_service_report
+      temperature_change
+      terminal_differences
+   

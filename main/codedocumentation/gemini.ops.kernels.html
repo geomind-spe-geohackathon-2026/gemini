@@ -1,0 +1,170 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.ops.kernels &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gemini.ops.kernels.numpy" href="gemini.ops.kernels.numpy.html" />
+    <link rel="prev" title="gemini.ops.failedrows" href="gemini.ops.failedrows.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="gemini.html">gemini</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gemini.analysis.html">gemini.analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.case.html">gemini.case</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.compiler.html">gemini.compiler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.engine.html">gemini.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.errors.html">gemini.errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.evaluate.html">gemini.evaluate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.modules.html">gemini.modules</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="gemini.ops.html">gemini.ops</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.backend.html">gemini.ops.backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.check.html">gemini.ops.check</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.control.html">gemini.ops.control</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.dispatch.html">gemini.ops.dispatch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.elementwise.html">gemini.ops.elementwise</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.failed.html">gemini.ops.failed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.failedrows.html">gemini.ops.failedrows</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gemini.ops.kernels</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="gemini.ops.kernels.numpy.html">gemini.ops.kernels.numpy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="gemini.ops.kernels.python.html">gemini.ops.kernels.python</a></li>
+<li class="toctree-l4"><a class="reference internal" href="gemini.ops.kernels.scalars.html">gemini.ops.kernels.scalars</a></li>
+<li class="toctree-l4"><a class="reference internal" href="gemini.ops.kernels.solvers.html">gemini.ops.kernels.solvers</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.logic.html">gemini.ops.logic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.math.html">gemini.ops.math</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.reductions.html">gemini.ops.reductions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.registry.html">gemini.ops.registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.scope.html">gemini.ops.scope</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.solvers.html">gemini.ops.solvers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.physics.html">gemini.physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.plants.html">gemini.plants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.runtime.html">gemini.runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.streams.html">gemini.streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.study.html">gemini.study</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.units.html">gemini.units</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="gemini.html">gemini</a></li>
+          <li class="breadcrumb-item"><a href="gemini.ops.html">gemini.ops</a></li>
+      <li class="breadcrumb-item active">gemini.ops.kernels</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/codedocumentation/gemini.ops.kernels.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-gemini.ops.kernels">
+<span id="gemini-ops-kernels"></span><h1>gemini.ops.kernels<a class="headerlink" href="#module-gemini.ops.kernels" title="Link to this heading"></a></h1>
+<p>The kernels that evaluate ops: <code class="docutils literal notranslate"><span class="pre">python</span></code> for scalars and <code class="docutils literal notranslate"><span class="pre">numpy</span></code> for arrays.</p>
+<p><code class="docutils literal notranslate"><span class="pre">select(values)</span></code> picks the backend of <code class="docutils literal notranslate"><span class="pre">gm.runtime.settings(backend=...)</span></code> when one is set,
+otherwise NumPy for array arguments and Python for scalars. An op missing in a backend runs on
+NumPy. <code class="docutils literal notranslate"><span class="pre">forced_name()</span></code> is the cheap test of whether a setting is active: ops on plain Python
+scalars skip the backend selection entirely when it returns <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<p class="rubric">Modules</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="gemini.ops.kernels.numpy.html#module-gemini.ops.kernels.numpy" title="gemini.ops.kernels.numpy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy</span></code></a></p></td>
+<td><p>Array backend: NumPy ufuncs over whole time series, with floating-point warnings silenced.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gemini.ops.kernels.python.html#module-gemini.ops.kernels.python" title="gemini.ops.kernels.python"><code class="xref py py-obj docutils literal notranslate"><span class="pre">python</span></code></a></p></td>
+<td><p>Scalar backend: plain Python operators on floats, NumPy scalars and bools.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gemini.ops.kernels.scalars.html#module-gemini.ops.kernels.scalars" title="gemini.ops.kernels.scalars"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scalars</span></code></a></p></td>
+<td><p>The mode of the eager scalar scope, below the ops so that constants and backends can read it.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gemini.ops.kernels.solvers.html#module-gemini.ops.kernels.solvers" title="gemini.ops.kernels.solvers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">solvers</span></code></a></p></td>
+<td><p>Root finding on arrays for the NumPy backend, step for step like the scalar algorithms.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gemini.ops.failedrows.html" class="btn btn-neutral float-left" title="gemini.ops.failedrows" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gemini.ops.kernels.numpy.html" class="btn btn-neutral float-right" title="gemini.ops.kernels.numpy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,12 @@
+gemini.modules.cooling.adsorptionchiller
+========================================
+
+.. automodule:: gemini.modules.cooling.adsorptionchiller
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      AdsorptionChiller
+   

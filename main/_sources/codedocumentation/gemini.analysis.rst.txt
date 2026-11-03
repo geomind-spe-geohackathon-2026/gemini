@@ -1,0 +1,15 @@
+gemini.analysis
+===============
+
+.. automodule:: gemini.analysis
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   fits
+   integrity
+   nodal

@@ -1,0 +1,20 @@
+gemini.evaluate
+===============
+
+.. automodule:: gemini.evaluate
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   balances
+   costs
+   coverage
+   emissions
+   metrics
+   report
+   summary
+   verdict

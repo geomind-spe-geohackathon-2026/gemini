@@ -1,0 +1,238 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.physics.gas &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gemini.physics.geometry" href="gemini.physics.geometry.html" />
+    <link rel="prev" title="gemini.physics.fluid" href="gemini.physics.fluid.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="gemini.html">gemini</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gemini.analysis.html">gemini.analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.case.html">gemini.case</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.compiler.html">gemini.compiler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.engine.html">gemini.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.errors.html">gemini.errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.evaluate.html">gemini.evaluate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.modules.html">gemini.modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.ops.html">gemini.ops</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="gemini.physics.html">gemini.physics</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.chemistry.html">gemini.physics.chemistry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.combustion.html">gemini.physics.combustion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.constants.html">gemini.physics.constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.corrosion.html">gemini.physics.corrosion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.cycles.html">gemini.physics.cycles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.diagnostics.html">gemini.physics.diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.energy.html">gemini.physics.energy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.erosion.html">gemini.physics.erosion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.fluid.html">gemini.physics.fluid</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gemini.physics.gas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.geometry.html">gemini.physics.geometry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.ground.html">gemini.physics.ground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.heat_transfer.html">gemini.physics.heat_transfer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.hydraulics.html">gemini.physics.hydraulics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.psychrometrics.html">gemini.physics.psychrometrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.pumps.html">gemini.physics.pumps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.refrigeration.html">gemini.physics.refrigeration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.separation.html">gemini.physics.separation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.steam.html">gemini.physics.steam</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.plants.html">gemini.plants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.runtime.html">gemini.runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.streams.html">gemini.streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.study.html">gemini.study</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.units.html">gemini.units</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="gemini.html">gemini</a></li>
+          <li class="breadcrumb-item"><a href="gemini.physics.html">gemini.physics</a></li>
+      <li class="breadcrumb-item active">gemini.physics.gas</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/codedocumentation/gemini.physics.gas.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-gemini.physics.gas">
+<span id="gemini-physics-gas"></span><h1>gemini.physics.gas<a class="headerlink" href="#module-gemini.physics.gas" title="Link to this heading"></a></h1>
+<p>A gas from its composition: molar mass, normal and ideal-gas density, heating value and CO2.</p>
+<p>A composition maps a species to its mole fraction. The formulas of a fluid that carries a gas
+live here; <code class="docutils literal notranslate"><span class="pre">gemini.streams.Fluid</span></code> calls them once per fluid, so they run on plain numbers, except
+<code class="docutils literal notranslate"><span class="pre">ideal_gas_density</span></code>, which a stream calls with its pressure and temperature.</p>
+<p>The end of the file holds the ideal-gas adiabatic compression of intercooled stages with an
+isentropic efficiency, the textbook form of GPSA Engineering Data Book, 14th ed. (2017),
+Section 13, with the compressibility factor Z = 1: <code class="docutils literal notranslate"><span class="pre">T_2s</span> <span class="pre">=</span> <span class="pre">T_1</span> <span class="pre">*</span> <span class="pre">r**((k</span> <span class="pre">-</span> <span class="pre">1)</span> <span class="pre">/</span> <span class="pre">k)</span></code> and
+<code class="docutils literal notranslate"><span class="pre">T_2</span> <span class="pre">=</span> <span class="pre">T_1</span> <span class="pre">+</span> <span class="pre">(T_2s</span> <span class="pre">-</span> <span class="pre">T_1)</span> <span class="pre">/</span> <span class="pre">eta_s</span></code>. It holds for gases near ideal behaviour (Z close to one, low
+reduced pressure) with a constant heat capacity ratio <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">=</span> <span class="pre">cp</span> <span class="pre">/</span> <span class="pre">cv</span></code> over the stage.</p>
+<p class="rubric">Module Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">NORMAL_TEMPERATURE</span></code></p></td>
+<td><p>0 degC, the normal state of DIN 1343.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">NORMAL_PRESSURE</span></code></p></td>
+<td><p>1.01325 bar(a), the normal state of DIN 1343.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SPECIES</span></code></p></td>
+<td><p>Molar mass [kg/mol], lower heating value [J/mol] and carbon atoms burnt to CO2 per species.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">COMPOSITION_TOLERANCE</span></code></p></td>
+<td><p>Largest distance from one [-] of the sum of a composition; numerical, not physical.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AIR_COMPOSITION</span></code></p></td>
+<td><p>Dry air as mole fractions, argon and CO2 counted as nitrogen (Incropera et al., Fundamentals of Heat and Mass Transfer, 7th ed., table A.4 lists air as one substance).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AIR_SPECIFIC_HEAT</span></code></p></td>
+<td><p>Incropera et al., 7th ed., table A.4.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">combustion_co2</span></code>(composition)</p></td>
+<td><p>Return the CO2 [kg] that complete combustion forms per kilogram of gas.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">composition_of_masses</span></code>(masses)</p></td>
+<td><p>Return the mole fractions of a gas whose species have the mass shares <code class="docutils literal notranslate"><span class="pre">masses</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">emission_per_energy</span></code>(composition)</p></td>
+<td><p>Return the CO2 [kg] a burner emits per joule of fuel energy of a gas.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">gas_liquid_ratio</span></code>(fraction, density_normal, ...)</p></td>
+<td><p>Return the gas-liquid ratio [Nm3/m3] of a gas mass fraction, the inverse of the above.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">gas_mass_fraction</span></code>(ratio, density_normal, ...)</p></td>
+<td><p>Return the gas mass fraction [-] of a gas-liquid ratio, <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">R</span> <span class="pre">rho_n</span> <span class="pre">/</span> <span class="pre">(rho_l</span> <span class="pre">+</span> <span class="pre">R</span> <span class="pre">rho_n)</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">heat_rejected</span></code>(electricity, shaft_power, stages)</p></td>
+<td><p>Return the heat an intercooled electric compressor rejects to its surroundings.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ideal_gas_density</span></code>(pressure, temperature, ...)</p></td>
+<td><p>Return the ideal-gas density [kg/m3], <code class="docutils literal notranslate"><span class="pre">rho</span> <span class="pre">=</span> <span class="pre">p</span> <span class="pre">M</span> <span class="pre">/</span> <span class="pre">(R</span> <span class="pre">T)</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">isentropic_outlet_temperature</span></code>(...)</p></td>
+<td><p>Return the ideal-gas isentropic outlet temperature [K] of one compression stage.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">lower_heating_value</span></code>(composition)</p></td>
+<td><p>Return the lower heating value [J/kg] of a gas.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mass_fraction</span></code>(composition, species)</p></td>
+<td><p>Return the mass fraction [-] of one species in a gas.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">molar_mass</span></code>(composition)</p></td>
+<td><p>Return the molar mass [kg/mol] of a gas, the mole-weighted sum over its species.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">normal_density</span></code>(composition[, temperature, ...])</p></td>
+<td><p>Return the density [kg/Nm3] of a gas at its reference conditions, by default normal ones.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">overall_pressure_ratio</span></code>(discharge_pressure, ...)</p></td>
+<td><p>Return the overall pressure ratio of a compressor.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">shaft_power</span></code>(mass_flow, specific_work)</p></td>
+<td><p>Return the shaft power of a compressor.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">species_flow</span></code>(mass_flow, composition, species)</p></td>
+<td><p>Return the mass flow [kg/s] of <code class="docutils literal notranslate"><span class="pre">species</span></code> in a gas stream; zero without a composition.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">specific_compression_work</span></code>(inlet_temperature, ...)</p></td>
+<td><p>Return the shaft work per kg of gas [J/kg] of an intercooled multistage compressor.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stage_outlet_temperature</span></code>(inlet_temperature, ...)</p></td>
+<td><p>Return the adiabatic outlet temperature [K] of one stage with an isentropic efficiency.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stage_pressure_ratio</span></code>(pressure_ratio, stages)</p></td>
+<td><p>Return the pressure ratio of each of several equal stages.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gemini.physics.fluid.html" class="btn btn-neutral float-left" title="gemini.physics.fluid" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gemini.physics.geometry.html" class="btn btn-neutral float-right" title="gemini.physics.geometry" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

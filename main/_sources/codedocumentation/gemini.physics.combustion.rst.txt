@@ -1,0 +1,27 @@
+gemini.physics.combustion
+=========================
+
+.. automodule:: gemini.physics.combustion
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      METHANE_HEATING_VALUE
+      FLARE_EFFICIENCY
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      burnt_gas_emissions
+      covered_load
+      emission_rate
+      engine_energy_flows
+      flare_emissions
+      fuel_power
+      fuel_split
+      released_heat
+      willans_fuel_input
+   

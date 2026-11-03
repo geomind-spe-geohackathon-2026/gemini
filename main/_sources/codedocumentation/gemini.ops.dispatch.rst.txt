@@ -1,0 +1,6 @@
+gemini.ops.dispatch
+===================
+
+.. currentmodule:: gemini.ops
+
+.. autofunction:: dispatch

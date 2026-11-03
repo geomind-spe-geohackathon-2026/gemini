@@ -1,0 +1,15 @@
+gemini.physics.erosion
+======================
+
+.. automodule:: gemini.physics.erosion
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      api_erosional_velocity
+      api_velocity_comparison
+      erosion_rate
+      pipe_path_erosion_check
+   

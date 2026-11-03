@@ -1,0 +1,12 @@
+gemini.modules.environment.formation
+====================================
+
+.. automodule:: gemini.modules.environment.formation
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Formation
+   

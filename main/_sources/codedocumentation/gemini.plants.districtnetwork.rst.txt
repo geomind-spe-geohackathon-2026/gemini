@@ -1,0 +1,18 @@
+gemini.plants.districtnetwork
+=============================
+
+.. automodule:: gemini.plants.districtnetwork
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      SUBSTATIONS
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      DistrictNetwork
+   

@@ -1,0 +1,15 @@
+gemini.modules.bindings
+=======================
+
+.. automodule:: gemini.modules.bindings
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Binding
+      ConfigModel
+      DatedParams
+      ModuleBindings
+   

@@ -1,0 +1,15 @@
+gemini.modules.power
+====================
+
+.. automodule:: gemini.modules.power
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   flashturbine
+   orc
+   separator

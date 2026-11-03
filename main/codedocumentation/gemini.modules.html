@@ -1,0 +1,241 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.modules &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gemini.modules.bindings" href="gemini.modules.bindings.html" />
+    <link rel="prev" title="gemini.evaluate.verdict" href="gemini.evaluate.verdict.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="gemini.html">gemini</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gemini.analysis.html">gemini.analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.case.html">gemini.case</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.compiler.html">gemini.compiler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.engine.html">gemini.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.errors.html">gemini.errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.evaluate.html">gemini.evaluate</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">gemini.modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.bindings.html">gemini.modules.bindings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.call.html">gemini.modules.call</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.callargs.html">gemini.modules.callargs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.callrecord.html">gemini.modules.callrecord</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.check.html">gemini.modules.check</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.classpath.html">gemini.modules.classpath</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.container.html">gemini.modules.container</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.control.html">gemini.modules.control</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.cooling.html">gemini.modules.cooling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.declarations.html">gemini.modules.declarations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.display.html">gemini.modules.display</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.environment.html">gemini.modules.environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.exchangers.html">gemini.modules.exchangers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.grids.html">gemini.modules.grids</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.heating.html">gemini.modules.heating</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.module.html">gemini.modules.module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.piping.html">gemini.modules.piping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.power.html">gemini.modules.power</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.pumps.html">gemini.modules.pumps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.results.html">gemini.modules.results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.states.html">gemini.modules.states</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.storage.html">gemini.modules.storage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.subsurface.html">gemini.modules.subsurface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.treatment.html">gemini.modules.treatment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.tree.html">gemini.modules.tree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.values.html">gemini.modules.values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.modules.wells.html">gemini.modules.wells</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.ops.html">gemini.ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.physics.html">gemini.physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.plants.html">gemini.plants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.runtime.html">gemini.runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.streams.html">gemini.streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.study.html">gemini.study</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.units.html">gemini.units</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="gemini.html">gemini</a></li>
+      <li class="breadcrumb-item active">gemini.modules</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/codedocumentation/gemini.modules.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-gemini.modules">
+<span id="gemini-modules"></span><h1>gemini.modules<a class="headerlink" href="#module-gemini.modules" title="Link to this heading"></a></h1>
+<p>Public composable equipment and module API.</p>
+<p class="rubric">Modules</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="gemini.modules.bindings.html#module-gemini.modules.bindings" title="gemini.modules.bindings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bindings</span></code></a></p></td>
+<td><p>Portable sensor and dated-parameter metadata of a module: which column feeds which input.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gemini.modules.call.html#module-gemini.modules.call" title="gemini.modules.call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">call</span></code></a></p></td>
+<td><p>One call of one module from plain JSON.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gemini.modules.callargs.html#module-gemini.modules.callargs" title="gemini.modules.callargs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">callargs</span></code></a></p></td>
+<td><p>How a call is read: its inlets and its controls and boundaries, and the ports it gives back.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gemini.modules.callrecord.html#module-gemini.modules.callrecord" title="gemini.modules.callrecord"><code class="xref py py-obj docutils literal notranslate"><span class="pre">callrecord</span></code></a></p></td>
+<td><p>The record of one module call in progress, and the helpers that read and shape its values.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gemini.modules.check.html#gemini.modules.check" title="gemini.modules.check"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check</span></code></a>(cls[, example])</p></td>
+<td><p>Return a report of gemini's module rules for a new <code class="docutils literal notranslate"><span class="pre">Module</span></code> class; it never raises.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gemini.modules.classpath.html#module-gemini.modules.classpath" title="gemini.modules.classpath"><code class="xref py py-obj docutils literal notranslate"><span class="pre">classpath</span></code></a></p></td>
+<td><p>The path that plant files and checkpoints store for a module class, and the import back.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gemini.modules.container.html#module-gemini.modules.container" title="gemini.modules.container"><code class="xref py py-obj docutils literal notranslate"><span class="pre">container</span></code></a></p></td>
+<td><p>Ordered list and mapping containers for child modules.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gemini.modules.control.html#module-gemini.modules.control" title="gemini.modules.control"><code class="xref py py-obj docutils literal notranslate"><span class="pre">control</span></code></a></p></td>
+<td><p>GEMINI control modules.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gemini.modules.cooling.html#module-gemini.modules.cooling" title="gemini.modules.cooling"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cooling</span></code></a></p></td>
+<td><p>GEMINI thermally driven cooling modules.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gemini.modules.declarations.html#module-gemini.modules.declarations" title="gemini.modules.declarations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">declarations</span></code></a></p></td>
+<td><p>Declarations registered by <code class="xref py py-class docutils literal notranslate"><span class="pre">gemini.modules.Module</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gemini.modules.display.html#module-gemini.modules.display" title="gemini.modules.display"><code class="xref py py-obj docutils literal notranslate"><span class="pre">display</span></code></a></p></td>
+<td><p>How a module shows itself: parameter values in display units, and its declarations.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gemini.modules.environment.html#module-gemini.modules.environment" title="gemini.modules.environment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">environment</span></code></a></p></td>
+<td><p>GEMINI edge modules of the surroundings: the air and the rock around the wells.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gemini.modules.exchangers.html#module-gemini.modules.exchangers" title="gemini.modules.exchangers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exchangers</span></code></a></p></td>
+<td><p>GEMINI heat exchange modules.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gemini.modules.grids.html#module-gemini.modules.grids" title="gemini.modules.grids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">grids</span></code></a></p></td>
+<td><p>GEMINI edge modules: what the plant buys from outside and delivers to outside.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gemini.modules.heating.html#module-gemini.modules.heating" title="gemini.modules.heating"><code class="xref py py-obj docutils literal notranslate"><span class="pre">heating</span></code></a></p></td>
+<td><p>GEMINI heat generation modules.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gemini.modules.module.html#module-gemini.modules.module" title="gemini.modules.module"><code class="xref py py-obj docutils literal notranslate"><span class="pre">module</span></code></a></p></td>
+<td><p>Equipment modules: declarations and children registered in <code class="docutils literal notranslate"><span class="pre">__init__</span></code>, called with inlets.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gemini.modules.piping.html#module-gemini.modules.piping" title="gemini.modules.piping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">piping</span></code></a></p></td>
+<td><p>GEMINI piping equipment modules.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gemini.modules.power.html#module-gemini.modules.power" title="gemini.modules.power"><code class="xref py py-obj docutils literal notranslate"><span class="pre">power</span></code></a></p></td>
+<td><p>GEMINI power generation and grid equipment modules.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gemini.modules.pumps.html#module-gemini.modules.pumps" title="gemini.modules.pumps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pumps</span></code></a></p></td>
+<td><p>GEMINI pumps equipment modules.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gemini.modules.results.html#module-gemini.modules.results" title="gemini.modules.results"><code class="xref py py-obj docutils literal notranslate"><span class="pre">results</span></code></a></p></td>
+<td><p>Health and immutable per-call module results.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gemini.modules.states.html#module-gemini.modules.states" title="gemini.modules.states"><code class="xref py py-obj docutils literal notranslate"><span class="pre">states</span></code></a></p></td>
+<td><p>The state of a module tree: what a call starts from and how a step advances it.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gemini.modules.storage.html#module-gemini.modules.storage" title="gemini.modules.storage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">storage</span></code></a></p></td>
+<td><p>GEMINI thermal energy storage modules.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gemini.modules.subsurface.html#module-gemini.modules.subsurface" title="gemini.modules.subsurface"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subsurface</span></code></a></p></td>
+<td><p>GEMINI subsurface equipment modules.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gemini.modules.treatment.html#module-gemini.modules.treatment" title="gemini.modules.treatment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">treatment</span></code></a></p></td>
+<td><p>GEMINI treatment equipment modules.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gemini.modules.tree.html#module-gemini.modules.tree" title="gemini.modules.tree"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tree</span></code></a></p></td>
+<td><p>The module tree: children, paths and the listings of declarations below a module.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="gemini.modules.values.html#module-gemini.modules.values" title="gemini.modules.values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">values</span></code></a></p></td>
+<td><p>The values of a module tree: parameters, controls and boundaries, their validity and snapshots.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gemini.modules.wells.html#module-gemini.modules.wells" title="gemini.modules.wells"><code class="xref py py-obj docutils literal notranslate"><span class="pre">wells</span></code></a></p></td>
+<td><p>GEMINI well modules.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gemini.evaluate.verdict.html" class="btn btn-neutral float-left" title="gemini.evaluate.verdict" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gemini.modules.bindings.html" class="btn btn-neutral float-right" title="gemini.modules.bindings" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

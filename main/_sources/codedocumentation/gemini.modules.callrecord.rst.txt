@@ -1,0 +1,32 @@
+gemini.modules.callrecord
+=========================
+
+.. automodule:: gemini.modules.callrecord
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      active_call
+      has_arrays
+      holds_array
+      is_column
+      no_outputs
+      numpy_ports
+      numpy_value
+      output_rows
+      outputs_enabled
+      plain_outlet
+      recorded_output
+      restored
+      row_output
+      scalar_output
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      CallRecord
+      ScalarParameters
+   

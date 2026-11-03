@@ -1,0 +1,14 @@
+gemini.modules.environment
+==========================
+
+.. automodule:: gemini.modules.environment
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   atmosphere
+   formation

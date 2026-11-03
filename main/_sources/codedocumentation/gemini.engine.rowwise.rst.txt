@@ -1,0 +1,20 @@
+gemini.engine.rowwise
+=====================
+
+.. automodule:: gemini.engine.rowwise
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      applied
+      call_rows
+      inlet_feeds
+      row_item
+      row_streams
+      run_rows
+      stack_column
+      stacked
+      started
+   

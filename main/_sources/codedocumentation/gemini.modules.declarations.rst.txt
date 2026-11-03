@@ -1,0 +1,19 @@
+gemini.modules.declarations
+===========================
+
+.. automodule:: gemini.modules.declarations
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Boundary
+      Control
+      Declaration
+      Inlet
+      Outlet
+      Output
+      Parameter
+      State
+   

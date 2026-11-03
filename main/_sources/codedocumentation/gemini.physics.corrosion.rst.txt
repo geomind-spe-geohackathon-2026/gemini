@@ -1,0 +1,15 @@
+gemini.physics.corrosion
+========================
+
+.. automodule:: gemini.physics.corrosion
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      co2_corrosion_rate
+      remaining_wall_thickness
+      time_to_minimum_wall
+      wall_loss
+   

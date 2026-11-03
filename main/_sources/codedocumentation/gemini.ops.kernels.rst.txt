@@ -1,0 +1,16 @@
+gemini.ops.kernels
+==================
+
+.. automodule:: gemini.ops.kernels
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   numpy
+   python
+   scalars
+   solvers

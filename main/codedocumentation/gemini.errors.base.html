@@ -1,0 +1,203 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.errors.base &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gemini.errors.lookup" href="gemini.errors.lookup.html" />
+    <link rel="prev" title="gemini.errors" href="gemini.errors.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="gemini.html">gemini</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gemini.analysis.html">gemini.analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.case.html">gemini.case</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.compiler.html">gemini.compiler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.engine.html">gemini.engine</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="gemini.errors.html">gemini.errors</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gemini.errors.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.errors.lookup.html">gemini.errors.lookup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.errors.rows.html">gemini.errors.rows</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.evaluate.html">gemini.evaluate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.modules.html">gemini.modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.ops.html">gemini.ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.physics.html">gemini.physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.plants.html">gemini.plants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.runtime.html">gemini.runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.streams.html">gemini.streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.study.html">gemini.study</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.units.html">gemini.units</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="gemini.html">gemini</a></li>
+          <li class="breadcrumb-item"><a href="gemini.errors.html">gemini.errors</a></li>
+      <li class="breadcrumb-item active">gemini.errors.base</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/codedocumentation/gemini.errors.base.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-gemini.errors.base">
+<span id="gemini-errors-base"></span><h1>gemini.errors.base<a class="headerlink" href="#module-gemini.errors.base" title="Link to this heading"></a></h1>
+<p>The seven error classes, the warning, the fixed lists of codes and the shape of a problem.</p>
+<p class="rubric">Module Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">CODES</span></code></p></td>
+<td><p>Every value of <code class="docutils literal notranslate"><span class="pre">GeminiError.code</span></code>; the backend puts them into <code class="docutils literal notranslate"><span class="pre">422</span></code> details.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ROW_CODES</span></code></p></td>
+<td><p>Every row code of <code class="docutils literal notranslate"><span class="pre">Results.errors()</span></code> with its meaning.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ON_ERROR</span></code></p></td>
+<td><p>The values of <code class="docutils literal notranslate"><span class="pre">on_error</span></code>, the one argument of a call that can report instead of raising.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ISSUE_KINDS</span></code></p></td>
+<td><p>Every kind of an <code class="docutils literal notranslate"><span class="pre">Issue</span></code> with the code its problem carries.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_on_error</span></code>(on_error)</p></td>
+<td><p>Refuse a value of <code class="docutils literal notranslate"><span class="pre">on_error</span></code> other than <code class="docutils literal notranslate"><span class="pre">&quot;raise&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;record&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">problem</span></code>(path, code, message[, suggestions, time])</p></td>
+<td><p>Return the shape <code class="docutils literal notranslate"><span class="pre">{path,</span> <span class="pre">code,</span> <span class="pre">message,</span> <span class="pre">suggestions}</span></code> of every problem as plain JSON.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">raise_issues</span></code>(issues)</p></td>
+<td><p>Raise the <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code> that carries every issue of the list, if there are any.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">reported</span></code>(problems, on_error)</p></td>
+<td><p>Return <code class="docutils literal notranslate"><span class="pre">problems</span></code> under <code class="docutils literal notranslate"><span class="pre">on_error=&quot;record&quot;</span></code>; else raise them, if there are any.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Classes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Issue</span></code>(path, kind, message[, quantity, ...])</p></td>
+<td><p>One problem found in an input: where, of which kind, what is wrong, and what is accepted.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Exceptions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Cancelled</span></code>(*args[, path, code, suggestions, ...])</p></td>
+<td><p>A callback stopped a run; the ticks already committed stay readable.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DefinitionError</span></code>(*args[, path, code, ...])</p></td>
+<td><p>A module class written wrongly: declarations, children, hooks, formulas or outlets.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">GeminiError</span></code>(*args[, path, code, ...])</p></td>
+<td><p>Base class of every error GEMINI raises on purpose; catch it to handle them all.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">GeminiWarning</span></code></p></td>
+<td><p>Base class of every warning GEMINI emits.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">NotImplementedYet</span></code>(*args[, path, code, ...])</p></td>
+<td><p>The name is final but its work lands in a later step.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">PhysicsError</span></code>(*args[, path, code, ...])</p></td>
+<td><p>Out of range, no convergence, missing chemistry or too little data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">RunError</span></code>(*args[, path, code, suggestions, ...])</p></td>
+<td><p>A dataset, a clock, a checkpoint or a step of a run failed.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ValidationError</span></code>(*args[, path, code, ...])</p></td>
+<td><p>Wrong input: a value, a dict, a binding, a unit or an unknown name.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gemini.errors.html" class="btn btn-neutral float-left" title="gemini.errors" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gemini.errors.lookup.html" class="btn btn-neutral float-right" title="gemini.errors.lookup" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,12 @@
+gemini.plants.atesplant
+=======================
+
+.. automodule:: gemini.plants.atesplant
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ATESPlant
+   

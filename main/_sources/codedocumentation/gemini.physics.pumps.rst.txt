@@ -1,0 +1,34 @@
+gemini.physics.pumps
+====================
+
+.. automodule:: gemini.physics.pumps
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      POLYNOMIAL_COEFFICIENT_COUNT
+      RUNOUT_LOAD
+      CENTRIFUGAL_HEAD_COEFFICIENT_COUNT
+      HYDRAULIC_POWER_PER_HEAD
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      best_efficiency_ratio
+      centrifugal_head
+      constant_head_curves
+      esp_efficiency
+      head
+      hydraulic_power
+      intake_gas_volume_fraction
+      is_in_operating_window
+      line_shaft_friction_power
+      parabolic_efficiency
+      power
+      pump_efficiency
+      speed_ratio
+      speed_scaled_flow
+   

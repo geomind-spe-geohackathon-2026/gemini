@@ -1,0 +1,244 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.physics.ground &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gemini.physics.heat_transfer" href="gemini.physics.heat_transfer.html" />
+    <link rel="prev" title="gemini.physics.geometry" href="gemini.physics.geometry.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="gemini.html">gemini</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gemini.analysis.html">gemini.analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.case.html">gemini.case</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.compiler.html">gemini.compiler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.engine.html">gemini.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.errors.html">gemini.errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.evaluate.html">gemini.evaluate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.modules.html">gemini.modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.ops.html">gemini.ops</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="gemini.physics.html">gemini.physics</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.chemistry.html">gemini.physics.chemistry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.combustion.html">gemini.physics.combustion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.constants.html">gemini.physics.constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.corrosion.html">gemini.physics.corrosion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.cycles.html">gemini.physics.cycles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.diagnostics.html">gemini.physics.diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.energy.html">gemini.physics.energy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.erosion.html">gemini.physics.erosion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.fluid.html">gemini.physics.fluid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.gas.html">gemini.physics.gas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.geometry.html">gemini.physics.geometry</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gemini.physics.ground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.heat_transfer.html">gemini.physics.heat_transfer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.hydraulics.html">gemini.physics.hydraulics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.psychrometrics.html">gemini.physics.psychrometrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.pumps.html">gemini.physics.pumps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.refrigeration.html">gemini.physics.refrigeration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.separation.html">gemini.physics.separation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.steam.html">gemini.physics.steam</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.plants.html">gemini.plants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.runtime.html">gemini.runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.streams.html">gemini.streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.study.html">gemini.study</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.units.html">gemini.units</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="gemini.html">gemini</a></li>
+          <li class="breadcrumb-item"><a href="gemini.physics.html">gemini.physics</a></li>
+      <li class="breadcrumb-item active">gemini.physics.ground</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/codedocumentation/gemini.physics.ground.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-gemini.physics.ground">
+<span id="gemini-physics-ground"></span><h1>gemini.physics.ground<a class="headerlink" href="#module-gemini.physics.ground" title="Link to this heading"></a></h1>
+<p>Ground and aquifer heat transport: doublet breakthrough, conduction shapes, Ramey profiles.</p>
+<p>The functions are plain SI relations used by the subsurface equipment: the thermal
+breakthrough of a geothermal doublet (Gringarten and Sauty 1975), the conduction conductance
+of buried storage volumes (Incropera et al.; Carslaw and Jaeger 1959), the steady-flux
+borehole cell resistance (Hellstrom 1991) and the transient rock resistance and fluid
+temperature profile of a well in a linear geothermal gradient (Ramey 1962).</p>
+<p class="rubric">Module Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">EULER_GAMMA</span></code></p></td>
+<td><p>Euler-Mascheroni constant [-] of the line-source long-time asymptote.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">aquifer_stored_energy</span></code>(...)</p></td>
+<td><p>Return the net excess heat of the warm and the cold store of a well pair.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">aquifer_volumetric_heat_capacity</span></code>(porosity, ...)</p></td>
+<td><p>Return the bulk volumetric heat capacity [J/m3/K] of a saturated aquifer.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">borehole_field_capacity</span></code>(...)</p></td>
+<td><p>Return the heat capacity [J/K] of the lumped ground volume of a borehole field.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">borehole_field_surroundings_conductance</span></code>(...)</p></td>
+<td><p>Return the conductance [W/K] between a borehole field volume and the undisturbed ground.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">borehole_field_temperature_change</span></code>(change, ...)</p></td>
+<td><p>Return the ground temperature change of a borehole field after one step.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">borehole_loop_conductance</span></code>(capacity_rate, ...)</p></td>
+<td><p>Return the inlet-to-ground conductance of the loops of a borehole field.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cylinder_store_conductance</span></code>(conductivity, ...)</p></td>
+<td><p>Return the period-mean conduction conductance [W/K] of a cylindrical heat store.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">doublet_breakthrough_time</span></code>(breakthrough, ...)</p></td>
+<td><p>Return the time for a doublet's thermal front to reach the producer; NaN at no flow.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">doublet_breakthrough_volume</span></code>(well_spacing, ...)</p></td>
+<td><p>Return the injected volume [m3] at which the cold front reaches the producer.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">doublet_cold_fraction</span></code>(volume_ratio)</p></td>
+<td><p>Return the share [-] of the produced flow that arrives at the injection temperature.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">doublet_temperature_drop</span></code>(injected, ...)</p></td>
+<td><p>Return the drop of the produced temperature of a doublet after thermal breakthrough.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">geotherm_temperature</span></code>(surface_temperature, ...)</p></td>
+<td><p>Return the undisturbed ground temperature [K] at a depth, <code class="docutils literal notranslate"><span class="pre">T</span> <span class="pre">=</span> <span class="pre">T_s</span> <span class="pre">+</span> <span class="pre">g</span> <span class="pre">z</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">injected_volume</span></code>(volume_flow, duration)</p></td>
+<td><p>Return the liquid volume that flows through a well during a step.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mix_store</span></code>(volume, change, added_volume, ...)</p></td>
+<td><p>Return a fully mixed store after water is injected into it.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ramey_fluid_temperature</span></code>(inlet_temperature, ...)</p></td>
+<td><p>Return the temperature [K] of a fluid after flowing <code class="docutils literal notranslate"><span class="pre">length</span></code> down a geothermal gradient.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ramey_relaxation_length</span></code>(capacity_rate, ...)</p></td>
+<td><p>Return Ramey's relaxation length of the circuit fluid.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ramey_rock_resistance</span></code>(time, diffusivity, ...)</p></td>
+<td><p>Return the transient rock resistance [m K/W] of a well at an operating time.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ramey_time_function</span></code>(time, diffusivity, ...)</p></td>
+<td><p>Return Ramey's dimensionless transient conduction function f(t) [-].</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">reservoir_pressure</span></code>(reference_pressure, ...)</p></td>
+<td><p>Return the reservoir pressure [Pa] at a depth, from the pressure at a reference depth.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">reservoir_temperature</span></code>(surface_temperature, ...)</p></td>
+<td><p>Return the reservoir temperature [K] at a depth, from a reference point or the surface.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">steady_flux_resistance</span></code>(conductivity, ...)</p></td>
+<td><p>Return the ground resistance [m K/W] between a borehole wall and its cell's mean.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">store_conductance</span></code>(volume, conductivity, ...)</p></td>
+<td><p>Return the conduction conductance [W/K] of an aquifer store of injected water volume.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">store_relaxation</span></code>(change, volume, ...)</p></td>
+<td><p>Return a store's temperature change after conduction towards the aquifer temperature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stored_heat</span></code>(water_volumetric_heat_capacity, ...)</p></td>
+<td><p>Return the excess heat of a water volume at a temperature change.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">thermal_recovery</span></code>(recovered_heat, charged_heat)</p></td>
+<td><p>Return the thermal recovery efficiency of a store; NaN until heat has been charged.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">vertical_cylinder_conductance</span></code>(conductivity, ...)</p></td>
+<td><p>Return the steady conductance [W/K] of a vertical cylinder below an isothermal surface.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gemini.physics.geometry.html" class="btn btn-neutral float-left" title="gemini.physics.geometry" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gemini.physics.heat_transfer.html" class="btn btn-neutral float-right" title="gemini.physics.heat_transfer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

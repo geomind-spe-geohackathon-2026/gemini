@@ -1,0 +1,26 @@
+﻿gemini
+======
+
+.. automodule:: gemini
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   analysis
+   case
+   compiler
+   engine
+   errors
+   evaluate
+   modules
+   ops
+   physics
+   plants
+   runtime
+   streams
+   study
+   units

@@ -1,0 +1,12 @@
+gemini.plants.heatingcoolingplant
+=================================
+
+.. automodule:: gemini.plants.heatingcoolingplant
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      HeatingCoolingPlant
+   

@@ -1,0 +1,38 @@
+gemini.ops.failedrows
+=====================
+
+.. automodule:: gemini.ops.failedrows
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      NONE
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      applied
+      attached
+      carried
+      current_frame
+      failures_of
+      is_marking
+      marking
+      merge
+      next_order
+      require
+      selection
+      stripped
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      FailedRows
+      Frame
+      Marking
+      RowFailures
+   

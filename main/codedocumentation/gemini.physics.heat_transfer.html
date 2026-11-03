@@ -1,0 +1,275 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.physics.heat_transfer &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gemini.physics.hydraulics" href="gemini.physics.hydraulics.html" />
+    <link rel="prev" title="gemini.physics.ground" href="gemini.physics.ground.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="gemini.html">gemini</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gemini.analysis.html">gemini.analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.case.html">gemini.case</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.compiler.html">gemini.compiler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.engine.html">gemini.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.errors.html">gemini.errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.evaluate.html">gemini.evaluate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.modules.html">gemini.modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.ops.html">gemini.ops</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="gemini.physics.html">gemini.physics</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.chemistry.html">gemini.physics.chemistry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.combustion.html">gemini.physics.combustion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.constants.html">gemini.physics.constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.corrosion.html">gemini.physics.corrosion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.cycles.html">gemini.physics.cycles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.diagnostics.html">gemini.physics.diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.energy.html">gemini.physics.energy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.erosion.html">gemini.physics.erosion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.fluid.html">gemini.physics.fluid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.gas.html">gemini.physics.gas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.geometry.html">gemini.physics.geometry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.ground.html">gemini.physics.ground</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gemini.physics.heat_transfer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.hydraulics.html">gemini.physics.hydraulics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.psychrometrics.html">gemini.physics.psychrometrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.pumps.html">gemini.physics.pumps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.refrigeration.html">gemini.physics.refrigeration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.separation.html">gemini.physics.separation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.steam.html">gemini.physics.steam</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.plants.html">gemini.plants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.runtime.html">gemini.runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.streams.html">gemini.streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.study.html">gemini.study</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.units.html">gemini.units</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="gemini.html">gemini</a></li>
+          <li class="breadcrumb-item"><a href="gemini.physics.html">gemini.physics</a></li>
+      <li class="breadcrumb-item active">gemini.physics.heat_transfer</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/codedocumentation/gemini.physics.heat_transfer.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-gemini.physics.heat_transfer">
+<span id="gemini-physics-heat-transfer"></span><h1>gemini.physics.heat_transfer<a class="headerlink" href="#module-gemini.physics.heat_transfer" title="Link to this heading"></a></h1>
+<p>Pipe heat loss, heat-exchanger effectiveness relations and lumped thermal stores.</p>
+<p class="rubric">Module Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEFAULT_CP</span></code></p></td>
+<td><p>Liquid heat capacity [J/kg/K] assumed when measurements give none; the <code class="docutils literal notranslate"><span class="pre">Fluid</span></code> default.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DUTY_AGREEMENT_TOLERANCE</span></code></p></td>
+<td><p>Largest relative difference [-] of the hot and cold duties for which an apparent UA is taken.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DETERMINED</span></code></p></td>
+<td><p>determined, or the first reason that it is not.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">NONPOSITIVE_INPUT</span></code></p></td>
+<td><p>determined, or the first reason that it is not.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DISAGREEING_DUTIES</span></code></p></td>
+<td><p>determined, or the first reason that it is not.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">NO_LMTD</span></code></p></td>
+<td><p>determined, or the first reason that it is not.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEFAULT_ICE_LATENT_HEAT</span></code></p></td>
+<td><p>the conventional 333.55 kJ/kg at 0 degC and 101.325 kPa.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEFAULT_FREEZING_TEMPERATURE</span></code></p></td>
+<td><p>Normal melting point of ice [K].</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEFAULT_WATER_HEAT_CAPACITY</span></code></p></td>
+<td><p>Specific heat capacity [J/kg/K] of saturated liquid water at 0.01 degC (IAPWS-95, Wagner and Pruss 2002).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEFAULT_ICE_HEAT_CAPACITY</span></code></p></td>
+<td><p>Specific heat capacity [J/kg/K] of ice Ih at the triple point (IAPWS R10-06).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MAX_SEGMENTS</span></code></p></td>
+<td><p>liquid, freezing or melting, then solid (or back).</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ambient_effectiveness</span></code>(conductance, capacity_rate)</p></td>
+<td><p>Return the effectiveness of a stream exchanging heat with a constant temperature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">apparent_conductance</span></code>(arrangement, hot_in_T, ...)</p></td>
+<td><p>Return <code class="docutils literal notranslate"><span class="pre">(UA,</span> <span class="pre">code,</span> <span class="pre">hot</span> <span class="pre">duty,</span> <span class="pre">cold</span> <span class="pre">duty,</span> <span class="pre">LMTD)</span></code> from measured temperatures and flows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">circuit_conductance</span></code>(effectiveness, capacity_rate)</p></td>
+<td><p>Return the conductance of a circuit exchanging heat with a store at uniform temperature.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">effectiveness_counterflow</span></code>(transfer_units, ...)</p></td>
+<td><p>Return counterflow heat-exchanger effectiveness.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">effectiveness_outlet_temperature</span></code>(...)</p></td>
+<td><p>Return the outlet temperature of a stream from the effectiveness definition.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">effectiveness_parallel</span></code>(transfer_units, c_ratio)</p></td>
+<td><p>Return parallel-flow heat-exchanger effectiveness.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">exchanger_balance</span></code>(hot_inlet, cold_inlet, ...)</p></td>
+<td><p>Return the effectiveness-NTU balance of a two-stream heat exchanger.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">exponential_relaxation</span></code>(start, equilibrium, ...)</p></td>
+<td><p>Return the value after an exponential approach to an equilibrium.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fan_power</span></code>(duty, specific_fan_power)</p></td>
+<td><p>Return the fan electricity of a cooler that is proportional to its duty.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">heat_rate</span></code>(capacity_rate, temperature_difference)</p></td>
+<td><p>Return the sensible heat rate of a stream.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ice_advance</span></code>(fraction, temperature, duration, ...)</p></td>
+<td><p>Return the frozen fraction and the temperature of an ice store after a step.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ice_step</span></code>(fraction, temperature, duration, ...)</p></td>
+<td><p>Advance an ice store through one phase segment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ice_stored_cold</span></code>(water_mass, latent_heat, ...)</p></td>
+<td><p>Return the latent cold stored in an ice store.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">lmtd</span></code>(dt1, dt2)</p></td>
+<td><p>Return logarithmic mean temperature difference; reject a temperature cross.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">logarithmic_mean</span></code>(first, second)</p></td>
+<td><p>Return the logarithmic mean of two positive values, without guards.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean_temperature</span></code>(first, second)</p></td>
+<td><p>Return the arithmetic mean of two temperatures.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mixed_temperature</span></code>(first_rate, ...)</p></td>
+<td><p>Return the adiabatic mixing temperature of two streams of the same fluid.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ntu</span></code>(ua, c_min)</p></td>
+<td><p>Return the number of transfer units.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pipe_temperature_change</span></code>(inlet_temperature, ...)</p></td>
+<td><p>Return the legacy explicit heat-loss increment [K] using SI inputs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">relaxation_factor</span></code>(conductance, duration, ...)</p></td>
+<td><p>Return the decay factor of a lumped body relaxing towards its surroundings.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sensible_latent_loads</span></code>(available, ...)</p></td>
+<td><p>Return the sensible and latent loads a cooling circuit takes up, sensible served first.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">setpoint_duty</span></code>(capacity_rate, temperature_gap)</p></td>
+<td><p>Return the heat needed to close a temperature gap; zero when there is no gap.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">signed_parts</span></code>(value)</p></td>
+<td><p>Return the positive part and the negative part of a signed value.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tank_capacity</span></code>(volumetric_heat_capacity, volume)</p></td>
+<td><p>Return the heat capacity of a tank of liquid.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tank_relaxation</span></code>(temperature, capacity, ...)</p></td>
+<td><p>Return the temperature of a fully mixed tank after a step with constant inlets.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tank_service_report</span></code>(hot, capacity, ...)</p></td>
+<td><p>Return the stored energy and the two circuit duties of a tank, signed by its service.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">temperature_change</span></code>(duty, capacity_rate)</p></td>
+<td><p>Return the temperature change of a stream that receives a duty; zero when stopped.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">terminal_differences</span></code>(hot_in, hot_out, ...)</p></td>
+<td><p>Return the two terminal temperature differences of a two-stream exchanger.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gemini.physics.ground.html" class="btn btn-neutral float-left" title="gemini.physics.ground" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gemini.physics.hydraulics.html" class="btn btn-neutral float-right" title="gemini.physics.hydraulics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,179 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.evaluate.verdict &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gemini.modules" href="gemini.modules.html" />
+    <link rel="prev" title="gemini.evaluate.summary" href="gemini.evaluate.summary.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="gemini.html">gemini</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gemini.analysis.html">gemini.analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.case.html">gemini.case</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.compiler.html">gemini.compiler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.engine.html">gemini.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.errors.html">gemini.errors</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="gemini.evaluate.html">gemini.evaluate</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gemini.evaluate.balances.html">gemini.evaluate.balances</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.evaluate.costs.html">gemini.evaluate.costs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.evaluate.coverage.html">gemini.evaluate.coverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.evaluate.emissions.html">gemini.evaluate.emissions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.evaluate.metrics.html">gemini.evaluate.metrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.evaluate.report.html">gemini.evaluate.report</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.evaluate.summary.html">gemini.evaluate.summary</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gemini.evaluate.verdict</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#gemini.evaluate.verdict"><code class="docutils literal notranslate"><span class="pre">verdict()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.modules.html">gemini.modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.ops.html">gemini.ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.physics.html">gemini.physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.plants.html">gemini.plants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.runtime.html">gemini.runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.streams.html">gemini.streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.study.html">gemini.study</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.units.html">gemini.units</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="gemini.html">gemini</a></li>
+          <li class="breadcrumb-item"><a href="gemini.evaluate.html">gemini.evaluate</a></li>
+      <li class="breadcrumb-item active">gemini.evaluate.verdict</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/codedocumentation/gemini.evaluate.verdict.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="gemini-evaluate-verdict">
+<h1>gemini.evaluate.verdict<a class="headerlink" href="#gemini-evaluate-verdict" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="gemini.evaluate.verdict">
+<span class="sig-prename descclassname"><span class="pre">gemini.evaluate.</span></span><span class="sig-name descname"><span class="pre">verdict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">case</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gemini/evaluate/verdict.html#verdict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gemini.evaluate.verdict" title="Link to this definition"></a></dt>
+<dd><p>Return whether a finished run is feasible, and why not.</p>
+<p>The one place that decides feasibility; <code class="docutils literal notranslate"><span class="pre">report</span></code>, <code class="docutils literal notranslate"><span class="pre">compare</span></code> and the study use it. A run is
+feasible when it has no reason. A reason has a <code class="docutils literal notranslate"><span class="pre">kind</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">requirement</span></code>: a requirement of the case, or a supply temperature of a service, that
+failed (<code class="docutils literal notranslate"><span class="pre">requirements</span></code>); no requirement could be checked; when some passed and none
+failed, each one that could not be judged (without a <code class="docutils literal notranslate"><span class="pre">violation</span></code>), except an idle unit
+and the supply of a service reported as not delivered; a service of the case that the run
+does not deliver.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">failed_step</span></code>: rows of the run that failed or were skipped.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">numerical</span></code>: a mass or energy residual above the tolerances of <code class="docutils literal notranslate"><span class="pre">mass_balance</span></code>,
+<code class="docutils literal notranslate"><span class="pre">energy_balance</span></code> and <code class="docutils literal notranslate"><span class="pre">plant_balance</span></code>, or a loop that did not converge.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bound</span></code>: a recorded output outside the limits its module declares (<code class="docutils literal notranslate"><span class="pre">bounds</span></code>), or an
+output past an operating limit of a module (<code class="docutils literal notranslate"><span class="pre">Module.operating_limits</span></code>) in the steps in
+which the module carried flow.</p></li>
+</ul>
+<p>The case is applied to the plant once; the plant of the user never changes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>plant</strong> (<em>Module</em>) – The plant of the run.</p></li>
+<li><p><strong>case</strong> (<em>Case</em>) – The case of the run.</p></li>
+<li><p><strong>results</strong> (<em>Results</em>) – A finished run.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dict <code class="docutils literal notranslate"><span class="pre">{feasible,</span> <span class="pre">reasons}</span></code> (<code class="docutils literal notranslate"><span class="pre">to_dict()</span></code> gives plain JSON). A reason is <code class="docutils literal notranslate"><span class="pre">{kind,</span>
+<span class="pre">name,</span> <span class="pre">message}</span></code> and, when it has them, <code class="docutils literal notranslate"><span class="pre">path</span></code> (the module or the output), <code class="docutils literal notranslate"><span class="pre">value</span></code>,
+<code class="docutils literal notranslate"><span class="pre">limit</span></code> (values) and <code class="docutils literal notranslate"><span class="pre">worst_step</span></code> (ISO 8601). A <code class="docutils literal notranslate"><span class="pre">requirement</span></code> reason of a check also
+has its <code class="docutils literal notranslate"><span class="pre">role</span></code> and <code class="docutils literal notranslate"><span class="pre">quantity</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Verdict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gemini.evaluate.summary.html" class="btn btn-neutral float-left" title="gemini.evaluate.summary" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gemini.modules.html" class="btn btn-neutral float-right" title="gemini.modules" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

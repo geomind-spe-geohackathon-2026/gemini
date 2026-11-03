@@ -1,0 +1,13 @@
+gemini.study.result
+===================
+
+.. automodule:: gemini.study.result
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Run
+      StudyResult
+   

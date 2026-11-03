@@ -1,0 +1,12 @@
+gemini.ops.kernels.scalars
+==========================
+
+.. automodule:: gemini.ops.kernels.scalars
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      scope_mode
+   

@@ -1,0 +1,220 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.ops.failedrows &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gemini.ops.kernels" href="gemini.ops.kernels.html" />
+    <link rel="prev" title="gemini.ops.failed" href="gemini.ops.failed.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="gemini.html">gemini</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gemini.analysis.html">gemini.analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.case.html">gemini.case</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.compiler.html">gemini.compiler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.engine.html">gemini.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.errors.html">gemini.errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.evaluate.html">gemini.evaluate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.modules.html">gemini.modules</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="gemini.ops.html">gemini.ops</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.backend.html">gemini.ops.backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.check.html">gemini.ops.check</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.control.html">gemini.ops.control</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.dispatch.html">gemini.ops.dispatch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.elementwise.html">gemini.ops.elementwise</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.failed.html">gemini.ops.failed</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gemini.ops.failedrows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.kernels.html">gemini.ops.kernels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.logic.html">gemini.ops.logic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.math.html">gemini.ops.math</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.reductions.html">gemini.ops.reductions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.registry.html">gemini.ops.registry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.scope.html">gemini.ops.scope</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.ops.solvers.html">gemini.ops.solvers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.physics.html">gemini.physics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.plants.html">gemini.plants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.runtime.html">gemini.runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.streams.html">gemini.streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.study.html">gemini.study</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.units.html">gemini.units</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="gemini.html">gemini</a></li>
+          <li class="breadcrumb-item"><a href="gemini.ops.html">gemini.ops</a></li>
+      <li class="breadcrumb-item active">gemini.ops.failedrows</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/codedocumentation/gemini.ops.failedrows.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-gemini.ops.failedrows">
+<span id="gemini-ops-failedrows"></span><h1>gemini.ops.failedrows<a class="headerlink" href="#module-gemini.ops.failedrows" title="Link to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">FailedRows</span></code>: the array counterpart of <code class="docutils literal notranslate"><span class="pre">Failed</span></code>, one failure per failing row.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">check</span></code> that fails on some rows of an array, inside an <code class="docutils literal notranslate"><span class="pre">&#64;ops.physics</span></code> function, cannot raise
+if <code class="docutils literal notranslate"><span class="pre">where</span></code> is to drop the rows of a branch it does not select. When the caller asked for it
+(<code class="docutils literal notranslate"><span class="pre">marking</span></code>, which the eager executor does), the check instead records <code class="docutils literal notranslate"><span class="pre">RowFailures</span></code>: for each
+row the number of its first failing check and, for each such check, how to build that row’s
+exception. The function’s results leave it as <code class="docutils literal notranslate"><span class="pre">FailedRows</span></code>, an <code class="docutils literal notranslate"><span class="pre">ndarray</span></code> that carries the
+<code class="docutils literal notranslate"><span class="pre">RowFailures</span></code> through <code class="docutils literal notranslate"><span class="pre">gemini.ops</span></code> and plain NumPy arithmetic (the lowest check number of the
+operands wins, as in <code class="docutils literal notranslate"><span class="pre">Failed.record</span></code>). <code class="docutils literal notranslate"><span class="pre">where</span></code> keeps the failures of the selected branch of
+each row. A value without a failing row is never a <code class="docutils literal notranslate"><span class="pre">FailedRows</span></code>, so the clean path has no
+subclass. An array has the rows on its first axis; any other array carries nothing.</p>
+<p>A check outside every physics function (inline in <code class="docutils literal notranslate"><span class="pre">forward</span></code>) raises, with the failures of all
+its rows in <code class="docutils literal notranslate"><span class="pre">error.failures</span></code> so that a caller can leave those rows out and run the others.</p>
+<p class="rubric">Module Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">NONE</span></code></p></td>
+<td><p>The number of the failing check of a row that did not fail.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">applied</span></code>(name, method, values, attributes)</p></td>
+<td><p>Run op <code class="docutils literal notranslate"><span class="pre">name</span></code> of <code class="docutils literal notranslate"><span class="pre">method</span></code> on <code class="docutils literal notranslate"><span class="pre">values</span></code> that hold failures; carry them to the result.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">attached</span></code>(value, failures)</p></td>
+<td><p>Return the result of a physics function with <code class="docutils literal notranslate"><span class="pre">failures</span></code> on every row it holds.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">carried</span></code>(result, failures)</p></td>
+<td><p>Return <code class="docutils literal notranslate"><span class="pre">result</span></code> as <code class="docutils literal notranslate"><span class="pre">FailedRows</span></code> when it holds the rows of <code class="docutils literal notranslate"><span class="pre">failures</span></code> and one failed.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">current_frame</span></code>()</p></td>
+<td><p>Return the frame of the innermost physics function, <code class="docutils literal notranslate"><span class="pre">None</span></code> outside every one.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">failures_of</span></code>(value)</p></td>
+<td><p>Return the <code class="docutils literal notranslate"><span class="pre">RowFailures</span></code> of <code class="docutils literal notranslate"><span class="pre">value</span></code>, a list or tuple of values, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_marking</span></code>()</p></td>
+<td><p>Return whether failing array checks mark rows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">marking</span></code>()</p></td>
+<td><p>Make failing array checks of physics functions mark rows instead of raising.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge</span></code>(values)</p></td>
+<td><p>Return the failures of all of <code class="docutils literal notranslate"><span class="pre">values</span></code> together, <code class="docutils literal notranslate"><span class="pre">None</span></code> if there are none.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">next_order</span></code>()</p></td>
+<td><p>Return the number of the next failing check: the lower one ran first.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">require</span></code>(value)</p></td>
+<td><p>Keep the failures of a required array so the marking run fails those rows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">selection</span></code>(condition, if_true, if_false)</p></td>
+<td><p>Return the failures <code class="docutils literal notranslate"><span class="pre">where</span></code> keeps: the condition's, and each branch's where selected.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stripped</span></code>(value)</p></td>
+<td><p>Return <code class="docutils literal notranslate"><span class="pre">value</span></code> without <code class="docutils literal notranslate"><span class="pre">FailedRows</span></code>: lists, tuples and dicts of values too.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Classes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">FailedRows</span></code>(shape[, dtype, buffer, offset, ...])</p></td>
+<td><p>An array over rows some of which failed; <code class="docutils literal notranslate"><span class="pre">failures</span></code> says which and why.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Frame</span></code>()</p></td>
+<td><p>The checks that failed in one physics function; its results receive them.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Marking</span></code>()</p></td>
+<td><p>What a marking run collects: the failures of results that were required.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">RowFailures</span></code>(order, sources)</p></td>
+<td><p>The first failing check of each row: <code class="docutils literal notranslate"><span class="pre">order</span></code> is its number, <code class="docutils literal notranslate"><span class="pre">NONE</span></code> where none failed.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gemini.ops.failed.html" class="btn btn-neutral float-left" title="gemini.ops.failed" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gemini.ops.kernels.html" class="btn btn-neutral float-right" title="gemini.ops.kernels" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

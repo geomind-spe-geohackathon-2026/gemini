@@ -1,0 +1,12 @@
+gemini.ops.kernels.numpy
+========================
+
+.. automodule:: gemini.ops.kernels.numpy
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      NumpyBackend
+   

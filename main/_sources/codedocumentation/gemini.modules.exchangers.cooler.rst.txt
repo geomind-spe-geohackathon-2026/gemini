@@ -1,0 +1,12 @@
+gemini.modules.exchangers.cooler
+================================
+
+.. automodule:: gemini.modules.exchangers.cooler
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Cooler
+   

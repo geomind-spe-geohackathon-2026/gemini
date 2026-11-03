@@ -1,0 +1,6 @@
+gemini.compiler.compile
+=======================
+
+.. currentmodule:: gemini.compiler
+
+.. autofunction:: compile

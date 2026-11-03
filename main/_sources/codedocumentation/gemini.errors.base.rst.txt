@@ -1,0 +1,43 @@
+gemini.errors.base
+==================
+
+.. automodule:: gemini.errors.base
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      CODES
+      ROW_CODES
+      ON_ERROR
+      ISSUE_KINDS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      check_on_error
+      problem
+      raise_issues
+      reported
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Issue
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      Cancelled
+      DefinitionError
+      GeminiError
+      GeminiWarning
+      NotImplementedYet
+      PhysicsError
+      RunError
+      ValidationError
+   

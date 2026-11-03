@@ -1,0 +1,354 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.plants.roles &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../codedocumentation/gemini.html">gemini</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">gemini.plants.roles</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for gemini.plants.roles</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""The roles of a plant: what each unit is for, its quantities, and how to find its units.</span>
+
+<span class="sd">A module class declares its ``plant_role`` when its class alone decides it (a ``Doublet``, a</span>
+<span class="sd">``Boiler``, a ``CHP``, a ``HeatExchanger``, a ``HeatingGrid``, a ``CoolingGrid``). The rest is read</span>
+<span class="sd">from the wiring: a heat pump is a ``heat_pump`` when its ``sink_out`` reaches a ``HeatingGrid`` and</span>
+<span class="sd">a ``chiller`` when its ``source_out`` reaches a ``CoolingGrid``, never from a module name. This file</span>
+<span class="sd">is the one owner of roles: ``roles()`` lists the closed table, ``roles_of`` and ``units_of`` find</span>
+<span class="sd">the roles of a plant, and the private table below says, for each quantity of a role, its dimension,</span>
+<span class="sd">the result field or parameter it reads below the unit, and how it is read: ``result`` (an output or</span>
+<span class="sd">port field of the unit), ``parameter``, ``delivery`` (the power the unit gives its circuit, from the</span>
+<span class="sd">enthalpy flows of its ports) or ``plant`` (a figure of the plant as a whole, read from the edge</span>
+<span class="sd">modules as ``gm.evaluate.totals`` and ``gm.evaluate.co2`` read them). A requirement of ``gm.case``</span>
+<span class="sd">names a role and a quantity of it.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">namedtuple</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini</span><span class="w"> </span><span class="kn">import</span> <span class="n">units</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini._utils.strings</span><span class="w"> </span><span class="kn">import</span> <span class="n">close_matches</span><span class="p">,</span> <span class="n">did_you_mean</span><span class="p">,</span> <span class="n">join_names</span><span class="p">,</span> <span class="n">join_path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ValidationError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.modules.cooling</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbsorptionUnit</span><span class="p">,</span> <span class="n">AdsorptionChiller</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.modules.grids</span><span class="w"> </span><span class="kn">import</span> <span class="n">CoolingGrid</span><span class="p">,</span> <span class="n">HeatingGrid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.modules.heating</span><span class="w"> </span><span class="kn">import</span> <span class="n">CHP</span><span class="p">,</span> <span class="n">Boiler</span><span class="p">,</span> <span class="n">ElectricBoiler</span><span class="p">,</span> <span class="n">HeatPump</span>
+
+<span class="n">Reads</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">"Reads"</span><span class="p">,</span> <span class="s2">"dimension path source over"</span><span class="p">)</span>
+<span class="sd">"""One quantity of a role: the dimension of its bounds (``None`` without one), the path below the</span>
+<span class="sd">unit (the name of the figure for ``delivery``, ``plant``, ``share`` and ``count``), how it is read</span>
+<span class="sd">(``result``, ``parameter``, ``delivery``, ``plant``, ``share`` or ``count``) and whether it takes</span>
+<span class="sd">``over``: a per-step quantity does, a window quantity (a total or share over the period) or a</span>
+<span class="sd">property of the plant does not."""</span>
+
+<span class="n">TABLE</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"doublet"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"production_flow"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"volume_flow"</span><span class="p">,</span> <span class="s2">"reservoir.liquid_flow"</span><span class="p">,</span> <span class="s2">"result"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"brine_cooling"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"temperature_difference"</span><span class="p">,</span> <span class="s2">"brine_cooling"</span><span class="p">,</span> <span class="s2">"result"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"production_temperature"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span>
+            <span class="s2">"temperature"</span><span class="p">,</span> <span class="s2">"riser.wellhead_out.temperature"</span><span class="p">,</span> <span class="s2">"result"</span><span class="p">,</span> <span class="kc">True</span>
+        <span class="p">),</span>
+        <span class="s2">"injection_temperature"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span>
+            <span class="s2">"temperature"</span><span class="p">,</span> <span class="s2">"injector.wellhead_in.temperature"</span><span class="p">,</span> <span class="s2">"result"</span><span class="p">,</span> <span class="kc">True</span>
+        <span class="p">),</span>
+        <span class="s2">"pump_power"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"power"</span><span class="p">,</span> <span class="s2">"esp.power_in"</span><span class="p">,</span> <span class="s2">"result"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"pump_efficiency"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"efficiency"</span><span class="p">,</span> <span class="s2">"pump_efficiency"</span><span class="p">,</span> <span class="s2">"parameter"</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="s2">"intake_pressure"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"pressure"</span><span class="p">,</span> <span class="s2">"esp.intake_pressure"</span><span class="p">,</span> <span class="s2">"result"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"intake_gas_fraction"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"fraction"</span><span class="p">,</span> <span class="s2">"esp.gas_volume_fraction"</span><span class="p">,</span> <span class="s2">"result"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"reinjection_ratio"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"ratio"</span><span class="p">,</span> <span class="s2">"reinjection_ratio"</span><span class="p">,</span> <span class="s2">"result"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"count"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"count"</span><span class="p">,</span> <span class="s2">"doublets"</span><span class="p">,</span> <span class="s2">"count"</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="s2">"wellhead_pressure"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"pressure"</span><span class="p">,</span> <span class="s2">"riser.wellhead_out.pressure"</span><span class="p">,</span> <span class="s2">"result"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="s2">"heat_pump"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"cop"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"ratio"</span><span class="p">,</span> <span class="s2">"cop"</span><span class="p">,</span> <span class="s2">"result"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"lift"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"temperature_difference"</span><span class="p">,</span> <span class="s2">"temperature_lift"</span><span class="p">,</span> <span class="s2">"result"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"heat_output"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"power"</span><span class="p">,</span> <span class="s2">"heat_output"</span><span class="p">,</span> <span class="s2">"delivery"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="s2">"boiler"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"fuel_input"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"power"</span><span class="p">,</span> <span class="s2">"fuel"</span><span class="p">,</span> <span class="s2">"result"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"heat_output"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"power"</span><span class="p">,</span> <span class="s2">"heat_output"</span><span class="p">,</span> <span class="s2">"delivery"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="s2">"chp"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"power_output"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"power"</span><span class="p">,</span> <span class="s2">"power_out"</span><span class="p">,</span> <span class="s2">"result"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"heat_output"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"power"</span><span class="p">,</span> <span class="s2">"heat_output"</span><span class="p">,</span> <span class="s2">"delivery"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="s2">"chiller"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"cop"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"ratio"</span><span class="p">,</span> <span class="s2">"cop"</span><span class="p">,</span> <span class="s2">"result"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"cold_output"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"power"</span><span class="p">,</span> <span class="s2">"cold_output"</span><span class="p">,</span> <span class="s2">"delivery"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="s2">"heat_exchanger"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"duty"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"power"</span><span class="p">,</span> <span class="s2">"duty"</span><span class="p">,</span> <span class="s2">"result"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"approach"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"temperature_difference"</span><span class="p">,</span> <span class="s2">"approach_temperature"</span><span class="p">,</span> <span class="s2">"result"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="s2">"heating_supply"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"temperature"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"temperature"</span><span class="p">,</span> <span class="s2">"supply_in.temperature"</span><span class="p">,</span> <span class="s2">"result"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"unmet"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"power"</span><span class="p">,</span> <span class="s2">"unmet_demand"</span><span class="p">,</span> <span class="s2">"result"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"unmet_share"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"fraction"</span><span class="p">,</span> <span class="s2">"unmet_demand"</span><span class="p">,</span> <span class="s2">"share"</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="s2">"cooling_supply"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"temperature"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"temperature"</span><span class="p">,</span> <span class="s2">"supply_in.temperature"</span><span class="p">,</span> <span class="s2">"result"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"unmet"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"power"</span><span class="p">,</span> <span class="s2">"unmet_sensible"</span><span class="p">,</span> <span class="s2">"result"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"unmet_share"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"fraction"</span><span class="p">,</span> <span class="s2">"unmet_sensible"</span><span class="p">,</span> <span class="s2">"share"</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="s2">"plant"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"electricity_bought"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"power"</span><span class="p">,</span> <span class="s2">"electricity_bought"</span><span class="p">,</span> <span class="s2">"plant"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"gas_bought"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"power"</span><span class="p">,</span> <span class="s2">"gas_bought"</span><span class="p">,</span> <span class="s2">"plant"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"heat_surplus"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"power"</span><span class="p">,</span> <span class="s2">"heat_surplus"</span><span class="p">,</span> <span class="s2">"plant"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"co2"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"mass"</span><span class="p">,</span> <span class="s2">"co2"</span><span class="p">,</span> <span class="s2">"plant"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">"gas_burned"</span><span class="p">:</span> <span class="n">Reads</span><span class="p">(</span><span class="s2">"mass_flow"</span><span class="p">,</span> <span class="s2">"gas_burned"</span><span class="p">,</span> <span class="s2">"plant"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+<span class="sd">"""``{role: {quantity: Reads}}``: the one table of roles."""</span>
+
+
+<div class="viewcode-block" id="roles">
+<a class="viewcode-back" href="../../../codedocumentation/gemini.plants.roles.html#gemini.plants.roles">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">roles</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""Return the closed table of roles as ``{role: {quantity: {"dimension", "over"}}}``.</span>
+
+<span class="sd">    A requirement is on a role and a quantity of it. The roles are ``doublet``, ``heat_pump``,</span>
+<span class="sd">    ``boiler``, ``chp``, ``chiller`` (absorption, adsorption and compression), ``heat_exchanger``,</span>
+<span class="sd">    ``heating_supply``, ``cooling_supply`` and ``plant``. ``dimension`` is the quantity of the</span>
+<span class="sd">    bounds, ``None`` for a number without one; ``over`` says whether the quantity is read per step</span>
+<span class="sd">    and takes ``over``, or is a window quantity or a property that takes none.</span>
+
+<span class="sd">    ``heat_output`` of ``heat_pump``, ``boiler`` and ``chp`` is the heat the unit gives its water</span>
+<span class="sd">    and ``cold_output`` of ``chiller`` the cold it takes from its chilled water, in W, from the</span>
+<span class="sd">    enthalpy flows of its ports (the source side for a heat pump in cooling mode).</span>
+<span class="sd">    ``reinjection_ratio`` of ``doublet`` is the injected over the produced liquid volume flow.</span>
+<span class="sd">    ``count`` of ``doublet`` is the number of doublets of the plant and ``unmet_share`` of a supply</span>
+<span class="sd">    the unmet energy over the energy demanded by the service, both over the whole period. The role</span>
+<span class="sd">    ``plant`` is the plant itself (``unit_path`` ``""``): ``electricity_bought``, ``gas_bought``</span>
+<span class="sd">    and ``heat_surplus`` are powers in W as ``gm.evaluate.totals`` sums them; ``co2`` is the mass</span>
+<span class="sd">    in kg of CO2-equivalent emitted in each step, as ``gm.evaluate.co2`` sums it, so ``over:</span>
+<span class="sd">    sum`` of it is the mass of the run (``over: each`` judges the mass of a step, which depends</span>
+<span class="sd">    on its length). ``sum`` of a power adds the step values, as for every other power.</span>
+<span class="sd">    ``gas_burned`` of ``plant`` is the co-produced gas burned in the plant, in kg/s: what its</span>
+<span class="sd">    gas makeups give to a burner and what its flares burn, from the mass flows of their ports.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="n">role</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">quantity</span><span class="p">:</span> <span class="p">{</span><span class="s2">"dimension"</span><span class="p">:</span> <span class="n">dimension</span><span class="p">(</span><span class="n">read</span><span class="o">.</span><span class="n">dimension</span><span class="p">),</span> <span class="s2">"over"</span><span class="p">:</span> <span class="n">read</span><span class="o">.</span><span class="n">over</span><span class="p">}</span>
+            <span class="k">for</span> <span class="n">quantity</span><span class="p">,</span> <span class="n">read</span> <span class="ow">in</span> <span class="n">quantities</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">role</span><span class="p">,</span> <span class="n">quantities</span> <span class="ow">in</span> <span class="n">TABLE</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">dimension</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``name``, the dimension of a quantity, or ``None`` when its SI unit is ``-``."""</span>
+    <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">units</span><span class="o">.</span><span class="n">si_unit</span><span class="p">(</span><span class="n">units</span><span class="o">.</span><span class="n">names</span><span class="p">(</span><span class="n">name</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="s2">"-"</span> <span class="k">else</span> <span class="n">name</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">check_role</span><span class="p">(</span><span class="n">role</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``role`` or raise ``unknown_name`` listing the roles."""</span>
+    <span class="k">if</span> <span class="n">role</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">TABLE</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"role </span><span class="si">{</span><span class="n">role</span><span class="si">!r}</span><span class="s2"> is unknown; expected one of </span><span class="si">{</span><span class="n">join_names</span><span class="p">(</span><span class="n">TABLE</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">did_you_mean</span><span class="p">(</span><span class="n">role</span><span class="p">,</span><span class="w"> </span><span class="n">TABLE</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">suggestions</span><span class="o">=</span><span class="n">close_matches</span><span class="p">(</span><span class="n">role</span><span class="p">,</span> <span class="n">TABLE</span><span class="p">),</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"unknown_name"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">role</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">reads</span><span class="p">(</span><span class="n">role</span><span class="p">,</span> <span class="n">quantity</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the ``Reads`` of ``quantity`` of ``role``, or raise saying what the role has."""</span>
+    <span class="n">check_role</span><span class="p">(</span><span class="n">role</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">quantity</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">TABLE</span><span class="p">[</span><span class="n">role</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">quantity</span><span class="si">!r}</span><span class="s2"> is not a quantity of </span><span class="si">{</span><span class="n">role</span><span class="si">!r}</span><span class="s2">; expected one of "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">join_names</span><span class="p">(</span><span class="n">TABLE</span><span class="p">[</span><span class="n">role</span><span class="p">])</span><span class="si">}{</span><span class="n">did_you_mean</span><span class="p">(</span><span class="n">quantity</span><span class="p">,</span><span class="w"> </span><span class="n">TABLE</span><span class="p">[</span><span class="n">role</span><span class="p">])</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">suggestions</span><span class="o">=</span><span class="n">close_matches</span><span class="p">(</span><span class="n">quantity</span><span class="p">,</span> <span class="n">TABLE</span><span class="p">[</span><span class="n">role</span><span class="p">]),</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_value"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">TABLE</span><span class="p">[</span><span class="n">role</span><span class="p">][</span><span class="n">quantity</span><span class="p">]</span>
+
+
+<span class="n">PLANT</span> <span class="o">=</span> <span class="s2">"plant"</span>
+<span class="sd">"""The role of the plant itself, at the root path ``""``."""</span>
+<span class="n">DELIVERY</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"heat_pump"</span><span class="p">:</span> <span class="p">{</span><span class="n">HeatPump</span><span class="p">:</span> <span class="p">(</span><span class="s2">"sink_out"</span><span class="p">,</span> <span class="s2">"sink_in"</span><span class="p">)},</span>
+    <span class="s2">"boiler"</span><span class="p">:</span> <span class="p">{</span><span class="n">Boiler</span><span class="p">:</span> <span class="p">(</span><span class="s2">"fluid_out"</span><span class="p">,</span> <span class="s2">"fluid_in"</span><span class="p">)},</span>
+    <span class="s2">"chp"</span><span class="p">:</span> <span class="p">{</span><span class="n">CHP</span><span class="p">:</span> <span class="p">(</span><span class="s2">"fluid_out"</span><span class="p">,</span> <span class="s2">"fluid_in"</span><span class="p">)},</span>
+    <span class="s2">"chiller"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="n">HeatPump</span><span class="p">:</span> <span class="p">(</span><span class="s2">"source_in"</span><span class="p">,</span> <span class="s2">"source_out"</span><span class="p">),</span>
+        <span class="n">AbsorptionUnit</span><span class="p">:</span> <span class="p">(</span><span class="s2">"chilled_in"</span><span class="p">,</span> <span class="s2">"chilled_out"</span><span class="p">),</span>
+        <span class="n">AdsorptionChiller</span><span class="p">:</span> <span class="p">(</span><span class="s2">"chilled_in"</span><span class="p">,</span> <span class="s2">"chilled_out"</span><span class="p">),</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+<span class="sd">"""For each role and class, the two ports whose enthalpy flows, first less second, give the power</span>
+<span class="sd">the unit delivers: heat to its water, or cold from its chilled water."""</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_reaches</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">grid</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return whether the outlet ``path.port`` feeds a module of class ``grid``."""</span>
+    <span class="n">fed</span> <span class="o">=</span> <span class="n">plant</span><span class="o">.</span><span class="n">feeds</span><span class="p">(</span><span class="n">join_path</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">port</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">plant</span><span class="o">.</span><span class="n">get_submodule</span><span class="p">(</span><span class="n">item</span><span class="p">),</span> <span class="n">grid</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">fed</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">roles_of</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the roles of ``module`` at ``path`` in ``plant``.</span>
+
+<span class="sd">    A heat pump is a ``heat_pump`` when its ``sink_out`` reaches a ``HeatingGrid`` and a</span>
+<span class="sd">    ``chiller`` when its ``source_out`` reaches a ``CoolingGrid``; an absorption or adsorption</span>
+<span class="sd">    unit is a ``chiller`` when its ``chilled_out`` reaches a ``CoolingGrid``. The root is also</span>
+<span class="sd">    the ``plant``.</span>
+<span class="sd">    """</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">[</span><span class="n">module</span><span class="o">.</span><span class="n">plant_role</span><span class="p">]</span> <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">plant_role</span> <span class="k">else</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
+        <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">PLANT</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">HeatPump</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">_reaches</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="s2">"sink_out"</span><span class="p">,</span> <span class="n">HeatingGrid</span><span class="p">):</span>
+            <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"heat_pump"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_reaches</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="s2">"source_out"</span><span class="p">,</span> <span class="n">CoolingGrid</span><span class="p">):</span>
+            <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"chiller"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="p">(</span><span class="n">AbsorptionUnit</span><span class="p">,</span> <span class="n">AdsorptionChiller</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">_reaches</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="s2">"chilled_out"</span><span class="p">,</span> <span class="n">CoolingGrid</span><span class="p">):</span>
+            <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"chiller"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">found</span>
+
+
+<span class="n">SUPPLY</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">(</span><span class="n">HeatPump</span><span class="p">,</span> <span class="s2">"sink_out"</span><span class="p">,</span> <span class="n">HeatingGrid</span><span class="p">,</span> <span class="s2">"heating"</span><span class="p">),</span>
+    <span class="p">(</span><span class="n">Boiler</span><span class="p">,</span> <span class="s2">"fluid_out"</span><span class="p">,</span> <span class="n">HeatingGrid</span><span class="p">,</span> <span class="s2">"heating"</span><span class="p">),</span>
+    <span class="p">(</span><span class="n">ElectricBoiler</span><span class="p">,</span> <span class="s2">"fluid_out"</span><span class="p">,</span> <span class="n">HeatingGrid</span><span class="p">,</span> <span class="s2">"heating"</span><span class="p">),</span>
+    <span class="p">(</span><span class="n">HeatPump</span><span class="p">,</span> <span class="s2">"source_out"</span><span class="p">,</span> <span class="n">CoolingGrid</span><span class="p">,</span> <span class="s2">"cooling"</span><span class="p">),</span>
+    <span class="p">(</span><span class="n">AbsorptionUnit</span><span class="p">,</span> <span class="s2">"chilled_out"</span><span class="p">,</span> <span class="n">CoolingGrid</span><span class="p">,</span> <span class="s2">"cooling"</span><span class="p">),</span>
+    <span class="p">(</span><span class="n">AdsorptionChiller</span><span class="p">,</span> <span class="s2">"chilled_out"</span><span class="p">,</span> <span class="n">CoolingGrid</span><span class="p">,</span> <span class="s2">"cooling"</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="sd">"""The units that regulate a supply temperature: class, outlet that carries it, grid it must reach</span>
+<span class="sd">and the service."""</span>
+
+
+<span class="n">SUPPLY_CLASSES</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="bp">cls</span> <span class="k">for</span> <span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span> <span class="ow">in</span> <span class="n">SUPPLY</span><span class="p">))</span>
+<span class="sd">"""The classes of ``SUPPLY``."""</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">supply_service</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``"heating"`` or ``"cooling"`` when ``module`` at ``path`` is on a supply line.</span>
+
+<span class="sd">    A unit is on a supply line when the outlet that carries its useful stream reaches the</span>
+<span class="sd">    ``HeatingGrid`` or the ``CoolingGrid`` (``plant.feeds``, the rule the schedule uses for its</span>
+<span class="sd">    roles). ``None`` for a unit on neither; a unit on both raises ``invalid_design``, because it</span>
+<span class="sd">    has one setpoint.</span>
+<span class="sd">    """</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">service</span>
+        <span class="k">for</span> <span class="bp">cls</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">service</span> <span class="ow">in</span> <span class="n">SUPPLY</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_reaches</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">grid</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'plant'</span><span class="si">}</span><span class="s2"> feeds both the heating and the cooling grid; expected one supply "</span>
+            <span class="s2">"line, because a unit has one setpoint"</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_design"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">found</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span> <span class="k">if</span> <span class="n">found</span> <span class="k">else</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">units_of</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">role</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the paths of the modules of ``role`` in ``plant``; the root is the path ``""``."""</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">path</span> <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">plant</span><span class="o">.</span><span class="n">named_modules</span><span class="p">()</span> <span class="k">if</span> <span class="n">role</span> <span class="ow">in</span> <span class="n">roles_of</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">module</span><span class="p">)]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">delivery_ports</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">role</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``(first, second)``, the ports whose enthalpy flows give the power ``module`` gives.</span>
+
+<span class="sd">    The power is the flow of ``first`` less that of ``second``. ``None`` for a class of the role</span>
+<span class="sd">    with no such pair.</span>
+<span class="sd">    """</span>
+    <span class="k">for</span> <span class="bp">cls</span><span class="p">,</span> <span class="n">ports</span> <span class="ow">in</span> <span class="n">DELIVERY</span><span class="p">[</span><span class="n">role</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="bp">cls</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">ports</span>
+    <span class="k">return</span> <span class="kc">None</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

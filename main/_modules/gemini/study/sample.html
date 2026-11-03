@@ -1,0 +1,313 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.study.sample &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../codedocumentation/gemini.html">gemini</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">gemini.study.sample</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for gemini.study.sample</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Spread of metrics when the uncertain values of the case are drawn at random."""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini</span><span class="w"> </span><span class="kn">import</span> <span class="n">units</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini._utils.jsonable</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_plain</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.engine.check</span><span class="w"> </span><span class="kn">import</span> <span class="n">check</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ValidationError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.errors.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">raise_issues</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.parallel</span><span class="w"> </span><span class="kn">import</span> <span class="n">mapped_batches</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.progress</span><span class="w"> </span><span class="kn">import</span> <span class="n">counting</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.shown</span><span class="w"> </span><span class="kn">import</span> <span class="n">difference_names</span><span class="p">,</span> <span class="n">shown</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.target</span><span class="w"> </span><span class="kn">import</span> <span class="n">quantities</span><span class="p">,</span> <span class="n">quantity_of</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.trial</span><span class="w"> </span><span class="kn">import</span> <span class="n">checked_metric</span><span class="p">,</span> <span class="n">drawn_trials</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.uncertain</span><span class="w"> </span><span class="kn">import</span> <span class="n">declared</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.units.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">measure</span>
+
+<span class="n">ATTEMPTS</span> <span class="o">=</span> <span class="mi">10000</span>
+<span class="sd">"""Draws of a truncated normal before its bounds are judged out of reach."""</span>
+<span class="n">SUMMARY</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"mean"</span><span class="p">,</span> <span class="s2">"p5"</span><span class="p">,</span> <span class="s2">"p50"</span><span class="p">,</span> <span class="s2">"p95"</span><span class="p">)</span>
+<span class="sd">"""The statistics of a summary; ``failed`` is the number of draws left out, beside them."""</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Sample</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The result of ``sample``: ``{samples, summary}``, with ``to_dict`` and ``from_dict``.</span>
+
+<span class="sd">    ``differences``, when present, names the drawn values that are differences of temperature.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the result as plain JSON in the display units of ``gm.units.display``.</span>
+
+<span class="sd">        Quantities and values are ``{"value", "unit"}``; the differences of temperature stay in K,</span>
+<span class="sd">        and ``from_dict`` reads the result back to the same values.</span>
+<span class="sd">        """</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"differences"</span><span class="p">,</span> <span class="p">())</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">"parameters"</span><span class="p">:</span> <span class="n">to_plain</span><span class="p">(</span><span class="n">shown</span><span class="p">(</span><span class="n">draw</span><span class="p">[</span><span class="s2">"parameters"</span><span class="p">],</span> <span class="n">names</span><span class="p">)),</span>
+                <span class="s2">"metrics"</span><span class="p">:</span> <span class="n">to_plain</span><span class="p">(</span><span class="n">shown</span><span class="p">(</span><span class="n">draw</span><span class="p">[</span><span class="s2">"metrics"</span><span class="p">])),</span>
+                <span class="o">**</span><span class="p">({</span><span class="s2">"reason"</span><span class="p">:</span> <span class="n">draw</span><span class="p">[</span><span class="s2">"reason"</span><span class="p">]}</span> <span class="k">if</span> <span class="s2">"reason"</span> <span class="ow">in</span> <span class="n">draw</span> <span class="k">else</span> <span class="p">{}),</span>
+                <span class="o">**</span><span class="p">({</span><span class="s2">"feasible"</span><span class="p">:</span> <span class="n">draw</span><span class="p">[</span><span class="s2">"feasible"</span><span class="p">]}</span> <span class="k">if</span> <span class="s2">"feasible"</span> <span class="ow">in</span> <span class="n">draw</span> <span class="k">else</span> <span class="p">{}),</span>
+            <span class="p">}</span>
+            <span class="k">for</span> <span class="n">draw</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"samples"</span><span class="p">]</span>
+        <span class="p">]</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="p">{</span><span class="n">metric</span><span class="p">:</span> <span class="n">to_plain</span><span class="p">(</span><span class="n">shown</span><span class="p">(</span><span class="n">spread</span><span class="p">))</span> <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">spread</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">[</span><span class="s2">"summary"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">extra</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"differences"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">names</span><span class="p">)}</span> <span class="k">if</span> <span class="n">names</span> <span class="k">else</span> <span class="p">{}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"samples"</span><span class="p">:</span> <span class="n">samples</span><span class="p">,</span> <span class="s2">"summary"</span><span class="p">:</span> <span class="n">summary</span><span class="p">}</span> <span class="o">|</span> <span class="n">extra</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the result of a dictionary of ``to_dict``."""</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">"parameters"</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="n">k</span><span class="p">:</span> <span class="n">units</span><span class="o">.</span><span class="n">Quantity</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">draw</span><span class="p">[</span><span class="s2">"parameters"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="p">},</span>
+                <span class="s2">"metrics"</span><span class="p">:</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">value_of</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">draw</span><span class="p">[</span><span class="s2">"metrics"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+                <span class="o">**</span><span class="p">({</span><span class="s2">"reason"</span><span class="p">:</span> <span class="n">draw</span><span class="p">[</span><span class="s2">"reason"</span><span class="p">]}</span> <span class="k">if</span> <span class="s2">"reason"</span> <span class="ow">in</span> <span class="n">draw</span> <span class="k">else</span> <span class="p">{}),</span>
+                <span class="o">**</span><span class="p">({</span><span class="s2">"feasible"</span><span class="p">:</span> <span class="n">draw</span><span class="p">[</span><span class="s2">"feasible"</span><span class="p">]}</span> <span class="k">if</span> <span class="s2">"feasible"</span> <span class="ow">in</span> <span class="n">draw</span> <span class="k">else</span> <span class="p">{}),</span>
+            <span class="p">}</span>
+            <span class="k">for</span> <span class="n">draw</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s2">"samples"</span><span class="p">]</span>
+        <span class="p">]</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">metric</span><span class="p">:</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value_of</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">spread</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+            <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">spread</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s2">"summary"</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+        <span class="n">extra</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"differences"</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s2">"differences"</span><span class="p">]}</span> <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"differences"</span><span class="p">)</span> <span class="k">else</span> <span class="p">{}</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">samples</span><span class="o">=</span><span class="n">samples</span><span class="p">,</span> <span class="n">summary</span><span class="o">=</span><span class="n">summary</span><span class="p">,</span> <span class="o">**</span><span class="n">extra</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_value</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Whether ``item`` is the JSON form of a value."""</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="p">{</span><span class="s2">"value"</span><span class="p">,</span> <span class="s2">"unit"</span><span class="p">}</span> <span class="o">&lt;=</span> <span class="nb">set</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">value_of</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the ``Value`` of the JSON value ``{value, unit}`` with its ``reason`` and parts."""</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">key</span><span class="p">:</span> <span class="n">value_of</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">if</span> <span class="n">_is_value</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">else</span> <span class="n">item</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"value"</span><span class="p">,</span> <span class="s2">"unit"</span><span class="p">,</span> <span class="s2">"reason"</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">measure</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"value"</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">"unit"</span><span class="p">],</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"reason"</span><span class="p">),</span> <span class="o">**</span><span class="n">parts</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_draw</span><span class="p">(</span><span class="n">generator</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">uncertainty</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return one random value in SI of a declared number, whose value in the case is ``value``."""</span>
+    <span class="n">kind</span> <span class="o">=</span> <span class="n">uncertainty</span><span class="o">.</span><span class="n">kind</span>
+    <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"uniform"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">generator</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">uncertainty</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="n">uncertainty</span><span class="o">.</span><span class="n">max</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"triangular"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">generator</span><span class="o">.</span><span class="n">triangular</span><span class="p">(</span><span class="n">uncertainty</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">uncertainty</span><span class="o">.</span><span class="n">max</span><span class="p">))</span>
+    <span class="n">low</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="k">if</span> <span class="n">uncertainty</span><span class="o">.</span><span class="n">min</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">uncertainty</span><span class="o">.</span><span class="n">min</span>
+    <span class="n">high</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="k">if</span> <span class="n">uncertainty</span><span class="o">.</span><span class="n">max</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">uncertainty</span><span class="o">.</span><span class="n">max</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ATTEMPTS</span><span class="p">):</span>
+        <span class="n">number</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">generator</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">uncertainty</span><span class="o">.</span><span class="n">std</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">low</span> <span class="o">&lt;=</span> <span class="n">number</span> <span class="o">&lt;=</span> <span class="n">high</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">number</span>
+    <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"study.sample: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: no draw of the normal inside [</span><span class="si">{</span><span class="n">low</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">high</span><span class="si">}</span><span class="s2">] in </span><span class="si">{</span><span class="n">ATTEMPTS</span><span class="si">}</span><span class="s2"> tries; "</span>
+        <span class="s2">"expected bounds that the distribution reaches"</span><span class="p">,</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">code</span><span class="o">=</span><span class="s2">"out_of_bounds"</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_number</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Whether a metric value is a finite number: ``None`` and NaN are left out of a summary."""</span>
+    <span class="k">return</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_spread</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return ``{mean, p5, p50, p95}``, each a ``Value``, of a metric over the samples giving it."""</span>
+    <span class="n">metrics</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="s2">"metrics"</span><span class="p">][</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">samples</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">item</span><span class="p">[</span><span class="s2">"metrics"</span><span class="p">]]</span>
+    <span class="n">numbers</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">metrics</span> <span class="k">if</span> <span class="n">_is_number</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="p">)]</span>
+    <span class="n">unit</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">item</span><span class="o">.</span><span class="n">unit</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">metrics</span> <span class="k">if</span> <span class="n">_is_number</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="p">)),</span> <span class="s2">"-"</span><span class="p">)</span>
+    <span class="n">failed</span> <span class="o">=</span> <span class="n">measure</span><span class="p">(</span><span class="nb">len</span><span class="p">([</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">samples</span> <span class="k">if</span> <span class="s2">"reason"</span> <span class="ow">in</span> <span class="n">item</span><span class="p">]),</span> <span class="s2">"-"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">numbers</span><span class="p">:</span>
+        <span class="n">reason</span> <span class="o">=</span> <span class="s2">"no sample gives this metric"</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">measure</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">reason</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">SUMMARY</span><span class="p">}</span> <span class="o">|</span> <span class="p">{</span><span class="s2">"failed"</span><span class="p">:</span> <span class="n">failed</span><span class="p">}</span>
+    <span class="n">low</span><span class="p">,</span> <span class="n">middle</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">numbers</span><span class="p">,</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">95</span><span class="p">))</span>
+    <span class="n">spread</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"mean"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">numbers</span><span class="p">),</span> <span class="s2">"p5"</span><span class="p">:</span> <span class="n">low</span><span class="p">,</span> <span class="s2">"p50"</span><span class="p">:</span> <span class="n">middle</span><span class="p">,</span> <span class="s2">"p95"</span><span class="p">:</span> <span class="n">high</span><span class="p">}</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">measure</span><span class="p">(</span><span class="n">number</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">number</span> <span class="ow">in</span> <span class="n">spread</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span> <span class="o">|</span> <span class="p">{</span><span class="s2">"failed"</span><span class="p">:</span> <span class="n">failed</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="sample">
+<a class="viewcode-back" href="../../../codedocumentation/gemini.study.sample.html#gemini.study.sample">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">plan</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">on_progress</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the spread of metrics when the uncertain values of the case are drawn at random.</span>
+
+<span class="sd">    ``gm.check`` runs first and raises its issues. The distributions are only those the case</span>
+<span class="sd">    declares (``uncertainty`` next to a number of</span>
+<span class="sd">    ``site``, ``demand``, ``utilities`` or ``economics`` in ``case.json``); a case with none raises</span>
+<span class="sd">    ``missing_value``. Plant parameters are design decisions and are never drawn. Each draw copies</span>
+<span class="sd">    the plant and the case, sets the drawn values on the copy of the case, simulates the copy</span>
+<span class="sd">    (``gm.simulate`` plans the demand on that design) and reads the metrics. The plant and the</span>
+<span class="sd">    case themselves are not changed. With ``gm.runtime.settings(processes=n)`` the draws run in</span>
+<span class="sd">    ``n`` worker processes and give the same result. A draw that breaks the bounds of a value of</span>
+<span class="sd">    the case, such as a negative price, is a draw whose run failed.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    plant : Plant</span>
+<span class="sd">        A plant with parameter values.</span>
+<span class="sd">    case : Case</span>
+<span class="sd">        What the plant is asked to do, with the ``uncertainty`` of the values to draw. A</span>
+<span class="sd">        ``uniform`` is drawn between its ``min`` and ``max``, a ``triangular`` with the value of</span>
+<span class="sd">        the case as mode, a ``normal`` around the value, redrawn until inside its bounds if it</span>
+<span class="sd">        has any. A profile of the case becomes the drawn constant.</span>
+<span class="sd">    metrics : list of str</span>
+<span class="sd">        The metrics to record, as the ``objective`` of ``minimize`` without a sign.</span>
+<span class="sd">    samples : int</span>
+<span class="sd">        The number of random draws, one simulation each. It has no default.</span>
+<span class="sd">    seed : int</span>
+<span class="sd">        Seed of ``numpy.random.default_rng``, 0 or more; the same seed gives the same draws. A</span>
+<span class="sd">        seed is a reproducibility choice, so there is no default.</span>
+<span class="sd">    plan : DataFrame, optional</span>
+<span class="sd">        The run input held fixed over the draws, as for ``minimize``.</span>
+<span class="sd">    on_progress : callable, optional</span>
+<span class="sd">        ``on_progress(done, total)`` after each finished draw, as for ``minimize``; ``total`` is</span>
+<span class="sd">        ``samples``. Raising ``gm.errors.Cancelled`` from it stops the study.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Sample</span>
+<span class="sd">        A dict ``{samples, summary}``: ``samples`` lists each draw's ``parameters``, ``Quantity``</span>
+<span class="sd">        values in SI by ``case.&lt;path&gt;``, and ``metrics``, a ``Value`` per metric, with a</span>
+<span class="sd">        ``reason`` for a draw whose run failed, and ``feasible``, whether the run of the draw is</span>
+<span class="sd">        feasible by ``gm.evaluate.verdict`` (``False`` for a run that failed); a result stored</span>
+<span class="sd">        before the flag has none. The flag does not change the metrics or the summary, which</span>
+<span class="sd">        count the draws as before; ``summary`` gives, for each metric,</span>
+<span class="sd">        ``{mean, p5, p50, p95}`` over the draws that give a finite number, each a ``Value`` that</span>
+<span class="sd">        is ``None`` with a ``reason`` when none does, and ``failed``, the number of draws left out</span>
+<span class="sd">        because their run had failed steps (their ``reason`` names the count and the most frequent</span>
+<span class="sd">        failure). ``to_dict()`` is plain JSON; ``Sample.from_dict`` reads it back.</span>
+<span class="sd">    """</span>
+    <span class="n">raise_issues</span><span class="p">(</span><span class="n">check</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">samples</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"study.sample: samples = </span><span class="si">{</span><span class="n">samples</span><span class="si">}</span><span class="s2">; expected at least 1"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"samples"</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">seed</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"study.sample: seed = </span><span class="si">{</span><span class="n">seed</span><span class="si">}</span><span class="s2">; expected 0 or more"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"seed"</span><span class="p">)</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">checked_metric</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">]</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">declared</span><span class="p">(</span><span class="n">case</span><span class="p">,</span> <span class="s2">"sample"</span><span class="p">)</span>
+    <span class="n">generator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">draws</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">_draw</span><span class="p">(</span><span class="n">generator</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">uncertainty</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">uncertainty</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">found</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="k">with</span> <span class="n">counting</span><span class="p">(</span><span class="n">on_progress</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">draws</span><span class="p">))</span> <span class="k">as</span> <span class="n">count</span><span class="p">:</span>
+        <span class="n">runs</span> <span class="o">=</span> <span class="n">mapped_batches</span><span class="p">(</span><span class="n">drawn_trials</span><span class="p">,</span> <span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">plan</span><span class="p">,</span> <span class="n">names</span><span class="p">),</span> <span class="n">draws</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">count</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">count</span><span class="o">.</span><span class="n">reach</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">draws</span><span class="p">))</span>
+    <span class="n">drawn_runs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">drawn</span><span class="p">,</span> <span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="n">reason</span><span class="p">,</span> <span class="n">feasible</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">draws</span><span class="p">,</span> <span class="n">runs</span><span class="p">):</span>
+        <span class="n">failed</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"reason"</span><span class="p">:</span> <span class="n">reason</span><span class="p">}</span> <span class="k">if</span> <span class="n">reason</span> <span class="k">else</span> <span class="p">{}</span>
+        <span class="n">drawn_runs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">"parameters"</span><span class="p">:</span> <span class="n">quantities</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">drawn</span><span class="p">),</span>
+                <span class="s2">"metrics"</span><span class="p">:</span> <span class="n">run</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">failed</span><span class="p">,</span>
+                <span class="s2">"feasible"</span><span class="p">:</span> <span class="n">feasible</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+    <span class="n">summary</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">_spread</span><span class="p">(</span><span class="n">drawn_runs</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">}</span>
+    <span class="n">lifts</span> <span class="o">=</span> <span class="n">difference_names</span><span class="p">(</span>
+        <span class="n">quantities</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">draws</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="k">lambda</span> <span class="n">name</span><span class="p">:</span> <span class="n">quantity_of</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">extra</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"differences"</span><span class="p">:</span> <span class="n">lifts</span><span class="p">}</span> <span class="k">if</span> <span class="n">lifts</span> <span class="k">else</span> <span class="p">{}</span>
+    <span class="k">return</span> <span class="n">Sample</span><span class="p">(</span><span class="n">samples</span><span class="o">=</span><span class="n">drawn_runs</span><span class="p">,</span> <span class="n">summary</span><span class="o">=</span><span class="n">summary</span><span class="p">,</span> <span class="o">**</span><span class="n">extra</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

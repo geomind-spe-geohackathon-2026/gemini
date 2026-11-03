@@ -1,0 +1,20 @@
+gemini.case.demand
+==================
+
+.. automodule:: gemini.case.demand
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      NAMES
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      CoolingService
+      Demand
+      Service
+   

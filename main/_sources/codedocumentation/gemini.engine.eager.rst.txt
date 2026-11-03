@@ -1,0 +1,13 @@
+gemini.engine.eager
+===================
+
+.. automodule:: gemini.engine.eager
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Call
+      EagerExecutor
+   

@@ -1,0 +1,193 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.physics.fluid &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gemini.physics.gas" href="gemini.physics.gas.html" />
+    <link rel="prev" title="gemini.physics.erosion" href="gemini.physics.erosion.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="gemini.html">gemini</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gemini.analysis.html">gemini.analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.case.html">gemini.case</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.compiler.html">gemini.compiler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.engine.html">gemini.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.errors.html">gemini.errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.evaluate.html">gemini.evaluate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.modules.html">gemini.modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.ops.html">gemini.ops</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="gemini.physics.html">gemini.physics</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.chemistry.html">gemini.physics.chemistry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.combustion.html">gemini.physics.combustion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.constants.html">gemini.physics.constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.corrosion.html">gemini.physics.corrosion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.cycles.html">gemini.physics.cycles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.diagnostics.html">gemini.physics.diagnostics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.energy.html">gemini.physics.energy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.erosion.html">gemini.physics.erosion</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gemini.physics.fluid</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.gas.html">gemini.physics.gas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.geometry.html">gemini.physics.geometry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.ground.html">gemini.physics.ground</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.heat_transfer.html">gemini.physics.heat_transfer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.hydraulics.html">gemini.physics.hydraulics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.psychrometrics.html">gemini.physics.psychrometrics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.pumps.html">gemini.physics.pumps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.refrigeration.html">gemini.physics.refrigeration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.separation.html">gemini.physics.separation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.physics.steam.html">gemini.physics.steam</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.plants.html">gemini.plants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.runtime.html">gemini.runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.streams.html">gemini.streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.study.html">gemini.study</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gemini.units.html">gemini.units</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="gemini.html">gemini</a></li>
+          <li class="breadcrumb-item"><a href="gemini.physics.html">gemini.physics</a></li>
+      <li class="breadcrumb-item active">gemini.physics.fluid</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/codedocumentation/gemini.physics.fluid.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-gemini.physics.fluid">
+<span id="gemini-physics-fluid"></span><h1>gemini.physics.fluid<a class="headerlink" href="#module-gemini.physics.fluid" title="Link to this heading"></a></h1>
+<p>Constant fluid properties inherited from GEMINI’s PVTConstantSTP model.</p>
+<p>The defaults are the original constant-water values; pressure and temperature do not change
+them. <code class="docutils literal notranslate"><span class="pre">gemini.streams.Fluid</span></code> builds and caches one snapshot per fluid.</p>
+<p><code class="docutils literal notranslate"><span class="pre">mixture_density</span></code>, <code class="docutils literal notranslate"><span class="pre">volume_flow</span></code>, <code class="docutils literal notranslate"><span class="pre">liquid_volume_flow</span></code> and <code class="docutils literal notranslate"><span class="pre">heat_capacity_rate</span></code> carry no
+<code class="docutils literal notranslate"><span class="pre">&#64;ops.physics</span></code>: <code class="docutils literal notranslate"><span class="pre">Stream</span></code> and <code class="docutils literal notranslate"><span class="pre">FluidProperties</span></code> call them on every eager step, the decorator
+would make those calls about 3.5 times slower, and they divide only by validated positive
+properties, so they need no eager scope.</p>
+<p class="rubric">Module Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEFAULT_LIQUID_DENSITY</span></code></p></td>
+<td><p>Density [kg/m3] of the constant-water liquid of GEMINI's PVTConstantSTP model, near 4 degC.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">heat_capacity_rate</span></code>(mass_flow, heat_capacity)</p></td>
+<td><p>Return the heat capacity rate [W/K] of a stream, <code class="docutils literal notranslate"><span class="pre">C</span> <span class="pre">=</span> <span class="pre">m</span> <span class="pre">cp</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">liquid_volume_flow</span></code>(mass_flow, ...)</p></td>
+<td><p>Return the liquid volume flow [m3/s] of a mixture, <code class="docutils literal notranslate"><span class="pre">q_l</span> <span class="pre">=</span> <span class="pre">m</span> <span class="pre">(1</span> <span class="pre">-</span> <span class="pre">x)</span> <span class="pre">/</span> <span class="pre">rho_l</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mixture_density</span></code>(liquid_density, gas_density, ...)</p></td>
+<td><p>Return the homogeneous mixture density [kg/m3] of a gas mass fraction [-].</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mixture_mass_flow</span></code>(liquid_flow, ...)</p></td>
+<td><p>Return the mixture mass flow [kg/s] of a liquid volume flow, <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">=</span> <span class="pre">q_l</span> <span class="pre">rho_l</span> <span class="pre">/</span> <span class="pre">(1</span> <span class="pre">-</span> <span class="pre">x)</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stream_quantities</span></code>(mass_flow, temperature, ...)</p></td>
+<td><p>Return the quantities of a fluid port, the one definition every reader of a port shares.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">volume_flow</span></code>(mass_flow, density)</p></td>
+<td><p>Return the volume flow [m3/s] of a mass flow at a density, <code class="docutils literal notranslate"><span class="pre">q</span> <span class="pre">=</span> <span class="pre">m</span> <span class="pre">/</span> <span class="pre">rho</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Classes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">FluidProperties</span></code>([rho_l, rho_g, gmf, mu_l, ...])</p></td>
+<td><p>Immutable liquid/gas property snapshot in SI units.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gemini.physics.erosion.html" class="btn btn-neutral float-left" title="gemini.physics.erosion" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gemini.physics.gas.html" class="btn btn-neutral float-right" title="gemini.physics.gas" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

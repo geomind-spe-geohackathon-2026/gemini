@@ -1,0 +1,6 @@
+gemini.ops.elementwise
+======================
+
+.. automodule:: gemini.ops.elementwise
+
+   

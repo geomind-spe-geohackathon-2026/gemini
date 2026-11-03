@@ -1,0 +1,6 @@
+gemini.study.minimize
+=====================
+
+.. currentmodule:: gemini.study
+
+.. autofunction:: minimize

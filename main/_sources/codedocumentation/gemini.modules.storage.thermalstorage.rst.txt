@@ -1,0 +1,12 @@
+gemini.modules.storage.thermalstorage
+=====================================
+
+.. automodule:: gemini.modules.storage.thermalstorage
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ThermalStorage
+   

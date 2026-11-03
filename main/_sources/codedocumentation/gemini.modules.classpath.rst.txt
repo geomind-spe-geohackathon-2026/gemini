@@ -1,0 +1,13 @@
+gemini.modules.classpath
+========================
+
+.. automodule:: gemini.modules.classpath
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      class_path
+      import_class
+   

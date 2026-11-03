@@ -1,0 +1,13 @@
+gemini.modules.control
+======================
+
+.. automodule:: gemini.modules.control
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   pidcontroller

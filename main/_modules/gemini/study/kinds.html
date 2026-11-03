@@ -1,0 +1,223 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.study.kinds &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../codedocumentation/gemini.html">gemini</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">gemini.study.kinds</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for gemini.study.kinds</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""The kinds of study in plain words, and the settings each one takes, for a form."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate._utils.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">OBJECTIVES</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate.summary</span><span class="w"> </span><span class="kn">import</span> <span class="n">KPI_NAMES</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.trial</span><span class="w"> </span><span class="kn">import</span> <span class="n">ECONOMICS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study.study</span><span class="w"> </span><span class="kn">import</span> <span class="n">METHODS</span><span class="p">,</span> <span class="n">OWN</span><span class="p">,</span> <span class="n">PREPARE</span><span class="p">,</span> <span class="n">REQUIRED</span><span class="p">,</span> <span class="n">Study</span>
+
+<span class="n">KINDS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"run"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Run the design"</span><span class="p">,</span>
+        <span class="s2">"Simulates the plant on the case over the whole period and reports what it delivers, "</span>
+        <span class="s2">"what it costs, what it emits and whether the requirements are met. Nothing is "</span>
+        <span class="s2">"changed or searched."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"minimize"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Find the best design"</span><span class="p">,</span>
+        <span class="s2">"Searches the ranges and choices that the plant file leaves open for the design with "</span>
+        <span class="s2">"the lowest value of one figure, such as the cost of heat. A design that fails a "</span>
+        <span class="s2">"requirement always ranks after every design that meets them."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"sample"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Test the uncertainty"</span><span class="p">,</span>
+        <span class="s2">"Draws random values for the inputs that the case gives an uncertainty, runs the plant "</span>
+        <span class="s2">"once for each draw and reports the average of each chosen figure and the range in "</span>
+        <span class="s2">"which most draws fall."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"sensitivity"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Rank what matters most"</span><span class="p">,</span>
+        <span class="s2">"Moves each uncertain input of the case to its low and to its high value, one at a "</span>
+        <span class="s2">"time, and ranks the inputs by how much each one changes the chosen figures."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"size"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Size the equipment"</span><span class="p">,</span>
+        <span class="s2">"Sets the capacity of the equipment from the demand of the case, so that a study starts "</span>
+        <span class="s2">"from a sensible design. It runs before another study and is not a study by itself."</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">}</span>
+<span class="sd">"""The ``(title, description)`` of each kind: the methods of a study and the action before it."""</span>
+
+<span class="n">SETTINGS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"objective"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Figure to minimise"</span><span class="p">,</span>
+        <span class="s2">"The figure the search makes as small as possible."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"metrics"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Figures to report"</span><span class="p">,</span>
+        <span class="s2">"The figures that are read from every run."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"evaluations"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Number of designs to try"</span><span class="p">,</span>
+        <span class="s2">"How many designs the search runs at most; more designs search better and take longer."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"samples"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Number of draws"</span><span class="p">,</span>
+        <span class="s2">"How many random draws are run; more draws give steadier figures and take longer."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"seed"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Random seed"</span><span class="p">,</span>
+        <span class="s2">"A whole number that fixes the random choices: the same seed gives the same study."</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">}</span>
+<span class="sd">"""The ``(title, description)`` of each setting that a method reads."""</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_setting</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the schema of one setting: its JSON Schema from ``Study``, with words for a form."""</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">Study</span><span class="o">.</span><span class="n">schema</span><span class="p">()[</span><span class="s2">"properties"</span><span class="p">][</span><span class="n">key</span><span class="p">])</span>
+    <span class="n">title</span><span class="p">,</span> <span class="n">description</span> <span class="o">=</span> <span class="n">SETTINGS</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="n">found</span><span class="p">[</span><span class="s2">"title"</span><span class="p">],</span> <span class="n">found</span><span class="p">[</span><span class="s2">"description"</span><span class="p">]</span> <span class="o">=</span> <span class="n">title</span><span class="p">,</span> <span class="n">description</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"objective"</span><span class="p">:</span>
+        <span class="n">found</span><span class="p">[</span><span class="s2">"enum"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">OBJECTIVES</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">"metrics"</span><span class="p">:</span>
+        <span class="n">found</span><span class="p">[</span><span class="s2">"items"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">found</span><span class="p">[</span><span class="s2">"items"</span><span class="p">],</span> <span class="s2">"enum"</span><span class="p">:</span> <span class="p">[</span><span class="o">*</span><span class="n">KPI_NAMES</span><span class="p">,</span> <span class="o">*</span><span class="n">ECONOMICS</span><span class="p">]}</span>
+    <span class="k">return</span> <span class="n">found</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_settings</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the JSON Schema of the keys a method reads beyond ``cases`` and ``plants``."""</span>
+    <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">key</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"objective"</span><span class="p">,</span> <span class="s2">"metrics"</span><span class="p">,</span> <span class="s2">"evaluations"</span><span class="p">,</span> <span class="s2">"samples"</span><span class="p">,</span> <span class="s2">"seed"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">REQUIRED</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="p">())</span> <span class="ow">or</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">OWN</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">())</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"object"</span><span class="p">,</span>
+        <span class="s2">"additionalProperties"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="s2">"required"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">REQUIRED</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="p">())),</span>
+        <span class="s2">"properties"</span><span class="p">:</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">_setting</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">},</span>
+    <span class="p">}</span>
+
+
+<div class="viewcode-block" id="kinds">
+<a class="viewcode-back" href="../../../codedocumentation/gemini.study.kinds.html#gemini.study.kinds">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">kinds</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""Return the kinds of study, each with a title, a description and its settings.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of dict</span>
+<span class="sd">        ``{kind, use, title, description, settings}`` in a fixed order: the methods of</span>
+<span class="sd">        ``gm.Study`` (``run``, ``minimize``, ``sample``, ``sensitivity``, ``use`` ``"method"``,</span>
+<span class="sd">        the value of the ``method`` key of ``study.json``) and ``size`` (``use`` ``"prepare"``,</span>
+<span class="sd">        an entry of its ``prepare`` list). ``title`` and ``description`` are plain words for a</span>
+<span class="sd">        user. ``settings`` is the JSON Schema (draft 2020-12) of the keys the kind reads besides</span>
+<span class="sd">        ``cases`` and ``plants``: ``objective``, ``evaluations`` and ``seed`` for ``minimize``,</span>
+<span class="sd">        ``metrics``, ``samples`` and ``seed`` for ``sample``, ``metrics`` for ``sensitivity``,</span>
+<span class="sd">        none for the others. ``required`` lists those the kind cannot do without; ``objective``</span>
+<span class="sd">        lists the metrics worth minimising (``gm.evaluate.metrics()``) and ``metrics`` those that a</span>
+<span class="sd">        study reads. Plain JSON, a new list on each call.</span>
+<span class="sd">    """</span>
+    <span class="n">methods</span> <span class="o">=</span> <span class="p">[(</span><span class="n">method</span><span class="p">,</span> <span class="s2">"method"</span><span class="p">)</span> <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">METHODS</span><span class="p">]</span>
+    <span class="n">prepared</span> <span class="o">=</span> <span class="p">[(</span><span class="n">action</span><span class="p">,</span> <span class="s2">"prepare"</span><span class="p">)</span> <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">PREPARE</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">"kind"</span><span class="p">:</span> <span class="n">kind</span><span class="p">,</span>
+            <span class="s2">"use"</span><span class="p">:</span> <span class="n">use</span><span class="p">,</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="n">KINDS</span><span class="p">[</span><span class="n">kind</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s2">"description"</span><span class="p">:</span> <span class="n">KINDS</span><span class="p">[</span><span class="n">kind</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+            <span class="s2">"settings"</span><span class="p">:</span> <span class="n">_settings</span><span class="p">(</span><span class="n">kind</span><span class="p">),</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">kind</span><span class="p">,</span> <span class="n">use</span> <span class="ow">in</span> <span class="n">methods</span> <span class="o">+</span> <span class="n">prepared</span>
+    <span class="p">]</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,18 @@
+gemini.modules.pumps
+====================
+
+.. automodule:: gemini.modules.pumps
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   centrifugalpump
+   circulationpump
+   esp
+   gascompressor
+   injectionpump
+   lineshaftpump

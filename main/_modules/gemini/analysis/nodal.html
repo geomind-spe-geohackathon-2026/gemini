@@ -1,0 +1,542 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.analysis.nodal &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../codedocumentation/gemini.html">gemini</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">gemini.analysis.nodal</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for gemini.analysis.nodal</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Nodal analysis of geothermal wells: the flow or pressure at which well and reservoir agree.</span>
+
+<span class="sd">A plant normally commands the production rate (``ProductionReservoir.production_rate``) and</span>
+<span class="sd">reads the wellhead pressure that results. Nodal analysis inverts this: for a given wellhead</span>
+<span class="sd">pressure it finds the rate at which the reservoir inflow and the well lift agree, and on the</span>
+<span class="sd">injection side the rate or the wellhead pressure at which the injection well delivers the</span>
+<span class="sd">bottomhole pressure the receiving aquifer needs. The functions are ported from the upstream</span>
+<span class="sd">GEMINI simulator (``gemini_simulator.nodal_solver``), which solves the same balances with</span>
+<span class="sd">``scipy.optimize.brentq``.</span>
+
+<span class="sd">Every trial evaluates the plant's own modules without a running call. A plant states the same</span>
+<span class="sd">balances with ``Plant.constrain``, as ``NodalDoublet`` does. Each solve needs a</span>
+<span class="sd">bracket whose two ends lie inside the well model's domain and give residuals of opposite sign:</span>
+<span class="sd">very small rates can cool a stream below 0 K through the explicit heat loss and very large rates</span>
+<span class="sd">can drive the traversed pressure below zero, and a trial there raises ``PhysicsError``</span>
+<span class="sd">naming the trial value.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini</span><span class="w"> </span><span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">physics_units</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini._utils.jsonable</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_plain</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini._utils.strings</span><span class="w"> </span><span class="kn">import</span> <span class="n">split_path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeminiError</span><span class="p">,</span> <span class="n">ValidationError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.errors.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_on_error</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.modules.pumps</span><span class="w"> </span><span class="kn">import</span> <span class="n">ESP</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.modules.subsurface</span><span class="w"> </span><span class="kn">import</span> <span class="n">InjectionReservoir</span><span class="p">,</span> <span class="n">ProductionReservoir</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.modules.wells</span><span class="w"> </span><span class="kn">import</span> <span class="n">InjectionWell</span><span class="p">,</span> <span class="n">ProductionWell</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.plants._utils.targets</span><span class="w"> </span><span class="kn">import</span> <span class="n">evaluate</span><span class="p">,</span> <span class="n">root</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.streams.flows</span><span class="w"> </span><span class="kn">import</span> <span class="n">Stream</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.units.shapes</span><span class="w"> </span><span class="kn">import</span> <span class="n">OutputUnits</span>
+
+<span class="n">CURVE_POINTS</span> <span class="o">=</span> <span class="mi">21</span>
+<span class="sd">"""Number of rates on the IPR and VLP curves of ``nodal``, from the low to the high bracket end."""</span>
+<span class="n">WELLHEAD_PRESSURES</span> <span class="o">=</span> <span class="p">(</span><span class="mf">101325.0</span><span class="p">,</span> <span class="mf">1e8</span><span class="p">)</span>
+<span class="sd">"""The bracket [Pa] of an injection wellhead: the lowest is one atmosphere, the highest 1000 bar."""</span>
+<span class="n">NO_PUMP</span> <span class="o">=</span> <span class="s2">"the column of brine delivers what the aquifer needs: no pump, a choke holds the well"</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_Chain</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The production chain of a well: reservoir, lower well, optional ESP and upper well."""</span>
+
+    <span class="n">reservoir</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="n">lower</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="n">esp</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="n">upper</span><span class="p">:</span> <span class="n">Any</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_Injection</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The injection chain of a well: the well and the aquifer it feeds."""</span>
+
+    <span class="n">well</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="n">sink</span><span class="p">:</span> <span class="n">Any</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_injection_chain</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">well</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">inside</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the injection chain at ``well``, or ``None`` when it has no part of one.</span>
+
+<span class="sd">    A path of the well or of the aquifer finds the other in the same parent, which is how to reach</span>
+<span class="sd">    the injection side of a doublet, whose own path is its production chain.</span>
+<span class="sd">    """</span>
+    <span class="n">alone</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="p">(</span><span class="n">InjectionWell</span><span class="p">,</span> <span class="n">InjectionReservoir</span><span class="p">))</span>
+    <span class="n">scope</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">plant</span><span class="o">.</span><span class="n">get_submodule</span><span class="p">(</span><span class="n">split_path</span><span class="p">(</span><span class="n">well</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">modules</span><span class="p">())</span> <span class="k">if</span> <span class="n">alone</span> <span class="k">else</span> <span class="n">inside</span>
+    <span class="n">wells</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">scope</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">InjectionWell</span><span class="p">)]</span>
+    <span class="n">sinks</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">scope</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">InjectionReservoir</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">wells</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">sinks</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">wells</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">sinks</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"nodal: well = </span><span class="si">{</span><span class="n">well</span><span class="si">!r}</span><span class="s2">; </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">wells</span><span class="p">)</span><span class="si">}</span><span class="s2"> injection wells, </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">sinks</span><span class="p">)</span><span class="si">}</span><span class="s2"> aquifers; "</span>
+            <span class="s2">"expected one of each"</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">well</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_design"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">_Injection</span><span class="p">(</span><span class="n">wells</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sinks</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_chain</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">well</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the production or injection chain at the plant path ``well``."""</span>
+    <span class="n">module</span> <span class="o">=</span> <span class="n">plant</span><span class="o">.</span><span class="n">get_submodule</span><span class="p">(</span><span class="n">well</span><span class="p">)</span>
+    <span class="n">inside</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">modules</span><span class="p">())</span>
+    <span class="n">reservoirs</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">inside</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">ProductionReservoir</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">reservoirs</span><span class="p">:</span>
+        <span class="n">injection</span> <span class="o">=</span> <span class="n">_injection_chain</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">well</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">inside</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">injection</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">injection</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"nodal: well = </span><span class="si">{</span><span class="n">well</span><span class="si">!r}</span><span class="s2">; expected a path that holds a ProductionReservoir, or an "</span>
+            <span class="s2">"injection well and its aquifer"</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">well</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="n">wells</span> <span class="o">=</span> <span class="p">{</span><span class="n">item</span><span class="o">.</span><span class="n">segment</span><span class="p">:</span> <span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">inside</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">ProductionWell</span><span class="p">)}</span>
+    <span class="n">esps</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">inside</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">ESP</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">esps</span> <span class="ow">and</span> <span class="p">{</span><span class="s2">"below_esp"</span><span class="p">,</span> <span class="s2">"above_esp"</span><span class="p">}</span> <span class="o">&lt;=</span> <span class="n">wells</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">_Chain</span><span class="p">(</span><span class="n">reservoirs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">wells</span><span class="p">[</span><span class="s2">"below_esp"</span><span class="p">],</span> <span class="n">esps</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">wells</span><span class="p">[</span><span class="s2">"above_esp"</span><span class="p">])</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">esps</span> <span class="ow">and</span> <span class="s2">"full"</span> <span class="ow">in</span> <span class="n">wells</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_Chain</span><span class="p">(</span><span class="n">reservoirs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">wells</span><span class="p">[</span><span class="s2">"full"</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"nodal: well = </span><span class="si">{</span><span class="n">well</span><span class="si">!r}</span><span class="s2">; segments = </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">wells</span><span class="p">)</span><span class="si">}</span><span class="s2">, ESPs = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">esps</span><span class="p">)</span><span class="si">}</span><span class="s2">; expected one "</span>
+        <span class="s2">"ProductionWell 'full', or an ESP with the segments 'below_esp' and 'above_esp'"</span><span class="p">,</span>
+        <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_design"</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_required</span><span class="p">(</span><span class="n">conditions</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">conditions</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"nodal: conditions.</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> is missing; expected it"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="s2">"missing_value"</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">conditions</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_case_inputs</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">conditions</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the SI wellhead pressure [Pa], rate bracket [kg/s] and ESP frequency [Hz]."""</span>
+    <span class="n">pressure</span> <span class="o">=</span> <span class="n">physics_units</span><span class="o">.</span><span class="n">value_in_si</span><span class="p">(</span>
+        <span class="n">_required</span><span class="p">(</span><span class="n">conditions</span><span class="p">,</span> <span class="s2">"wellhead_pressure"</span><span class="p">),</span> <span class="s2">"Pa"</span><span class="p">,</span> <span class="s2">"conditions.wellhead_pressure"</span><span class="p">,</span> <span class="s2">"pressure"</span>
+    <span class="p">)</span>
+    <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">physics_units</span><span class="o">.</span><span class="n">value_in_si</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">"kg/s"</span><span class="p">,</span> <span class="s2">"conditions.rates"</span><span class="p">,</span> <span class="s2">"mass_flow"</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_required</span><span class="p">(</span><span class="n">conditions</span><span class="p">,</span> <span class="s2">"rates"</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">frequency</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">chain</span><span class="o">.</span><span class="n">esp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">frequency</span> <span class="o">=</span> <span class="n">physics_units</span><span class="o">.</span><span class="n">value_in_si</span><span class="p">(</span>
+            <span class="n">_required</span><span class="p">(</span><span class="n">conditions</span><span class="p">,</span> <span class="s2">"frequency"</span><span class="p">),</span> <span class="s2">"Hz"</span><span class="p">,</span> <span class="s2">"conditions.frequency"</span><span class="p">,</span> <span class="s2">"frequency"</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">pressure</span><span class="p">),</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">low</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">high</span><span class="p">)),</span> <span class="n">frequency</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_lift</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">rate</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the wellhead pressure [Pa] that the well lifts the inflow of ``rate`` to."""</span>
+    <span class="n">inflow</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">reservoir</span><span class="o">.</span><span class="n">sandface_stream</span><span class="p">(</span><span class="n">rate</span><span class="p">)</span>
+    <span class="n">stream</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">lower</span><span class="o">.</span><span class="n">_trial</span><span class="p">(</span><span class="n">bottom_in</span><span class="o">=</span><span class="n">inflow</span><span class="p">)</span><span class="o">.</span><span class="n">outlets</span><span class="o">.</span><span class="n">wellhead_out</span>
+    <span class="k">if</span> <span class="n">chain</span><span class="o">.</span><span class="n">esp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">stream</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">esp</span><span class="o">.</span><span class="n">_trial</span><span class="p">(</span><span class="n">fluid_in</span><span class="o">=</span><span class="n">stream</span><span class="p">)</span><span class="o">.</span><span class="n">outlets</span><span class="o">.</span><span class="n">fluid_out</span>
+        <span class="n">stream</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">upper</span><span class="o">.</span><span class="n">_trial</span><span class="p">(</span><span class="n">bottom_in</span><span class="o">=</span><span class="n">stream</span><span class="p">)</span><span class="o">.</span><span class="n">outlets</span><span class="o">.</span><span class="n">wellhead_out</span>
+    <span class="k">return</span> <span class="n">stream</span><span class="o">.</span><span class="n">p</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_curve</span><span class="p">(</span><span class="n">rates</span><span class="p">,</span> <span class="n">pressures</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return one curve of 21 points, each list a value."""</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"rate"</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="n">rates</span><span class="p">,</span> <span class="s2">"kg/s"</span><span class="p">,</span> <span class="s2">"mass_flow"</span><span class="p">),</span>
+        <span class="s2">"pressure"</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="n">pressures</span><span class="p">,</span> <span class="s2">"Pa"</span><span class="p">,</span> <span class="s2">"pressure"</span><span class="p">),</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_curves</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">rates</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the IPR, the VLP and the operating point for a rate bracket."""</span>
+    <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">rates</span>
+    <span class="n">sampled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">CURVE_POINTS</span><span class="p">)</span>
+    <span class="n">inflow</span> <span class="o">=</span> <span class="p">[</span><span class="n">chain</span><span class="o">.</span><span class="n">reservoir</span><span class="o">.</span><span class="n">sandface_stream</span><span class="p">(</span><span class="n">rate</span><span class="p">)</span><span class="o">.</span><span class="n">p</span> <span class="k">for</span> <span class="n">rate</span> <span class="ow">in</span> <span class="n">sampled</span><span class="p">]</span>
+    <span class="n">lift</span> <span class="o">=</span> <span class="p">[</span><span class="n">_lift</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">rate</span><span class="p">)</span> <span class="k">for</span> <span class="n">rate</span> <span class="ow">in</span> <span class="n">sampled</span><span class="p">]</span>
+    <span class="n">rate</span> <span class="o">=</span> <span class="n">solve_production_rate</span><span class="p">(</span>
+        <span class="n">chain</span><span class="o">.</span><span class="n">reservoir</span><span class="p">,</span> <span class="n">chain</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">rates</span><span class="p">,</span> <span class="n">esp</span><span class="o">=</span><span class="n">chain</span><span class="o">.</span><span class="n">esp</span><span class="p">,</span> <span class="n">riser</span><span class="o">=</span><span class="n">chain</span><span class="o">.</span><span class="n">upper</span>
+    <span class="p">)</span>
+    <span class="n">point</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"rate"</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="s2">"kg/s"</span><span class="p">,</span> <span class="s2">"mass_flow"</span><span class="p">),</span>
+        <span class="s2">"wellhead_pressure"</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="s2">"Pa"</span><span class="p">,</span> <span class="s2">"pressure"</span><span class="p">),</span>
+        <span class="s2">"sandface_pressure"</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">value</span><span class="p">(</span>
+            <span class="n">chain</span><span class="o">.</span><span class="n">reservoir</span><span class="o">.</span><span class="n">sandface_stream</span><span class="p">(</span><span class="n">rate</span><span class="p">)</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="s2">"Pa"</span><span class="p">,</span> <span class="s2">"pressure"</span>
+        <span class="p">),</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">_curve</span><span class="p">(</span><span class="n">sampled</span><span class="p">,</span> <span class="n">inflow</span><span class="p">,</span> <span class="n">output</span><span class="p">),</span> <span class="n">_curve</span><span class="p">(</span><span class="n">sampled</span><span class="p">,</span> <span class="n">lift</span><span class="p">,</span> <span class="n">output</span><span class="p">),</span> <span class="n">point</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_in_si</span><span class="p">(</span><span class="n">conditions</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">quantity</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the condition ``name`` as a float in SI."""</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">physics_units</span><span class="o">.</span><span class="n">value_in_si</span><span class="p">(</span><span class="n">conditions</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">unit</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"conditions.</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">quantity</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_injection_inputs</span><span class="p">(</span><span class="n">conditions</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the SI temperature [K], rate bracket [kg/s] and what the case gives of a point."""</span>
+    <span class="n">_required</span><span class="p">(</span><span class="n">conditions</span><span class="p">,</span> <span class="s2">"temperature"</span><span class="p">)</span>
+    <span class="n">temperature</span> <span class="o">=</span> <span class="n">_in_si</span><span class="p">(</span><span class="n">conditions</span><span class="p">,</span> <span class="s2">"temperature"</span><span class="p">,</span> <span class="s2">"K"</span><span class="p">,</span> <span class="s2">"temperature"</span><span class="p">)</span>
+    <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">physics_units</span><span class="o">.</span><span class="n">value_in_si</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">"kg/s"</span><span class="p">,</span> <span class="s2">"conditions.rates"</span><span class="p">,</span> <span class="s2">"mass_flow"</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_required</span><span class="p">(</span><span class="n">conditions</span><span class="p">,</span> <span class="s2">"rates"</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"rate"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">conditions</span> <span class="ow">and</span> <span class="s2">"wellhead_pressure"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">conditions</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="s2">"nodal: conditions has no rate and no wellhead_pressure; expected one of them"</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="s2">"wellhead_pressure"</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"missing_value"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">temperature</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">low</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">high</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_needed_pressure</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">rate</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the wellhead pressure [Pa] that injects ``rate``, or ``None`` with no pump."""</span>
+    <span class="n">stream</span> <span class="o">=</span> <span class="n">Stream</span><span class="o">.</span><span class="n">_si</span><span class="p">(</span><span class="n">m_dot</span><span class="o">=</span><span class="n">rate</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">WELLHEAD_PRESSURES</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">fluid</span><span class="o">=</span><span class="n">chain</span><span class="o">.</span><span class="n">well</span><span class="o">.</span><span class="n">fluid</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">solve_injection_pressure</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">well</span><span class="p">,</span> <span class="n">chain</span><span class="o">.</span><span class="n">sink</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">WELLHEAD_PRESSURES</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_injected_rate</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">rates</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the rate [kg/s] the wellhead pressure [Pa] pushes into the aquifer."""</span>
+    <span class="n">stream</span> <span class="o">=</span> <span class="n">Stream</span><span class="o">.</span><span class="n">_si</span><span class="p">(</span><span class="n">m_dot</span><span class="o">=</span><span class="n">rates</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">T</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">pressure</span><span class="p">,</span> <span class="n">fluid</span><span class="o">=</span><span class="n">chain</span><span class="o">.</span><span class="n">well</span><span class="o">.</span><span class="n">fluid</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">solve_injection_rate</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">well</span><span class="p">,</span> <span class="n">chain</span><span class="o">.</span><span class="n">sink</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">rates</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_aquifer_pressure</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">rate</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the sandface pressure [Pa] the aquifer needs to take ``rate``."""</span>
+    <span class="n">stream</span> <span class="o">=</span> <span class="n">Stream</span><span class="o">.</span><span class="n">_si</span><span class="p">(</span><span class="n">m_dot</span><span class="o">=</span><span class="n">rate</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="n">temperature</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">WELLHEAD_PRESSURES</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">fluid</span><span class="o">=</span><span class="n">chain</span><span class="o">.</span><span class="n">sink</span><span class="o">.</span><span class="n">fluid</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">chain</span><span class="o">.</span><span class="n">sink</span><span class="o">.</span><span class="n">required_pressure</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_injection_point</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">conditions</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">rates</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the operating point: the rate and pressure of the case, the other one solved."""</span>
+    <span class="k">if</span> <span class="s2">"rate"</span> <span class="ow">in</span> <span class="n">conditions</span><span class="p">:</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="n">_in_si</span><span class="p">(</span><span class="n">conditions</span><span class="p">,</span> <span class="s2">"rate"</span><span class="p">,</span> <span class="s2">"kg/s"</span><span class="p">,</span> <span class="s2">"mass_flow"</span><span class="p">)</span>
+        <span class="n">pressure</span> <span class="o">=</span> <span class="n">_needed_pressure</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">rate</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pressure</span> <span class="o">=</span> <span class="n">_in_si</span><span class="p">(</span><span class="n">conditions</span><span class="p">,</span> <span class="s2">"wellhead_pressure"</span><span class="p">,</span> <span class="s2">"Pa"</span><span class="p">,</span> <span class="s2">"pressure"</span><span class="p">)</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="n">_injected_rate</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">rates</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"rate"</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="s2">"kg/s"</span><span class="p">,</span> <span class="s2">"mass_flow"</span><span class="p">),</span>
+        <span class="s2">"wellhead_pressure"</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">value</span><span class="p">(</span>
+            <span class="n">pressure</span><span class="p">,</span> <span class="s2">"Pa"</span><span class="p">,</span> <span class="s2">"pressure"</span><span class="p">,</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">pressure</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">NO_PUMP</span>
+        <span class="p">),</span>
+        <span class="s2">"sandface_pressure"</span><span class="p">:</span> <span class="n">output</span><span class="o">.</span><span class="n">value</span><span class="p">(</span>
+            <span class="n">_aquifer_pressure</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">rate</span><span class="p">),</span> <span class="s2">"Pa"</span><span class="p">,</span> <span class="s2">"pressure"</span>
+        <span class="p">),</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_injection_curves</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">conditions</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the aquifer's curve, the well's curve and the operating point of a case."""</span>
+    <span class="n">temperature</span><span class="p">,</span> <span class="n">rates</span> <span class="o">=</span> <span class="n">_injection_inputs</span><span class="p">(</span><span class="n">conditions</span><span class="p">)</span>
+    <span class="n">sampled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">*</span><span class="n">rates</span><span class="p">,</span> <span class="n">CURVE_POINTS</span><span class="p">)</span>
+    <span class="n">aquifer</span> <span class="o">=</span> <span class="p">[</span><span class="n">_aquifer_pressure</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">rate</span><span class="p">)</span> <span class="k">for</span> <span class="n">rate</span> <span class="ow">in</span> <span class="n">sampled</span><span class="p">]</span>
+    <span class="n">needed</span> <span class="o">=</span> <span class="p">[</span><span class="n">_needed_pressure</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">rate</span><span class="p">)</span> <span class="k">for</span> <span class="n">rate</span> <span class="ow">in</span> <span class="n">sampled</span><span class="p">]</span>
+    <span class="n">well</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="k">if</span> <span class="n">pressure</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">pressure</span> <span class="k">for</span> <span class="n">pressure</span> <span class="ow">in</span> <span class="n">needed</span><span class="p">]</span>
+    <span class="n">point</span> <span class="o">=</span> <span class="n">_injection_point</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">conditions</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">rates</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_curve</span><span class="p">(</span><span class="n">sampled</span><span class="p">,</span> <span class="n">aquifer</span><span class="p">,</span> <span class="n">output</span><span class="p">),</span> <span class="n">_curve</span><span class="p">(</span><span class="n">sampled</span><span class="p">,</span> <span class="n">well</span><span class="p">,</span> <span class="n">output</span><span class="p">),</span> <span class="n">point</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_production_curves</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">conditions</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the IPR, the VLP and the operating point of a case of a production well."""</span>
+    <span class="n">pressure</span><span class="p">,</span> <span class="n">rates</span><span class="p">,</span> <span class="n">frequency</span> <span class="o">=</span> <span class="n">_case_inputs</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">conditions</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">chain</span><span class="o">.</span><span class="n">esp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">chain</span><span class="o">.</span><span class="n">esp</span><span class="o">.</span><span class="n">_assign_si</span><span class="p">(</span><span class="s2">"frequency"</span><span class="p">,</span> <span class="n">frequency</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_curves</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">rates</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_case</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">conditions</span><span class="p">,</span> <span class="n">on_error</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the curves and the operating point of one set of conditions."""</span>
+    <span class="n">case</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"conditions"</span><span class="p">:</span> <span class="n">conditions</span><span class="p">,</span>
+        <span class="s2">"ipr"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"vlp"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"operating_point"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"error"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">curves</span> <span class="o">=</span> <span class="n">_injection_curves</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">_Injection</span><span class="p">)</span> <span class="k">else</span> <span class="n">_production_curves</span>
+        <span class="k">case</span><span class="p">[</span><span class="s2">"ipr"</span><span class="p">],</span> <span class="n">case</span><span class="p">[</span><span class="s2">"vlp"</span><span class="p">],</span> <span class="n">case</span><span class="p">[</span><span class="s2">"operating_point"</span><span class="p">]</span> <span class="o">=</span> <span class="n">curves</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">conditions</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">GeminiError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">on_error</span> <span class="o">==</span> <span class="s2">"raise"</span><span class="p">:</span>
+            <span class="k">raise</span>
+        <span class="k">case</span><span class="p">[</span><span class="s2">"error"</span><span class="p">]</span> <span class="o">=</span> <span class="n">error</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">case</span>
+
+
+<div class="viewcode-block" id="nodal">
+<a class="viewcode-back" href="../../../codedocumentation/gemini.analysis.nodal.html#gemini.analysis.nodal">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">nodal</span><span class="p">(</span><span class="n">plant</span><span class="p">,</span> <span class="n">well</span><span class="p">,</span> <span class="n">conditions</span><span class="p">,</span> <span class="n">on_error</span><span class="o">=</span><span class="s2">"raise"</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the IPR and VLP curves and the operating point of a production or injection well.</span>
+
+<span class="sd">    The IPR (inflow performance) is the sandface pressure the reservoir delivers at each rate.</span>
+<span class="sd">    The VLP (vertical lift performance) is the wellhead pressure the well, the ESP and the riser</span>
+<span class="sd">    deliver from that inflow at each rate: the node is the wellhead, and the operating point is</span>
+<span class="sd">    where the VLP falls to the wellhead pressure the surface plant holds. The solve is the one</span>
+<span class="sd">    of ``solve_production_rate``. The plant is not changed: the ESP frequency</span>
+<span class="sd">    of a case is set on a copy.</span>
+
+<span class="sd">    An injection well has the same shape. ``ipr`` is the sandface pressure the aquifer needs at</span>
+<span class="sd">    each rate and ``vlp`` the wellhead pressure that delivers it down the well, ``</span>
+<span class="sd">    solve_injection_pressure``; the operating point is the pressure a case's rate needs, or the</span>
+<span class="sd">    rate a case's pressure pushes in. A rate the column of brine injects alone needs no pump: its</span>
+<span class="sd">    point on ``vlp`` is ``None``, and in ``operating_point`` a value ``None`` with a ``reason``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    plant : Module</span>
+<span class="sd">        A plant with parameter values.</span>
+<span class="sd">    well : str</span>
+<span class="sd">        Dotted path of the module that holds the whole chain, for example ``"doublet"``: one</span>
+<span class="sd">        ``ProductionReservoir`` and either one full ``ProductionWell`` or an ``ESP`` with the</span>
+<span class="sd">        ``below_esp`` and ``above_esp`` segments. For injection, the path of an</span>
+<span class="sd">        ``InjectionWell`` or of its ``InjectionReservoir``, ``"doublet.injector"``, or of what</span>
+<span class="sd">        holds one of each and no production chain.</span>
+<span class="sd">    conditions : dict or list of dict</span>
+<span class="sd">        One case, or several for a what-if. Each has ``wellhead_pressure`` [Pa], ``rates``, the</span>
+<span class="sd">        ``[low, high]`` bracket [kg/s] of the curves and of the solve (a trial outside the well</span>
+<span class="sd">        model's domain fails the case), and ``frequency`` [Hz] when the chain has an ESP. Numbers</span>
+<span class="sd">        are SI, or a ``Quantity``. An injection case has ``rates``,</span>
+<span class="sd">        ``temperature`` [K], the temperature at the wellhead, and ``rate`` or</span>
+<span class="sd">        ``wellhead_pressure``, which says what to solve for.</span>
+<span class="sd">    on_error : {"raise", "record"}, optional</span>
+<span class="sd">        A case that fails raises; ``"record"`` puts its problem in ``error`` and runs the others.</span>
+<span class="sd">    units : dict, optional</span>
+<span class="sd">        A map from quantity to unit for the returned values, such as ``{"pressure": "bar"}``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Plain JSON ``{well, cases}``. Each case holds ``conditions`` as given, ``ipr`` and ``vlp``</span>
+<span class="sd">        as ``{rate, pressure}``, each a value with 21 points from the low to the high rate,</span>
+<span class="sd">        ``operating_point`` as ``{rate, wellhead_pressure, sandface_pressure}``, each a value, and</span>
+<span class="sd">        ``error``. Under ``on_error="record"`` a case whose bracket leaves the well model's domain</span>
+<span class="sd">        or has no sign change has ``None`` curves and operating point and its problem in ``error``.</span>
+<span class="sd">    """</span>
+    <span class="n">check_on_error</span><span class="p">(</span><span class="n">on_error</span><span class="p">)</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">OutputUnits</span><span class="p">(</span><span class="n">units</span><span class="p">)</span>
+    <span class="n">chain_plant</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">plant</span><span class="p">)</span>
+    <span class="n">chain</span> <span class="o">=</span> <span class="n">_chain</span><span class="p">(</span><span class="n">chain_plant</span><span class="p">,</span> <span class="n">well</span><span class="p">)</span>
+    <span class="n">cases</span> <span class="o">=</span> <span class="p">[</span><span class="n">conditions</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">conditions</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">conditions</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">to_plain</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">"well"</span><span class="p">:</span> <span class="n">well</span><span class="p">,</span>
+            <span class="s2">"cases"</span><span class="p">:</span> <span class="p">[</span><span class="n">_case</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">case</span><span class="p">,</span> <span class="n">on_error</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span> <span class="k">for</span> <span class="n">case</span> <span class="ow">in</span> <span class="n">cases</span><span class="p">],</span>
+        <span class="p">}</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">solve_production_rate</span><span class="p">(</span><span class="n">reservoir</span><span class="p">,</span> <span class="n">well</span><span class="p">,</span> <span class="n">wellhead_pressure</span><span class="p">,</span> <span class="n">rates</span><span class="p">,</span> <span class="n">esp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">riser</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the production rate [kg/s] that delivers the wellhead pressure [Pa].</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    reservoir : ProductionReservoir</span>
+<span class="sd">        Aquifer with its linear inflow performance.</span>
+<span class="sd">    well : ProductionWell</span>
+<span class="sd">        The full well, or with an ESP the segment below it (``segment="below_esp"``).</span>
+<span class="sd">    wellhead_pressure : float</span>
+<span class="sd">        Wellhead pressure [Pa] the surface plant holds.</span>
+<span class="sd">    rates : tuple of float</span>
+<span class="sd">        ``(low, high)`` mass flows [kg/s] bracketing the solution.</span>
+<span class="sd">    esp, riser : ESP and ProductionWell, optional</span>
+<span class="sd">        Pump and segment above it (``segment="above_esp"``), given together. The ESP runs at</span>
+<span class="sd">        its persisted ``frequency``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        The rate at which the sandface stream, lifted through well, ESP and riser, arrives at</span>
+<span class="sd">        ``wellhead_pressure``. The wellhead pressure falls with rate (more drawdown and</span>
+<span class="sd">        friction, less ESP head), so the root is unique within a valid bracket.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Upstream GEMINI walks the well downward from the wellhead and compares bottomhole</span>
+<span class="sd">    pressures; this solve walks upward from the sandface as the plant does, so both sides of</span>
+<span class="sd">    the balance use the same traversal as an ordinary plant call.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">esp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">!=</span> <span class="p">(</span><span class="n">riser</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"solve_production_rate: esp = </span><span class="si">{</span><span class="n">esp</span><span class="si">!r}</span><span class="s2">, riser = </span><span class="si">{</span><span class="n">riser</span><span class="si">!r}</span><span class="s2">; expected both or neither"</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"invalid_design"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">residual</span><span class="p">(</span><span class="n">rate</span><span class="p">):</span>
+        <span class="n">stream</span> <span class="o">=</span> <span class="n">well</span><span class="o">.</span><span class="n">_trial</span><span class="p">(</span><span class="n">bottom_in</span><span class="o">=</span><span class="n">reservoir</span><span class="o">.</span><span class="n">sandface_stream</span><span class="p">(</span><span class="n">rate</span><span class="p">))</span><span class="o">.</span><span class="n">outlets</span><span class="o">.</span><span class="n">wellhead_out</span>
+        <span class="k">if</span> <span class="n">esp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">stream</span> <span class="o">=</span> <span class="n">esp</span><span class="o">.</span><span class="n">_trial</span><span class="p">(</span><span class="n">fluid_in</span><span class="o">=</span><span class="n">stream</span><span class="p">)</span><span class="o">.</span><span class="n">outlets</span><span class="o">.</span><span class="n">fluid_out</span>
+            <span class="n">stream</span> <span class="o">=</span> <span class="n">riser</span><span class="o">.</span><span class="n">_trial</span><span class="p">(</span><span class="n">bottom_in</span><span class="o">=</span><span class="n">stream</span><span class="p">)</span><span class="o">.</span><span class="n">outlets</span><span class="o">.</span><span class="n">wellhead_out</span>
+        <span class="k">return</span> <span class="n">stream</span><span class="o">.</span><span class="n">p</span> <span class="o">-</span> <span class="n">wellhead_pressure</span>
+
+    <span class="k">return</span> <span class="n">root</span><span class="p">(</span><span class="s2">"solve_production_rate"</span><span class="p">,</span> <span class="s2">"rate"</span><span class="p">,</span> <span class="n">residual</span><span class="p">,</span> <span class="n">rates</span><span class="p">,</span> <span class="s2">"kg/s"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">solve_injection_rate</span><span class="p">(</span><span class="n">well</span><span class="p">,</span> <span class="n">sink</span><span class="p">,</span> <span class="n">wellhead</span><span class="p">,</span> <span class="n">rates</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the injection rate [kg/s] a wellhead stream's pressure pushes into the aquifer.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    well : InjectionWell</span>
+<span class="sd">        Injection well from wellhead to bottom.</span>
+<span class="sd">    sink : InjectionReservoir</span>
+<span class="sd">        Receiving aquifer with its linear injectivity.</span>
+<span class="sd">    wellhead : Stream</span>
+<span class="sd">        Wellhead temperature, pressure and fluid; its mass flow is replaced by trial rates.</span>
+<span class="sd">    rates : tuple of float</span>
+<span class="sd">        ``(low, high)`` mass flows [kg/s] bracketing the solution.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        The rate at which the well's bottom pressure equals ``sink.required_pressure``.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">residual</span><span class="p">(</span><span class="n">rate</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_injection_residual</span><span class="p">(</span><span class="n">well</span><span class="p">,</span> <span class="n">sink</span><span class="p">,</span> <span class="n">wellhead</span><span class="o">.</span><span class="n">_with_si</span><span class="p">(</span><span class="n">m_dot</span><span class="o">=</span><span class="n">rate</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">root</span><span class="p">(</span><span class="s2">"solve_injection_rate"</span><span class="p">,</span> <span class="s2">"rate"</span><span class="p">,</span> <span class="n">residual</span><span class="p">,</span> <span class="n">rates</span><span class="p">,</span> <span class="s2">"kg/s"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">solve_injection_pressure</span><span class="p">(</span><span class="n">well</span><span class="p">,</span> <span class="n">sink</span><span class="p">,</span> <span class="n">wellhead</span><span class="p">,</span> <span class="n">pressures</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the wellhead pressure [Pa] that injects a stream, or ``None`` if none is needed.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    well : InjectionWell</span>
+<span class="sd">        Injection well from wellhead to bottom.</span>
+<span class="sd">    sink : InjectionReservoir</span>
+<span class="sd">        Receiving aquifer with its linear injectivity.</span>
+<span class="sd">    wellhead : Stream</span>
+<span class="sd">        Injected mass flow, temperature and fluid; its pressure is replaced by trial pressures.</span>
+<span class="sd">    pressures : tuple of float</span>
+<span class="sd">        ``(low, high)`` wellhead pressures [Pa]. Pass the pressure available without an</span>
+<span class="sd">        injection pump, normally the pump suction, as ``low``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float or None</span>
+<span class="sd">        The wellhead pressure an injection pump must deliver. ``None`` means no pump is</span>
+<span class="sd">        needed: already at ``low`` the column of brine delivers at least the bottomhole</span>
+<span class="sd">        pressure the aquifer needs (common for deep injectors, which a choke throttles</span>
+<span class="sd">        instead). Treat ``None`` as zero pump head and power, for example by commanding the</span>
+<span class="sd">        pump to its suction pressure. Upstream GEMINI returned the bracket's lower end here.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">residual</span><span class="p">(</span><span class="n">pressure</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_injection_residual</span><span class="p">(</span><span class="n">well</span><span class="p">,</span> <span class="n">sink</span><span class="p">,</span> <span class="n">wellhead</span><span class="o">.</span><span class="n">_with_si</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">pressure</span><span class="p">))</span>
+
+    <span class="n">low</span> <span class="o">=</span> <span class="n">pressures</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">evaluate</span><span class="p">(</span><span class="s2">"solve_injection_pressure"</span><span class="p">,</span> <span class="s2">"pressure"</span><span class="p">,</span> <span class="n">residual</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="s2">"Pa"</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">root</span><span class="p">(</span><span class="s2">"solve_injection_pressure"</span><span class="p">,</span> <span class="s2">"pressure"</span><span class="p">,</span> <span class="n">residual</span><span class="p">,</span> <span class="n">pressures</span><span class="p">,</span> <span class="s2">"Pa"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_injection_residual</span><span class="p">(</span><span class="n">well</span><span class="p">,</span> <span class="n">sink</span><span class="p">,</span> <span class="n">wellhead</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the injection well's bottom pressure minus the aquifer's required pressure [Pa]."""</span>
+    <span class="n">bottom</span> <span class="o">=</span> <span class="n">well</span><span class="o">.</span><span class="n">_trial</span><span class="p">(</span><span class="n">wellhead_in</span><span class="o">=</span><span class="n">wellhead</span><span class="p">)</span><span class="o">.</span><span class="n">outlets</span><span class="o">.</span><span class="n">bottom_out</span>
+    <span class="k">return</span> <span class="n">bottom</span><span class="o">.</span><span class="n">p</span> <span class="o">-</span> <span class="n">sink</span><span class="o">.</span><span class="n">required_pressure</span><span class="p">(</span><span class="n">bottom</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

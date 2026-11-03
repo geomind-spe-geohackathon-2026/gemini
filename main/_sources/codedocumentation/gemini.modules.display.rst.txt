@@ -1,0 +1,13 @@
+gemini.modules.display
+======================
+
+.. automodule:: gemini.modules.display
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      describe
+      display
+   

@@ -1,0 +1,27 @@
+gemini.compiler.ir
+==================
+
+.. automodule:: gemini.compiler.ir
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      STREAM_FIELDS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      caller_source
+      traced_nodes
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Body
+      Graph
+      Node
+   

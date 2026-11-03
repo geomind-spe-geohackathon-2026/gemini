@@ -1,0 +1,12 @@
+gemini.modules.treatment.desander
+=================================
+
+.. automodule:: gemini.modules.treatment.desander
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Desander
+   

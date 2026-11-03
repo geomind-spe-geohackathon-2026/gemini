@@ -1,0 +1,39 @@
+gemini.modules
+==============
+
+.. automodule:: gemini.modules
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   bindings
+   call
+   callargs
+   callrecord
+   check
+   classpath
+   container
+   control
+   cooling
+   declarations
+   display
+   environment
+   exchangers
+   grids
+   heating
+   module
+   piping
+   power
+   pumps
+   results
+   states
+   storage
+   subsurface
+   treatment
+   tree
+   values
+   wells

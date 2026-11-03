@@ -1,0 +1,12 @@
+gemini.modules.power.flashturbine
+=================================
+
+.. automodule:: gemini.modules.power.flashturbine
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      FlashTurbine
+   

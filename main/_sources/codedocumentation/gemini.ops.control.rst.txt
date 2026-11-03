@@ -1,0 +1,18 @@
+gemini.ops.control
+==================
+
+.. automodule:: gemini.ops.control
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      scan
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Scanned
+   

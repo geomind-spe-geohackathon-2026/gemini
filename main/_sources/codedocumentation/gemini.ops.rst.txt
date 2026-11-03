@@ -1,0 +1,26 @@
+gemini.ops
+==========
+
+.. automodule:: gemini.ops
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   backend
+   check
+   control
+   dispatch
+   elementwise
+   failed
+   failedrows
+   kernels
+   logic
+   math
+   reductions
+   registry
+   scope
+   solvers

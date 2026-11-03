@@ -1,0 +1,6 @@
+gemini.modules.check
+====================
+
+.. currentmodule:: gemini.modules
+
+.. autofunction:: check

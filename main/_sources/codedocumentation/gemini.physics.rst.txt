@@ -1,0 +1,31 @@
+gemini.physics
+==============
+
+.. automodule:: gemini.physics
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   chemistry
+   combustion
+   constants
+   corrosion
+   cycles
+   diagnostics
+   energy
+   erosion
+   fluid
+   gas
+   geometry
+   ground
+   heat_transfer
+   hydraulics
+   psychrometrics
+   pumps
+   refrigeration
+   separation
+   steam

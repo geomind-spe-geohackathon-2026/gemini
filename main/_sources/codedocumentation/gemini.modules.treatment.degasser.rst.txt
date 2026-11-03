@@ -1,0 +1,12 @@
+gemini.modules.treatment.degasser
+=================================
+
+.. automodule:: gemini.modules.treatment.degasser
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Degasser
+   

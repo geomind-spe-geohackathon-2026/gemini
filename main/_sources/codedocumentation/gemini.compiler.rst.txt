@@ -1,0 +1,18 @@
+gemini.compiler
+===============
+
+.. automodule:: gemini.compiler
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   cache
+   compile
+   executor
+   ir
+   passes
+   run

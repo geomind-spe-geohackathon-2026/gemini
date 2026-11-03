@@ -1,0 +1,28 @@
+gemini.units.display
+====================
+
+.. automodule:: gemini.units.display
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DISPLAY_UNITS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      by_si_unit
+      output_units
+      shown
+      without_offsets
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      DisplayUnits
+      DisplayedValues
+   

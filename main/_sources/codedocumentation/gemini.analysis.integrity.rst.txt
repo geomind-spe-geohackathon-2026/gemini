@@ -1,0 +1,12 @@
+gemini.analysis.integrity
+=========================
+
+.. automodule:: gemini.analysis.integrity
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      corrosion_forecast
+   

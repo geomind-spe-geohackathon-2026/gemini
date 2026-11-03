@@ -1,0 +1,23 @@
+gemini.analysis.fits
+====================
+
+.. automodule:: gemini.analysis.fits
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      PUMP_CURVE_POINTS
+      CURVE_COEFFICIENTS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      estimate_conductance
+      estimate_reservoir_pressure
+      fit_head_coefficients
+      fit_head_correction
+      pump_curve
+   

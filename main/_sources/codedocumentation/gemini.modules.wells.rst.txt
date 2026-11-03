@@ -1,0 +1,15 @@
+gemini.modules.wells
+====================
+
+.. automodule:: gemini.modules.wells
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   injectionwell
+   productionwell
+   well

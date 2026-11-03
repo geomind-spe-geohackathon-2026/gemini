@@ -1,0 +1,12 @@
+gemini.compiler.executor
+========================
+
+.. automodule:: gemini.compiler.executor
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      GraphExecutor
+   

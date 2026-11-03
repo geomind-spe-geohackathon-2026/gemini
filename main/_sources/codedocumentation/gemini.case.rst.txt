@@ -1,0 +1,23 @@
+gemini.case
+===========
+
+.. automodule:: gemini.case
+
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   case
+   dataset
+   demand
+   demand_frame
+   economics
+   missing
+   profile
+   requirement
+   site
+   time
+   utilities

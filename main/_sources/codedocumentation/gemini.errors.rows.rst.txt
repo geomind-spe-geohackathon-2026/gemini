@@ -1,0 +1,21 @@
+gemini.errors.rows
+==================
+
+.. automodule:: gemini.errors.rows
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      SKIPPED
+      PHYSICAL_ROW_CODES
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      failed_row
+      row_code
+      skipped_row
+   

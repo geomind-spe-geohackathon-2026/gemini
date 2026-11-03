@@ -1,0 +1,6 @@
+gemini.evaluate.verdict
+=======================
+
+.. currentmodule:: gemini.evaluate
+
+.. autofunction:: verdict

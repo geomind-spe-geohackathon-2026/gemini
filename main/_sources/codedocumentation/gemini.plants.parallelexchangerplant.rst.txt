@@ -1,0 +1,19 @@
+gemini.plants.parallelexchangerplant
+====================================
+
+.. automodule:: gemini.plants.parallelexchangerplant
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      EXCHANGERS
+      TEES
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ParallelExchangerPlant
+   

@@ -1,0 +1,21 @@
+gemini.study.study
+==================
+
+.. automodule:: gemini.study.study
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      METHODS
+      PREPARE
+      REQUIRED
+      OWN
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Study
+   

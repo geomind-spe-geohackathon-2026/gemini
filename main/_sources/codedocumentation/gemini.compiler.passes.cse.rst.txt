@@ -1,0 +1,12 @@
+gemini.compiler.passes.cse
+==========================
+
+.. automodule:: gemini.compiler.passes.cse
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      eliminate_common_subexpressions
+   

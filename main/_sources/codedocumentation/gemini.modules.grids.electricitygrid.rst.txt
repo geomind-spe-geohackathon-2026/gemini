@@ -1,0 +1,12 @@
+gemini.modules.grids.electricitygrid
+====================================
+
+.. automodule:: gemini.modules.grids.electricitygrid
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ElectricityGrid
+   

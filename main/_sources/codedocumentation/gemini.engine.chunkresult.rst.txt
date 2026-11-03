@@ -1,0 +1,25 @@
+gemini.engine.chunkresult
+=========================
+
+.. automodule:: gemini.engine.chunkresult
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DTYPES
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      converter
+      typed
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ChunkResult
+   

@@ -1,0 +1,21 @@
+gemini.evaluate.coverage
+========================
+
+.. automodule:: gemini.evaluate.coverage
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      TOLERANCE
+      BACKUP_ROLES
+      KEYS
+      SERVICES
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      daily_coverage
+   

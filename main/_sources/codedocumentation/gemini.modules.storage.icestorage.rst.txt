@@ -1,0 +1,12 @@
+gemini.modules.storage.icestorage
+=================================
+
+.. automodule:: gemini.modules.storage.icestorage
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      IceStorage
+   

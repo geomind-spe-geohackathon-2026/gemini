@@ -1,0 +1,12 @@
+gemini.modules.treatment.inhibitordosing
+========================================
+
+.. automodule:: gemini.modules.treatment.inhibitordosing
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      InhibitorDosing
+   
