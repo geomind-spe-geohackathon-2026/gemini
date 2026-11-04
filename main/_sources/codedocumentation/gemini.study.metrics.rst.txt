@@ -1,0 +1,6 @@
+gemini.study.metrics
+====================
+
+.. currentmodule:: gemini.study
+
+.. autofunction:: metrics

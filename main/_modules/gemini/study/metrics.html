@@ -1,0 +1,205 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>gemini.study.metrics &mdash; GEMINI  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            GEMINI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../codedocumentation/gemini.html">gemini</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GEMINI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">gemini.study.metrics</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for gemini.study.metrics</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""The metrics a study reads, with the unit it records them in and what each one means."""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.evaluate._utils.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">OBJECTIVES</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">gemini.study._utils.trial</span><span class="w"> </span><span class="kn">import</span> <span class="n">METRICS</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"metrics"</span><span class="p">]</span>
+
+<span class="n">_WORDS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"heating_coverage"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Heating coverage"</span><span class="p">,</span>
+        <span class="s2">"-"</span><span class="p">,</span>
+        <span class="s2">"higher"</span><span class="p">,</span>
+        <span class="s2">"The heat delivered over the heat demanded in the period, between 0 and 1."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"cooling_coverage"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Cooling coverage"</span><span class="p">,</span>
+        <span class="s2">"-"</span><span class="p">,</span>
+        <span class="s2">"higher"</span><span class="p">,</span>
+        <span class="s2">"The cold delivered over the cold demanded in the period, between 0 and 1."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"cop"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Coefficient of performance"</span><span class="p">,</span>
+        <span class="s2">"-"</span><span class="p">,</span>
+        <span class="s2">"higher"</span><span class="p">,</span>
+        <span class="s2">"The heat delivered over the electricity consumed in the period."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"peak_heat"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Peak heat demand"</span><span class="p">,</span>
+        <span class="s2">"W"</span><span class="p">,</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"The largest heating power delivered in one step of the period."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"peak_cold"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Peak cold demand"</span><span class="p">,</span>
+        <span class="s2">"W"</span><span class="p">,</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"The largest cooling power delivered in one step of the period."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"lcoh"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Cost of heat"</span><span class="p">,</span>
+        <span class="s2">"currency/J"</span><span class="p">,</span>
+        <span class="s2">"lower"</span><span class="p">,</span>
+        <span class="s2">"The levelised cost of heat: the discounted cost over the discounted heat delivered."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"lcoc"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Cost of cold"</span><span class="p">,</span>
+        <span class="s2">"currency/J"</span><span class="p">,</span>
+        <span class="s2">"lower"</span><span class="p">,</span>
+        <span class="s2">"The levelised cost of cold: the discounted cost over the discounted cold delivered."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"lcts"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Cost of thermal supply"</span><span class="p">,</span>
+        <span class="s2">"currency/J"</span><span class="p">,</span>
+        <span class="s2">"lower"</span><span class="p">,</span>
+        <span class="s2">"The levelised cost of thermal supply: the annualised cost over the heat and the cold "</span>
+        <span class="s2">"delivered in a year."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"annualised_cost"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Annualised cost"</span><span class="p">,</span>
+        <span class="s2">"currency/yr"</span><span class="p">,</span>
+        <span class="s2">"lower"</span><span class="p">,</span>
+        <span class="s2">"The yearly cost of the system: the investment spread over the analysis period at the "</span>
+        <span class="s2">"discount rate, plus the operating cost."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="s2">"co2"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"CO2 emissions"</span><span class="p">,</span>
+        <span class="s2">"kg"</span><span class="p">,</span>
+        <span class="s2">"lower"</span><span class="p">,</span>
+        <span class="s2">"The CO2-equivalent emitted over the period: direct, from methane and from the electricity "</span>
+        <span class="s2">"bought."</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">}</span>
+<span class="sd">"""The ``(title, unit, better, description)`` of each name of ``METRICS``."""</span>
+
+
+<div class="viewcode-block" id="metrics">
+<a class="viewcode-back" href="../../../codedocumentation/gemini.study.metrics.html#gemini.study.metrics">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">metrics</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""Return the metrics a study reads, each with its unit and what it means.</span>
+
+<span class="sd">    These are the names ``objective``, ``objectives`` and ``metrics`` of a study accept (a</span>
+<span class="sd">    ``-`` before a name maximises it), the same list the settings of ``gm.study.kinds()`` offer.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of dict</span>
+<span class="sd">        ``{name, title, unit, description, better, objective}`` for each metric, in a fixed order.</span>
+<span class="sd">        ``unit`` is the SI unit the study records the value in (``currency`` is the</span>
+<span class="sd">        ``economics.currency`` of the case; ``-`` is dimensionless); ``better`` is ``"lower"`` or</span>
+<span class="sd">        ``"higher"`` when one direction is better, ``None`` for a size such as a peak power;</span>
+<span class="sd">        ``objective`` is whether the metric is one worth minimising (a cost or an emission, the</span>
+<span class="sd">        ``objective`` choices of ``gm.study.kinds()``). Plain JSON, a new list on each call.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="n">_WORDS</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s2">"unit"</span><span class="p">:</span> <span class="n">_WORDS</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+            <span class="s2">"description"</span><span class="p">:</span> <span class="n">_WORDS</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">3</span><span class="p">],</span>
+            <span class="s2">"better"</span><span class="p">:</span> <span class="n">_WORDS</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span>
+            <span class="s2">"objective"</span><span class="p">:</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">OBJECTIVES</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">METRICS</span>
+    <span class="p">]</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

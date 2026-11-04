@@ -102,7 +102,8 @@
 <p><code class="docutils literal notranslate"><span class="pre">DISPLAY_UNITS</span></code> is the one table of quantity -&gt; display unit: energy in MWh, power in MW,
 temperature in degC. It names no metric and no equipment: a folder that knows its own metrics
 (<code class="docutils literal notranslate"><span class="pre">gm.evaluate</span></code>) maps them to a quantity of this table. <code class="docutils literal notranslate"><span class="pre">shown</span></code> converts every <code class="docutils literal notranslate"><span class="pre">Quantity</span></code>
-of a result to the unit its SI unit has in a table.</p>
+of a result to the unit its SI unit has in a table. <code class="docutils literal notranslate"><span class="pre">written_in</span></code> and <code class="docutils literal notranslate"><span class="pre">written</span></code> give a stored
+file (a plant file) in the units its caller chose.</p>
 <p class="rubric">Module Attributes</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
@@ -125,6 +126,15 @@ of a result to the unit its SI unit has in a table.</p>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">without_offsets</span></code>(table)</p></td>
 <td><p>Return <code class="docutils literal notranslate"><span class="pre">table</span></code> without the units that shift a number: a difference keeps its SI unit.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">written</span></code>(found[, quantity])</p></td>
+<td><p>Return the <code class="docutils literal notranslate"><span class="pre">{&quot;value&quot;,</span> <span class="pre">&quot;unit&quot;}</span></code> dict <code class="docutils literal notranslate"><span class="pre">found</span></code> in its unit under <code class="docutils literal notranslate"><span class="pre">written_in</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">written_in</span></code>(units)</p></td>
+<td><p>Write every quantity of a stored file in <code class="docutils literal notranslate"><span class="pre">units</span></code> while the block runs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">written_unit</span></code>(unit[, quantity])</p></td>
+<td><p>Return the unit a value stored in <code class="docutils literal notranslate"><span class="pre">unit</span></code> is written in under <code class="docutils literal notranslate"><span class="pre">written_in</span></code>.</p></td>
 </tr>
 </tbody>
 </table>

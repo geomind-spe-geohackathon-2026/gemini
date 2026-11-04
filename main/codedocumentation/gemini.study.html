@@ -60,6 +60,7 @@
 <li class="toctree-l3"><a class="reference internal" href="gemini.study.calibrate.html">gemini.study.calibrate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gemini.study.evolve.html">gemini.study.evolve</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gemini.study.kinds.html">gemini.study.kinds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gemini.study.metrics.html">gemini.study.metrics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gemini.study.minimize.html">gemini.study.minimize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gemini.study.result.html">gemini.study.result</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gemini.study.sample.html">gemini.study.sample</a></li>
@@ -113,22 +114,25 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="gemini.study.kinds.html#gemini.study.kinds" title="gemini.study.kinds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kinds</span></code></a>()</p></td>
 <td><p>Return the kinds of study, each with a title, a description and its settings.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gemini.study.minimize.html#gemini.study.minimize" title="gemini.study.minimize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">minimize</span></code></a>(plant, case, objective, ...[, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gemini.study.metrics.html#gemini.study.metrics" title="gemini.study.metrics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">metrics</span></code></a>()</p></td>
+<td><p>Return the metrics a study reads, each with its unit and what it means.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="gemini.study.minimize.html#gemini.study.minimize" title="gemini.study.minimize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">minimize</span></code></a>(plant, case, objective, ...[, ...])</p></td>
 <td><p>Return the design of a plant that minimises a metric, searched in the space the plant states.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gemini.study.result.html#module-gemini.study.result" title="gemini.study.result"><code class="xref py py-obj docutils literal notranslate"><span class="pre">result</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gemini.study.result.html#module-gemini.study.result" title="gemini.study.result"><code class="xref py py-obj docutils literal notranslate"><span class="pre">result</span></code></a></p></td>
 <td><p>The result of <code class="docutils literal notranslate"><span class="pre">Study.run</span></code>: every run's verdict and metrics, the comparison, the best plant.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gemini.study.sample.html#gemini.study.sample" title="gemini.study.sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code></a>(plant, case, metrics, samples, seed, *)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gemini.study.sample.html#gemini.study.sample" title="gemini.study.sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code></a>(plant, case, metrics, samples, seed, *)</p></td>
 <td><p>Return the spread of metrics when the uncertain values of the case are drawn at random.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gemini.study.sensitivity.html#gemini.study.sensitivity" title="gemini.study.sensitivity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sensitivity</span></code></a>(plant, case, metrics, *[, plan, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gemini.study.sensitivity.html#gemini.study.sensitivity" title="gemini.study.sensitivity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sensitivity</span></code></a>(plant, case, metrics, *[, plan, ...])</p></td>
 <td><p>Return how each metric changes when each uncertain value of the case moves, one at a time.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="gemini.study.size.html#gemini.study.size" title="gemini.study.size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">size</span></code></a>(plant, case)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="gemini.study.size.html#gemini.study.size" title="gemini.study.size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">size</span></code></a>(plant, case)</p></td>
 <td><p>Return a new plant with first sizes from the case; the plant itself is not changed.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="gemini.study.study.html#module-gemini.study.study" title="gemini.study.study"><code class="xref py py-obj docutils literal notranslate"><span class="pre">study</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="gemini.study.study.html#module-gemini.study.study" title="gemini.study.study"><code class="xref py py-obj docutils literal notranslate"><span class="pre">study</span></code></a></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">gm.Study</span></code>: the arguments of the study functions as a file, and the run that calls them.</p></td>
 </tr>
 </tbody>

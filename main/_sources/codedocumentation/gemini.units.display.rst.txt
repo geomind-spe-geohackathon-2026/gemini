@@ -18,6 +18,9 @@ gemini.units.display
       output_units
       shown
       without_offsets
+      written
+      written_in
+      written_unit
    
    .. rubric:: Classes
 

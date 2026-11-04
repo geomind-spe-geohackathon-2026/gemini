@@ -13,6 +13,7 @@ gemini.study
    calibrate
    evolve
    kinds
+   metrics
    minimize
    result
    sample

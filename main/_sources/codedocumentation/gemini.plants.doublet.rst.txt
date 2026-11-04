@@ -4,6 +4,12 @@ gemini.plants.doublet
 .. automodule:: gemini.plants.doublet
 
    
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DESIGNED
+   
    .. rubric:: Classes
 
    .. autosummary::
