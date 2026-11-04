@@ -8,6 +8,7 @@ gemini.streams.fluid
 
    .. autosummary::
    
+      COMPOSITIONS
       FLUE_CO2
       NATURAL_GAS
       CHEMICAL

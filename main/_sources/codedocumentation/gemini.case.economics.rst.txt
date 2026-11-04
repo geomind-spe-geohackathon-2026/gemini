@@ -4,6 +4,13 @@ gemini.case.economics
 .. automodule:: gemini.case.economics
 
    
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      PER_ENERGY
+      EXAMPLE_UNITS
+   
    .. rubric:: Classes
 
    .. autosummary::

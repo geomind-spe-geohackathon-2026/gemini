@@ -4,6 +4,12 @@ gemini.units.bare
 .. automodule:: gemini.units.bare
 
    
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      LIST_FORM
+   
    .. rubric:: Functions
 
    .. autosummary::

@@ -99,13 +99,21 @@
   <section id="module-gemini.units.bare">
 <span id="gemini-units-bare"></span><h1>gemini.units.bare<a class="headerlink" href="#module-gemini.units.bare" title="Link to this heading"></a></h1>
 <p>The one rule for a value with a dimension: a public boundary takes a quantity, never a number.</p>
+<p class="rubric">Module Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">LIST_FORM</span></code></p></td>
+<td><p>the numbers in one list and one unit for all.</p></td>
+</tr>
+</tbody>
+</table>
 <p class="rubric">Functions</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_bare</span></code>(value)</p></td>
 <td><p>Return whether <code class="docutils literal notranslate"><span class="pre">value</span></code> is a number, an array or a list of numbers without a unit.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">refuse</span></code>(path, value, unit[, quantity])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">refuse</span></code>(path, value, unit[, quantity, many])</p></td>
 <td><p>Raise <code class="docutils literal notranslate"><span class="pre">invalid_value</span></code> for a bare number given where the SI <code class="docutils literal notranslate"><span class="pre">unit</span></code> is the dimension.</p></td>
 </tr>
 </tbody>

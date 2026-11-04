@@ -372,7 +372,12 @@
 <span class="w">    </span><span class="sd">"""Return the number of trials ``minimize`` runs on ``plant``: the sum over its doublet counts.</span>
 
 <span class="sd">    A count with variables runs whole populations, as many as the budget allows; one without</span>
-<span class="sd">    runs the design once. A search that ends before its budget runs fewer.</span>
+<span class="sd">    runs the design once. A search that ends before its budget runs fewer. A population of</span>
+<span class="sd">    ``differential_evolution`` is its ``popsize`` times the number of variables.</span>
+
+<span class="sd">    NOTE(refactor): before 0.6.2 this left out the number of variables, so with two variables or</span>
+<span class="sd">    more ``on_progress`` was told a ``total`` below the trials that ran; the trials and every</span>
+<span class="sd">    number of the search are unchanged.</span>
 <span class="sd">    """</span>
     <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">counts</span><span class="p">(</span><span class="n">plant</span><span class="p">):</span>
@@ -381,7 +386,7 @@
             <span class="n">total</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="k">continue</span>
         <span class="n">population</span><span class="p">,</span> <span class="n">allowed</span> <span class="o">=</span> <span class="n">_generations</span><span class="p">(</span><span class="n">evaluations</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">))</span>
-        <span class="n">total</span> <span class="o">+=</span> <span class="n">population</span> <span class="o">*</span> <span class="p">(</span><span class="n">allowed</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">total</span> <span class="o">+=</span> <span class="n">population</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">found</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">allowed</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">total</span>
 
 

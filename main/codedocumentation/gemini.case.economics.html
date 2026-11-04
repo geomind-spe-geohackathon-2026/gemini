@@ -104,6 +104,17 @@
   <section id="module-gemini.case.economics">
 <span id="gemini-case-economics"></span><h1>gemini.case.economics<a class="headerlink" href="#module-gemini.case.economics" title="Link to this heading"></a></h1>
 <p>The economics of a case: all money conditions and the reporting conventions.</p>
+<p class="rubric">Module Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">PER_ENERGY</span></code></p></td>
+<td><p>The quantity of a subsidy paid per energy of useful heat.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">EXAMPLE_UNITS</span></code></p></td>
+<td><p>A unit of each cost basis, named in the descriptions of the schema; <code class="docutils literal notranslate"><span class="pre">x-units</span></code> lists all.</p></td>
+</tr>
+</tbody>
+</table>
 <p class="rubric">Classes</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
@@ -138,7 +149,7 @@
 <td><p>What a unit of delivered <code class="docutils literal notranslate"><span class="pre">heat</span></code> and <code class="docutils literal notranslate"><span class="pre">cold</span></code> earns [currency/J], and the <code class="docutils literal notranslate"><span class="pre">subsidy</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Subsidy</span></code>([leaves, values, children, about])</p></td>
-<td><p>A subsidy: the <code class="docutils literal notranslate"><span class="pre">amount</span></code> paid per year [currency/yr] for a <code class="docutils literal notranslate"><span class="pre">duration</span></code> [s].</p></td>
+<td><p>A subsidy: the <code class="docutils literal notranslate"><span class="pre">amount</span></code> paid for a <code class="docutils literal notranslate"><span class="pre">duration</span></code> [s], per year or per energy.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Variable</span></code>([leaves, values, children, about])</p></td>
 <td><p>Consumables priced by the market: <code class="docutils literal notranslate"><span class="pre">chemical</span></code> and <code class="docutils literal notranslate"><span class="pre">waste_disposal</span></code> [currency/kg].</p></td>

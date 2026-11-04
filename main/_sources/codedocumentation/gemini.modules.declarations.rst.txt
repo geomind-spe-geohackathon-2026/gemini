@@ -8,6 +8,7 @@ gemini.modules.declarations
 
    .. autosummary::
    
+      holds_list
       mismatch
    
    .. rubric:: Classes

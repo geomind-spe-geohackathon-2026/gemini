@@ -106,26 +106,46 @@
 <h1>gemini.study.evolve<a class="headerlink" href="#gemini-study-evolve" title="Link to this heading"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="gemini.study.evolve">
-<span class="sig-prename descclassname"><span class="pre">gemini.study.</span></span><span class="sig-name descname"><span class="pre">evolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">case</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">objectives</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">population</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">polish</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gemini/study/evolve.html#evolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gemini.study.evolve" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">gemini.study.</span></span><span class="sig-name descname"><span class="pre">evolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">case</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">objectives</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evaluations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">population</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">polish</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gemini/study/evolve.html#evolve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gemini.study.evolve" title="Link to this definition"></a></dt>
 <dd><p>Return the best structures and designs of a superstructure, by a genetic algorithm.</p>
 <p>The genome holds every choice the plant states: whether each optional module is on
 (<code class="docutils literal notranslate"><span class="pre">set_optional</span></code>), the group of each choice (<code class="docutils literal notranslate"><span class="pre">set_choice</span></code>), the number of doublets when
 <code class="docutils literal notranslate"><span class="pre">size.doublets</span></code> has a range, and the variables of <code class="docutils literal notranslate"><span class="pre">gm.study.minimize</span></code> (every <code class="docutils literal notranslate"><span class="pre">range</span></code>
-and <code class="docutils literal notranslate"><span class="pre">options</span></code> of a leaf, tied by role). A gene of a module that is off is ignored. With one
-objective it is a genetic algorithm; with two or more it is NSGA-II: the candidates are
-ranked in fronts of non-domination and, within a front, by crowding distance. A feasible
-candidate beats every infeasible one, and infeasible ones are ranked by their violation, as
-in <code class="docutils literal notranslate"><span class="pre">minimize</span></code>. Parents are chosen by binary tournament; continuous and integer genes cross
-by simulated binary crossover and mutate by polynomial mutation, the choices cross uniformly
-and mutate by a random reset; each generation keeps the best of the parents and children.</p>
-<p>The first generation is the plant’s own values (clipped to the ranges) in each valid structure,
-in the order of <code class="docutils literal notranslate"><span class="pre">plant.structures()</span></code> while they fit, then random candidates. A candidate whose
-structure gives no valid plant (<code class="docutils literal notranslate"><span class="pre">plant.with_structure(...).check()</span></code> has an error) is
-refused before any simulation and counted in <code class="docutils literal notranslate"><span class="pre">invalid</span></code>. A candidate equal to one judged
-before in the genes that matter is not simulated again. The trials of a generation run in the
-worker processes of <code class="docutils literal notranslate"><span class="pre">gm.runtime.settings(processes=n)</span></code>; the same seed gives the same result,
-whatever <code class="docutils literal notranslate"><span class="pre">n</span></code>. Each trial is judged as in <code class="docutils literal notranslate"><span class="pre">minimize</span></code>. The search ends when <code class="docutils literal notranslate"><span class="pre">evaluations</span></code>
-simulations have run, or after a number of generations in a row (<code class="docutils literal notranslate"><span class="pre">STALL</span></code>) without a new one.</p>
+and <code class="docutils literal notranslate"><span class="pre">options</span></code> of a leaf, tied by role); leaves of modules that are in different places of
+the structure (an optional module, a group of a choice, the fixed modules) are not tied, so
+that alternatives keep their own sizes. A gene of a module that is off is ignored: it takes the
+plant’s own value, so two candidates that differ only there are one. With one objective it is
+a genetic algorithm; with two or more it is NSGA-II: the candidates are ranked in fronts of
+non-domination and, within a front, by crowding distance. A feasible candidate beats every
+infeasible one, and infeasible ones are ranked by their violation, as in <code class="docutils literal notranslate"><span class="pre">minimize</span></code>. Parents
+are chosen by binary tournament; continuous and integer genes cross by simulated binary
+crossover and mutate by polynomial mutation, the choices cross uniformly and mutate by a
+random reset; the structure genes mutate with a probability of one over their number, the
+other genes of one over theirs. Half of the children are local steps, a compass search: half
+of those from the best candidate of the best structure, the others from the best candidates
+of the next structures (on each objective in turn) and, with two objectives or more, from
+members of the first front by crowding distance. A local step moves one value up or down by
+a share of its range (<code class="docutils literal notranslate"><span class="pre">STEP</span></code> at first, halved per structure and value once both directions
+failed from the same candidate), or takes the next or previous option; a candidate that a
+step made is first stepped again the same way, twice as far. A child equal to a candidate
+judged before is mutated again (<code class="docutils literal notranslate"><span class="pre">RETRIES</span></code> times at most). Each generation keeps the best of
+the parents and children.</p>
+<p>The first generation is the plant’s own values (clipped to the ranges) in each valid
+structure, when they are no more than <code class="docutils literal notranslate"><span class="pre">population</span></code> (else in half of it, structures drawn at
+random), then random candidates. A candidate whose structure gives no valid plant
+(<code class="docutils literal notranslate"><span class="pre">plant.with_structure(...).check()</span></code> has an error) is never simulated and counts in
+<code class="docutils literal notranslate"><span class="pre">invalid</span></code>: when valid structures are known (all of them up to <code class="docutils literal notranslate"><span class="pre">ENUMERATED</span></code>, else those
+judged so far) it takes the nearest one instead (fewest structure genes changed, a tie drawn
+at random), so the budget goes to valid structures; else it is refused. A candidate equal to
+one judged before in the genes that matter is not simulated again. The new candidates of a
+generation run in the worker processes of <code class="docutils literal notranslate"><span class="pre">gm.runtime.settings(processes=n)</span></code>, those of one
+structure as one batch; the same seed gives the same result, whatever <code class="docutils literal notranslate"><span class="pre">n</span></code>. Each trial is
+judged as in <code class="docutils literal notranslate"><span class="pre">minimize</span></code>; a candidate whose plant cannot be built or whose run raises is
+infeasible with the error as its reason, and so is one that has no unit at all for a service
+of the case (a structure without cooling), which <code class="docutils literal notranslate"><span class="pre">minimize</span></code> does not hold against a trial
+since no value changes it. The search ends when <code class="docutils literal notranslate"><span class="pre">evaluations</span></code> simulations have run, after
+<code class="docutils literal notranslate"><span class="pre">STALL</span></code> generations in a row without a new simulation, or as <code class="docutils literal notranslate"><span class="pre">stop</span></code> says. The front is
+that of every design simulated.</p>
 <p>With <code class="docutils literal notranslate"><span class="pre">polish</span></code> above 0, each of the first <code class="docutils literal notranslate"><span class="pre">polish</span></code> designs of the result (ordered by the
 first objective) is searched again by <code class="docutils literal notranslate"><span class="pre">gm.study.minimize</span></code> in the ranges its plant keeps,
 on the first objective, with <code class="docutils literal notranslate"><span class="pre">population</span></code> evaluations for each doublet count (the budget of
@@ -144,27 +164,38 @@ search; a plant with neither is searched in its values alone.</p></li>
 <li><p><strong>polish</strong> (<em>int</em>) – The number of designs searched again by <code class="docutils literal notranslate"><span class="pre">minimize</span></code>; 0 for none. <code class="docutils literal notranslate"><span class="pre">population</span></code> must
 then be at least five per variable of the plant, the budget <code class="docutils literal notranslate"><span class="pre">minimize</span></code> needs.</p></li>
 <li><p><strong>plan</strong> (<em>DataFrame</em><em>, </em><em>optional</em>) – The run input held fixed over the trials, as for <code class="docutils literal notranslate"><span class="pre">minimize</span></code>.</p></li>
-<li><p><strong>on_progress</strong> (<em>callable</em><em>, </em><em>optional</em>) – <code class="docutils literal notranslate"><span class="pre">on_progress(done,</span> <span class="pre">total)</span></code> after each finished trial of the genetic search, <code class="docutils literal notranslate"><span class="pre">total</span></code>
-being <code class="docutils literal notranslate"><span class="pre">evaluations</span></code>; <code class="docutils literal notranslate"><span class="pre">done</span></code> reaches it when the search ends, before <code class="docutils literal notranslate"><span class="pre">polish</span></code>.
-Raising <code class="docutils literal notranslate"><span class="pre">gm.errors.Cancelled</span></code> stops the search.</p></li>
+<li><p><strong>on_progress</strong> (<em>callable</em><em>, </em><em>optional</em>) – <code class="docutils literal notranslate"><span class="pre">on_progress(done,</span> <span class="pre">total)</span></code> after each finished trial, <code class="docutils literal notranslate"><span class="pre">total</span></code> being <code class="docutils literal notranslate"><span class="pre">evaluations</span></code>
+and the most <code class="docutils literal notranslate"><span class="pre">polish</span></code> can run (<code class="docutils literal notranslate"><span class="pre">polish</span></code> times the trials of <code class="docutils literal notranslate"><span class="pre">minimize</span></code> on the whole
+plant with <code class="docutils literal notranslate"><span class="pre">population</span></code>, plus one each); <code class="docutils literal notranslate"><span class="pre">done</span></code> reaches it at the end. Raising
+<code class="docutils literal notranslate"><span class="pre">gm.errors.Cancelled</span></code> stops the search.</p></li>
+<li><p><strong>stop</strong> (<em>dict</em><em>, </em><em>optional</em>) – When to end before the budget: <code class="docutils literal notranslate"><span class="pre">{&quot;generations&quot;:</span> <span class="pre">n}</span></code> after <code class="docutils literal notranslate"><span class="pre">n</span></code> generations in a row with
+no new design on the feasible front, <code class="docutils literal notranslate"><span class="pre">{&quot;seconds&quot;:</span> <span class="pre">s}</span></code> once the search has run <code class="docutils literal notranslate"><span class="pre">s</span></code>
+seconds (the result then depends on the machine), or both. <code class="docutils literal notranslate"><span class="pre">None</span></code> spends the budget.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">{front,</span> <span class="pre">best,</span> <span class="pre">history,</span> <span class="pre">evaluations,</span> <span class="pre">invalid}</span></code>: <code class="docutils literal notranslate"><span class="pre">front</span></code> the designs no other beats
-on every objective (the best one alone for one objective), each a <code class="docutils literal notranslate"><span class="pre">Design</span></code>
-<code class="docutils literal notranslate"><span class="pre">{structure,</span> <span class="pre">plant,</span> <span class="pre">metrics,</span> <span class="pre">feasible,</span> <span class="pre">reason,</span> <span class="pre">violation,</span> <span class="pre">parameters}</span></code>; <code class="docutils literal notranslate"><span class="pre">best</span></code> the
-design best on the first objective (the least violating one when none is feasible);
-<code class="docutils literal notranslate"><span class="pre">history</span></code> per generation <code class="docutils literal notranslate"><span class="pre">{generation,</span> <span class="pre">evaluations,</span> <span class="pre">best,</span> <span class="pre">front}</span></code>: the simulations so
-far, the best value of each objective among the feasible candidates so far (<code class="docutils literal notranslate"><span class="pre">None</span></code>
-without one) and the size of the first front; <code class="docutils literal notranslate"><span class="pre">evaluations</span></code> the number of simulations;
-<code class="docutils literal notranslate"><span class="pre">invalid</span></code> the candidates refused for their structure.</p>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">{front,</span> <span class="pre">best,</span> <span class="pre">history,</span> <span class="pre">evaluations,</span> <span class="pre">invalid,</span> <span class="pre">structures,</span> <span class="pre">rejected,</span> <span class="pre">objectives,</span>
+<span class="pre">budget}</span></code>: <code class="docutils literal notranslate"><span class="pre">front</span></code> the designs no other beats on every objective (the best one alone
+for one objective), each a <code class="docutils literal notranslate"><span class="pre">Design</span></code> <code class="docutils literal notranslate"><span class="pre">{structure,</span> <span class="pre">plant,</span> <span class="pre">metrics,</span> <span class="pre">feasible,</span> <span class="pre">reason,</span>
+<span class="pre">violation,</span> <span class="pre">parameters}</span></code>; <code class="docutils literal notranslate"><span class="pre">best</span></code> the design best on the first objective (the least
+violating one when none is feasible); <code class="docutils literal notranslate"><span class="pre">history</span></code> per generation <code class="docutils literal notranslate"><span class="pre">{generation,</span>
+<span class="pre">evaluations,</span> <span class="pre">best,</span> <span class="pre">front,</span> <span class="pre">hypervolume}</span></code>: the simulations so far, the best value of each
+objective among the feasible candidates so far (<code class="docutils literal notranslate"><span class="pre">None</span></code> without one), the size of the
+feasible front so far and its hypervolume (objectives scaled between the best and worst
+of the final front, reference 1.1; <code class="docutils literal notranslate"><span class="pre">None</span></code> above two objectives); <code class="docutils literal notranslate"><span class="pre">evaluations</span></code> the
+number of simulations; <code class="docutils literal notranslate"><span class="pre">invalid</span></code> the candidates drawn with a refused structure;
+<code class="docutils literal notranslate"><span class="pre">structures</span></code> per valid structure <code class="docutils literal notranslate"><span class="pre">{structure,</span> <span class="pre">evaluations,</span> <span class="pre">feasible,</span> <span class="pre">best}</span></code>;
+<code class="docutils literal notranslate"><span class="pre">rejected</span></code> per refused structure <code class="docutils literal notranslate"><span class="pre">{structure,</span> <span class="pre">reasons}</span></code>; <code class="docutils literal notranslate"><span class="pre">budget</span></code> <code class="docutils literal notranslate"><span class="pre">{evaluations,</span>
+<span class="pre">search,</span> <span class="pre">polish,</span> <span class="pre">invalid,</span> <span class="pre">generations,</span> <span class="pre">stopped}</span></code> with <code class="docutils literal notranslate"><span class="pre">stopped</span></code> one of <code class="docutils literal notranslate"><span class="pre">budget</span></code>,
+<code class="docutils literal notranslate"><span class="pre">stalled</span></code>, <code class="docutils literal notranslate"><span class="pre">converged</span></code>, <code class="docutils literal notranslate"><span class="pre">seconds</span></code>.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Evolution</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValidationError</strong> – The issues of <code class="docutils literal notranslate"><span class="pre">gm.check</span></code>; <code class="docutils literal notranslate"><span class="pre">invalid_design</span></code> when no structure is valid or the plant
-    states nothing to search; <code class="docutils literal notranslate"><span class="pre">invalid_value</span></code> for a setting out of its range.</p>
+<dd class="field-even"><p><strong>ValidationError</strong> – The issues of <code class="docutils literal notranslate"><span class="pre">gm.check</span></code>; <code class="docutils literal notranslate"><span class="pre">invalid_design</span></code> when no structure is valid (with the reason
+    of each) or the plant states nothing to search; <code class="docutils literal notranslate"><span class="pre">invalid_value</span></code> for a setting out of its
+    range.</p>
 </dd>
 </dl>
 </dd></dl>
